@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>{{ service.nom }}</h2>
+    <p>{{ service.description }}</p>
+
+    <h3>Outils qui surveillent ce service</h3>
+    <ul>
+        {% for outil in service.outils_monitoring.all %}
+            <li><a href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a></li>
+        {% empty %}
+            <li>Aucun outil rattaché pour l'instant</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

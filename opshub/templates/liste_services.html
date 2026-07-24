@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1>Liste des services</h1>
+
+    {% if user.teamlead %}
+        <button onclick="document.getElementById('modale-ajout-service').style.display='block'">
+            Ajouter un service
+        </button>
+
+        <div id="modale-ajout-service" style="display:none;">
+            <form id="form-service" data-url="{% url 'ajouter_service' %}">
+                {% csrf_token %}
+                <label>Nom : <input type="text" name="nom"></label><br>
+                <label>Description : <textarea name="description"></textarea></label><br>
+                <label>Outils :
+                    <select name="outils_monitoring" multiple>
+                        {% for outil in tous_les_outils %}
+                            <option value="{{ outil.id }}">{{ outil.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </label><br>
+                <button type="submit">Enregistrer</button>
+                <button type="button" onclick="document.getElementById('modale-ajout-service').style.display='none'">Annuler</button>
+            </form>
+            <p id="message-erreur-service" style="color:red;"></p>
+        </div>
+    {% endif %}
+
+    <ul id="liste-services">
+        {% for service in services %}
+            <li id="service-{{ service.id }}">
+               <a id="nom-service-{{ service.id }}" href="{% url 'detail_service' service.id %}">{{ service.nom }}</a>
+
+                {% if user.teamlead %}
+                    <button onclick="document.getElementById('modale-modifier-service-{{ service.id }}').style.display='block'">
+                        Modifier
+                    </button>
+                    <button onclick="supprimerService({{ service.id }}, '{% url 'supprimer_service' service.id %}')">
+                        Supprimer
+                    </button>
+
+                    <div id="modale-modifier-service-{{ service.id }}" style="display:none;">
+                        <form id="form-modifier-service-{{ service.id }}" onsubmit="event.preventDefault(); modifierService({{ service.id }}, '{% url 'modifier_service' service.id %}')">
+                            {% csrf_token %}
+                            <label>Nom : <input type="text" name="nom" value="{{ service.nom }}"></label><br>
+                            <label>Description : <textarea name="description">{{ service.description }}</textarea></label><br>
+                            <button type="submit">Enregistrer</button>
+                            <button type="button" onclick="document.getElementById('modale-modifier-service-{{ service.id }}').style.display='none'">Annuler</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/services.js' %}"></script>
+{% endblock %}

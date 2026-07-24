@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>{{ outil.nom }}</h2>
+    <p>Lien d'accès : <a href="{{ outil.lien_acces }}">{{ outil.lien_acces }}</a></p>
+    <p>Authentification requise : {{ outil.necessite_authentification }}</p>
+    <p>Statut : {{ outil.statut }}</p>
+    <p>Team :{{outil.outil_team.nom}}</p>
+{% endblock %}
