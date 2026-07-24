@@ -4,6 +4,8 @@
 {% block content %}
     <h1>Liste des services</h1>
 
+    <input type="text" id="champ_recherche_services" placeholder="Rechercher un service...">
+
     {% if user.teamlead %}
         <button onclick="document.getElementById('modale-ajout-service').style.display='block'">
             Ajouter un service
@@ -31,7 +33,7 @@
     <ul id="liste-services">
         {% for service in services %}
             <li id="service-{{ service.id }}">
-               <a id="nom-service-{{ service.id }}" href="{% url 'detail_service' service.id %}">{{ service.nom }}</a>
+                <a id="nom-service-{{ service.id }}" href="{% url 'detail_service' service.id %}">{{ service.nom }}</a>
 
                 {% if user.teamlead %}
                     <button onclick="document.getElementById('modale-modifier-service-{{ service.id }}').style.display='block'">

@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    
     path('outils/', views.liste_outils, name='liste_outils'),
     path('outils/<int:outil_id>/', views.detail_outil, name='detail_outil'),
     path('outils/ajouter/', views.ajouter_outil, name='ajouter_outil'),
@@ -12,4 +13,8 @@ urlpatterns = [
     path('services/ajouter/', views.ajouter_service, name='ajouter_service'),
     path('services/<int:service_id>/modifier/', views.modifier_service, name='modifier_service'),
     path('services/<int:service_id>/supprimer/', views.supprimer_service, name='supprimer_service'),
+    path('mots-cles/', views.liste_mots_cles, name='liste_mots_cles'),
+    path('mots-cles/ajouter/', views.ajouter_mot_cle, name='ajouter_mot_cle'),
+    path('mots-cles/<int:mot_cle_id>/modifier/', views.modifier_mot_cle, name='modifier_mot_cle'),
+    path('mots-cles/<int:mot_cle_id>/supprimer/', views.supprimer_mot_cle, name='supprimer_mot_cle'),
 ]

@@ -1,48 +1,3 @@
-// --- AJOUTER ---
-document.getElementById('form-outil').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    fetch(this.dataset.url, {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.succes) {
-            const li = document.createElement('li');
-            li.textContent = data.nom;
-            document.getElementById('liste-outils').appendChild(li);
-            document.getElementById('modale-ajout').style.display = 'none';
-            this.reset();
-        } else {
-            document.getElementById('message-erreur').textContent = JSON.stringify(data.erreurs);
-        }
-    });
-});
-
-
-// --- MODIFIER ---
-function modifierOutil(outilId, url) {
-    const formData = new FormData(document.getElementById('form-modifier-' + outilId));
-
-    fetch(url, {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.succes) {
-            document.getElementById('nom-outil-' + outilId).textContent = data.nom;
-        } else {
-            alert(JSON.stringify(data.erreurs));
-        }
-    });
-}
-
-
-// --- SUPPRIMER ---
 function supprimerOutil(outilId, url) {
     if (!confirm('Supprimer cet outil ?')) return;
 
@@ -57,6 +12,7 @@ function supprimerOutil(outilId, url) {
             alert(data.erreur);
         }
     });
+}  // ← accolade ajoutée ici pour fermer supprimerOutil
 
 
 const champRecherche = document.getElementById('champ_recherche_outils');
@@ -71,5 +27,4 @@ if (champRecherche) {
             item.style.display = nom.includes(texte) ? '' : 'none';
         });
     });
-}
 }

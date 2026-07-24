@@ -1,6 +1,6 @@
 from django.shortcuts import render,get_object_or_404,redirect
 from .models import OutilMonitoring,Service
-from .forms import OutilMonitoringForm,ServiceForm
+from .forms import OutilMonitoringForm,ServiceForm,TeamLeadForm,MembreTechcommandForm,AdministrateurForm
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -134,3 +134,93 @@ def liste_services(request):
     services = Service.objects.filter(nom__icontains=requete) if requete else Service.objects.all()
     tous_les_outils = OutilMonitoring.objects.all()
     return render(request, 'liste_services.html', {'services': services, 'tous_les_outils': tous_les_outils, 'requete': requete})
+
+from .models import MotsClesAssignation, Equipe, MembreTechcommand
+from .forms import MotsClesAssignationForm
+
+def liste_mots_cles(request):
+    mots_cles = MotsClesAssignation.objects.all()
+    equipes = Equipe.objects.all()
+    membres = MembreTechcommand.objects.all()
+    return render(request, 'liste_mots_cles.html', {
+        'mots_cles': mots_cles,
+        'equipes': equipes,
+        'membres': membres,
+    })
+
+
+def ajouter_mot_cle(request):
+    if not hasattr(request.user, 'teamlead'):
+        return JsonResponse({'erreur': 'Accès réservé aux Team-leads'}, status=403)
+
+    if request.method == 'POST':
+        form = MotsClesAssignationForm(request.POST)
+        if form.is_valid():
+            mot_cle = form.save()
+            return JsonResponse({
+                'succes': True,
+                'id': mot_cle.id,
+                'intitule': mot_cle.intitule,
+                'equipe': mot_cle.equipe.nom if mot_cle.equipe else '',
+            }, status=201)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+def modifier_mot_cle(request, mot_cle_id):
+    if not hasattr(request.user, 'teamlead'):
+        return JsonResponse({'erreur': 'Accès réservé aux Team-leads'}, status=403)
+
+    mot_cle = get_object_or_404(MotsClesAssignation, id=mot_cle_id)
+    if request.method == 'POST':
+        form = MotsClesAssignationForm(request.POST, instance=mot_cle)
+        if form.is_valid():
+            mot_cle = form.save()
+            return JsonResponse({
+                'succes': True,
+                'id': mot_cle.id,
+                'intitule': mot_cle.intitule,
+                'equipe': mot_cle.equipe.nom if mot_cle.equipe else '',
+            }, status=200)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+def supprimer_mot_cle(request, mot_cle_id):
+    if not hasattr(request.user, 'teamlead'):
+        return JsonResponse({'erreur': 'Accès réservé aux Team-leads'}, status=403)
+
+    mot_cle = get_object_or_404(MotsClesAssignation, id=mot_cle_id)
+    if request.method == 'POST':
+        mot_cle.delete()
+        return JsonResponse({'succes': True}, status=200)
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+def ajouter_utilisateur(request):
+    if not hasattr(request.user, 'administrateur'):
+        return JsonResponse({'erreur': 'Accès réservé aux Administrateurs'}, status=403)
+
+    if request.method == 'POST':
+        role = request.POST.get('role')
+
+        if role == 'teamlead':
+            form = TeamLeadForm(request.POST)
+        elif role == 'membre':
+            form = MembreTechcommandForm(request.POST)
+        elif role == 'administrateur':
+            form = AdministrateurForm(request.POST)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': {'role': ['Rôle invalide']}}, status=400)
+
+        if form.is_valid():
+            utilisateur = form.save()
+            return JsonResponse({'succes': True, 'id': utilisateur.id, 'username': utilisateur.username, 'role': role}, status=201)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)

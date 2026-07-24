@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1>Mots-clés d'assignation</h1>
+
+    <input type="text" id="champ_recherche_mots_cles" placeholder="Rechercher un mot-clé...">
+
+    <table id="table-mots-cles" border="1">
+        <thead>
+            <tr>
+                <th>Intitulé</th>
+                <th>Équipe</th>
+                {% if user.teamlead %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for mot_cle in mots_cles %}
+                <tr id="mot-cle-{{ mot_cle.id }}">
+                    <td id="intitule-{{ mot_cle.id }}">{{ mot_cle.intitule }}</td>
+                    <td id="equipe-{{ mot_cle.id }}">{{ mot_cle.equipe.nom|default:"—" }}</td>
+                    {% if user.teamlead %}
+                        <td>
+                            <button onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='block'">
+                                Modifier
+                            </button>
+                            <button onclick="supprimerMotCle({{ mot_cle.id }}, '{% url 'supprimer_mot_cle' mot_cle.id %}')">
+                                Supprimer
+                            </button>
+
+                            <div id="modale-modifier-mc-{{ mot_cle.id }}" style="display:none;">
+                                <form id="form-modifier-mc-{{ mot_cle.id }}" onsubmit="event.preventDefault(); modifierMotCle({{ mot_cle.id }}, '{% url 'modifier_mot_cle' mot_cle.id %}')">
+                                    {% csrf_token %}
+                                    <label>Intitulé : <input type="text" name="intitule" value="{{ mot_cle.intitule }}"></label><br>
+                                    <label>Équipe :
+                                        <select name="equipe">
+                                            <option value="">—</option>
+                                            {% for equipe in equipes %}
+                                                <option value="{{ equipe.id }}" {% if mot_cle.equipe_id == equipe.id %}selected{% endif %}>{{ equipe.nom }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label><br>
+                                    <label>Membres :
+                                        <select name="membres" multiple>
+                                            {% for membre in membres %}
+                                                <option value="{{ membre.id }}" {% if membre in mot_cle.membres.all %}selected{% endif %}>{{ membre.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label><br>
+                                    <button type="submit">Enregistrer</button>
+                                    <button type="button" onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='none'">Annuler</button>
+                                </form>
+                            </div>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if user.teamlead %}
+        <button onclick="document.getElementById('modale-ajout-mc').style.display='block'">
+            Ajouter un mot-clé
+        </button>
+
+        <div id="modale-ajout-mc" style="display:none;">
+            <form id="form-mot-cle" data-url="{% url 'ajouter_mot_cle' %}">
+                {% csrf_token %}
+                <label>Intitulé : <input type="text" name="intitule"></label><br>
+                <label>Équipe :
+                    <select name="equipe">
+                        <option value="">—</option>
+                        {% for equipe in equipes %}
+                            <option value="{{ equipe.id }}">{{ equipe.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </label><br>
+                <label>Membres :
+                    <select name="membres" multiple>
+                        {% for membre in membres %}
+                            <option value="{{ membre.id }}">{{ membre.username }}</option>
+                        {% endfor %}
+                    </select>
+                </label><br>
+                <button type="submit">Enregistrer</button>
+                <button type="button" onclick="document.getElementById('modale-ajout-mc').style.display='none'">Annuler</button>
+            </form>
+            <p id="message-erreur-mc" style="color:red;"></p>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/mots-cles.js' %}"></script>
+{% endblock %}

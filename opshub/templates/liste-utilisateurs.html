@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1>Utilisateurs</h1>
+
+    {% if user.administrateur %}
+        <button onclick="document.getElementById('modale-ajout-utilisateur').style.display='block'">
+            Ajouter un utilisateur
+        </button>
+
+        <div id="modale-ajout-utilisateur" style="display:none;">
+            <form id="form-utilisateur" data-url="{% url 'ajouter_utilisateur' %}">
+                {% csrf_token %}
+                <label>Rôle :
+                    <select name="role" id="select-role">
+                        <option value="membre">Membre Techcommand</option>
+                        <option value="teamlead">Team-lead</option>
+                        <option value="administrateur">Administrateur</option>
+                    </select>
+                </label><br>
+                <label>Nom d'utilisateur : <input type="text" name="username"></label><br>
+                <label>Prénom : <input type="text" name="first_name"></label><br>
+                <label>Nom : <input type="text" name="last_name"></label><br>
+                <label>Email : <input type="email" name="email"></label><br>
+                <label>Adresse : <input type="text" name="adresse"></label><br>
+
+                <label>Mot de passe : <input type="password" name="password1"></label><br>
+                <label>Confirmer le mot de passe : <input type="password" name="password2"></label><br>
+
+                <button type="submit">Créer</button>
+                <button type="button" onclick="document.getElementById('modale-ajout-utilisateur').style.display='none'">Annuler</button>
+            </form>
+            <p id="message-erreur-utilisateur" style="color:red;"></p>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/utilisateurs.js' %}"></script>
+{% endblock %}
