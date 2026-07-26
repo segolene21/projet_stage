@@ -227,53 +227,7 @@ def ajouter_utilisateur(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
-<<<<<<< Updated upstream
-
-
-@login_required
-def liste_utilisateurs(request):
-    if not hasattr(request.user, 'administrateur'):
-        return HttpResponseForbidden("Accès réservé aux Administrateurs")
-
-    administrateurs = Administrateur.objects.all()
-    teamleads = TeamLead.objects.all()
-    membres = MembreTechcommand.objects.all()
-
-    return render(request, 'liste-utilisateurs.html', {
-        'administrateurs': administrateurs,
-        'teamleads': teamleads,
-        'membres': membres,
-    })
-
-
-@login_required
-def toggle_statut_utilisateur(request, user_id):
-    if not hasattr(request.user, 'administrateur'):
-        return JsonResponse({'erreur': 'Accès réservé aux Administrateurs'}, status=403)
-
-    utilisateur = get_object_or_404(Utilisateurs, id=user_id)
-    if request.method == 'POST':
-        utilisateur.is_active = not utilisateur.is_active
-        utilisateur.save()
-        return JsonResponse({'succes': True, 'actif': utilisateur.is_active})
-
-    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
-
-
-@login_required
-def supprimer_utilisateur(request, user_id):
-    if not hasattr(request.user, 'administrateur'):
-        return JsonResponse({'erreur': 'Accès réservé aux Administrateurs'}, status=403)
-
-    utilisateur = get_object_or_404(Utilisateurs, id=user_id)
-    if request.method == 'POST':
-        utilisateur.delete()
-        return JsonResponse({'succes': True})
-
-    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
-=======
 def index(request):
     return render(request, 'index.html')
 def login(request):
     return render(request, 'Login.html')
->>>>>>> Stashed changes

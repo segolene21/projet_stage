@@ -23,20 +23,29 @@
             <p>Portail MTN Bénin</p>
         </div>
         <nav class="sidebar-nav">
-            {% block nav %}
-            <ul>
-                <li><a href="{% url 'liste_outils' %}" class="nav-item">📖 Outils</a></li>
-                <li><a href="{% url 'liste_services' %}" class="nav-item">⚙️ Services</a></li>
-                <li><a href="{% url 'liste_mots_cles' %}" class="nav-item">🔑 Mots-clés</a></li>
-            </ul>
-            {% endblock %}
-        </nav>
+    {% block nav %}
+        <ul>
+            <li><a href="{% url 'liste_outils' %}">📖Outils</a></li>
+            <li><a href="{% url 'liste_services' %}">⚙️Services</a></li>
+            <li><a href="{% url 'liste_mots_cles' %}">🔑Mots-clés</a></li> 
+            {# <li><a href="{% url 'liste_feedbacks' %}">Feedbacks</a></li> #}
+            {#{% if user.administrateur %}#}
+                {#<li><a href="{% url 'liste_utilisateurs' %}">Utilisateurs</a></li>#}
+           {# {% endif %}#}
+          
+        </ul>
+    {% endblock %}
+</nav>
+    
         <div class="sidebar-footer">
             {% if user.is_authenticated %}
-                <div class="nav-item">{{ user.username }}</div>
-                <a href="#" class="nav-item logout">⎋ Se déconnecter</a>
+                <div class="nav-item"> Connecté en tant que {{ user.username }}</div>
+                <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-item logout">⎋ Se déconnecter</button>
+                </form>
             {% else %}
-                <a href="{% url 'login' %}" class="nav-item">→ Se connecter</a>
+                <a href="{% url 'login' %}" class="nav-item"> Se connecter</a>
             {% endif %}
         </div>
     </aside>
@@ -64,6 +73,7 @@
         </ul>
     {% endblock %}
 </nav>
+    
     <!-- CONTENU -->
     <div class="content-area">
         <header class="dash-header">
@@ -77,14 +87,12 @@
             {% block content %}{% endblock %}
         </main>
 
-<<<<<<< HEAD
         <footer>
             {% block footer %}
                 <p>OpsHub — Projet de stage MTN Bénin</p>
             {% endblock %}
         </footer>
     </div>
-=======
     <footer>
         {% block footer %}
             <p>OpsHub — Projet de stage MTN Bénin</p>
@@ -93,7 +101,6 @@
 
     <script src="{% static 'js/csrf.js' %}"></script>
     {% block extra_js %}{% endblock %}
->>>>>>> b366b6e1e6a6b768cc22e46c8de6222507511a39
 
 </div>
 {% block extra_js %}{% endblock %}
