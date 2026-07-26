@@ -1,14 +1,15 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from .models import (
     Utilisateurs, Administrateur, TeamLead, MembreTechcommand,
     Equipe, OutilTeam, OutilMonitoring, Service,
     MotsClesAssignation, Plainte, Feedback, Recommandation, Shift
 )
 
-admin.site.register(Utilisateurs)
-admin.site.register(Administrateur)
-admin.site.register(TeamLead)
-admin.site.register(MembreTechcommand)
+admin.site.register(Administrateur, UserAdmin)
+admin.site.register(TeamLead, UserAdmin)
+admin.site.register(MembreTechcommand, UserAdmin)
+
 admin.site.register(Equipe)
 admin.site.register(OutilTeam)
 admin.site.register(OutilMonitoring)
