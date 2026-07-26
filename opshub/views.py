@@ -227,6 +227,7 @@ def ajouter_utilisateur(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+<<<<<<< Updated upstream
 
 
 @login_required
@@ -270,3 +271,9 @@ def supprimer_utilisateur(request, user_id):
         return JsonResponse({'succes': True})
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+=======
+def index(request):
+    return render(request, 'index.html')
+def login(request):
+    return render(request, 'Login.html')
+>>>>>>> Stashed changes
