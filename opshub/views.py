@@ -234,6 +234,7 @@ def ajouter_utilisateur(request):
 <<<<<<< HEAD
 def index(request):
     return render(request, 'index.html')
+<<<<<<< Updated upstream
 def login(request):
 <<<<<<< Updated upstream
     return render(request, 'Login.html')
@@ -393,3 +394,7 @@ def supprimer_plainte(request, plainte_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 >>>>>>> 5893a3b75af4b92ad2d17a91ea5801b8d8568252
+=======
+def connexion(request):
+    return render(request, 'connexion.html')
+>>>>>>> Stashed changes
