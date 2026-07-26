@@ -2,38 +2,94 @@
 {% load static %}
 
 {% block content %}
-    <h1>Utilisateurs</h1>
+    <h1>Gestion des utilisateurs</h1>
 
-    {% if user.administrateur %}
-        <button onclick="document.getElementById('modale-ajout-utilisateur').style.display='block'">
-            Ajouter un utilisateur
-        </button>
+    <button onclick="document.getElementById('modale-ajout-utilisateur').style.display='block'">
+        Ajouter un utilisateur
+    </button>
 
-        <div id="modale-ajout-utilisateur" style="display:none;">
-            <form id="form-utilisateur" data-url="{% url 'ajouter_utilisateur' %}">
-                {% csrf_token %}
-                <label>Rôle :
-                    <select name="role" id="select-role">
-                        <option value="membre">Membre Techcommand</option>
-                        <option value="teamlead">Team-lead</option>
-                        <option value="administrateur">Administrateur</option>
-                    </select>
-                </label><br>
-                <label>Nom d'utilisateur : <input type="text" name="username"></label><br>
-                <label>Prénom : <input type="text" name="first_name"></label><br>
-                <label>Nom : <input type="text" name="last_name"></label><br>
-                <label>Email : <input type="email" name="email"></label><br>
-                <label>Adresse : <input type="text" name="adresse"></label><br>
+    <div id="modale-ajout-utilisateur" style="display:none;">
+        <form id="form-utilisateur" data-url="{% url 'ajouter_utilisateur' %}">
+            {% csrf_token %}
+            <label>Rôle :
+                <select name="role" id="select-role">
+                    <option value="membre">Membre Techcommand</option>
+                    <option value="teamlead">Team-lead</option>
+                    <option value="administrateur">Administrateur</option>
+                </select>
+            </label><br>
+            <label>Nom d'utilisateur : <input type="text" name="username"></label><br>
+            <label>Prénom : <input type="text" name="first_name"></label><br>
+            <label>Nom : <input type="text" name="last_name"></label><br>
+            <label>Email : <input type="email" name="email"></label><br>
+            <label>Adresse : <input type="text" name="adresse"></label><br>
+            <label>Mot de passe : <input type="password" name="password1"></label><br>
+            <label>Confirmer le mot de passe : <input type="password" name="password2"></label><br>
+            <button type="submit">Créer</button>
+            <button type="button" onclick="document.getElementById('modale-ajout-utilisateur').style.display='none'">Annuler</button>
+        </form>
+        <p id="message-erreur-utilisateur" style="color:red;"></p>
+    </div>
 
-                <label>Mot de passe : <input type="password" name="password1"></label><br>
-                <label>Confirmer le mot de passe : <input type="password" name="password2"></label><br>
+    <h2>Administrateurs</h2>
+    <table border="1">
+        <thead>
+            <tr><th>Nom d'utilisateur</th><th>Email</th><th>Statut</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for u in administrateurs %}
+                <tr id="user-{{ u.id }}">
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td id="statut-{{ u.id }}">{{ u.is_active|yesno:"Actif,Inactif" }}</td>
+                    <td>
+                        <button onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">Activer/Désactiver</button>
+                        <button onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">Supprimer</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-                <button type="submit">Créer</button>
-                <button type="button" onclick="document.getElementById('modale-ajout-utilisateur').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-utilisateur" style="color:red;"></p>
-        </div>
-    {% endif %}
+    <h2>Team-leads</h2>
+    <table border="1">
+        <thead>
+            <tr><th>Nom d'utilisateur</th><th>Email</th><th>Statut</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for u in teamleads %}
+                <tr id="user-{{ u.id }}">
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td id="statut-{{ u.id }}">{{ u.is_active|yesno:"Actif,Inactif" }}</td>
+                    <td>
+                        <button onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">Activer/Désactiver</button>
+                        <button onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">Supprimer</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Membres Techcommand</h2>
+    <table border="1">
+        <thead>
+            <tr><th>Nom d'utilisateur</th><th>Email</th><th>Statut</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for u in membres %}
+                <tr id="user-{{ u.id }}">
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td id="statut-{{ u.id }}">{{ u.is_active|yesno:"Actif,Inactif" }}</td>
+                    <td>
+                        <button onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">Activer/Désactiver</button>
+                        <button onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">Supprimer</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
 
 {% block extra_js %}
