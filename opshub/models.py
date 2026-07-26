@@ -94,21 +94,31 @@ class Recommandation(models.Model):
 # --- Shift ---
 
 class Shift(models.Model):
-    plage = models.TimeField()
+    PLAGE_CHOICES = [
+        ('matin', 'Matin'),
+        ('apres_midi', 'Après-midi'),
+        ('nuit', 'Nuit'),
+    ]
     date = models.DateField()
+    plage = models.CharField(max_length=15, choices=PLAGE_CHOICES)
 
-    def __str__(self):
+class Meta:
+        unique_together = ('date', 'plage')
+
+def __str__(self):
+        return f"{self.date} — {self.get_plage_display()}"
+def __str__(self):
         return self.nom
 
-    def __str__(self):
+def __str__(self):
         return f"Outil monitoring #{self.id}"  # pas de champ "nom" ici
-    def __str__(self):
+def __str__(self):
         return self.intitule
     
-    def __str__(self):
+def __str__(self):
         return f"Plainte du {self.date_ajout.date()}"
 
-    def __str__(self):
+def __str__(self):
         return f"Feedback #{self.id} — {self.date_soumission.date()}"
 def __str__(self):
         return f"Recommandation #{self.id}"

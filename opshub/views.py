@@ -8,6 +8,10 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import MotsClesAssignation, Equipe, MembreTechcommand
 from .forms import MotsClesAssignationForm
+from .models import Feedback, Recommandation, Plainte, Shift
+from .forms import FeedbackForm, RecommandationForm, PlainteForm
+
+
 @login_required
 def liste_outils(request):
     outils = OutilMonitoring.objects.all()
@@ -227,6 +231,7 @@ def ajouter_utilisateur(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+<<<<<<< HEAD
 def index(request):
     return render(request, 'index.html')
 def login(request):
@@ -235,3 +240,156 @@ def login(request):
 =======
     return render(request, 'Login.html')
 >>>>>>> Stashed changes
+=======
+
+
+@login_required
+def liste_utilisateurs(request):
+    if not hasattr(request.user, 'administrateur'):
+        return HttpResponseForbidden("Accès réservé aux Administrateurs")
+
+    administrateurs = Administrateur.objects.all()
+    teamleads = TeamLead.objects.all()
+    membres = MembreTechcommand.objects.all()
+
+    return render(request, 'liste-utilisateurs.html', {
+        'administrateurs': administrateurs,
+        'teamleads': teamleads,
+        'membres': membres,
+    })
+
+
+@login_required
+def toggle_statut_utilisateur(request, user_id):
+    if not hasattr(request.user, 'administrateur'):
+        return JsonResponse({'erreur': 'Accès réservé aux Administrateurs'}, status=403)
+
+    utilisateur = get_object_or_404(Utilisateurs, id=user_id)
+    if request.method == 'POST':
+        utilisateur.is_active = not utilisateur.is_active
+        utilisateur.save()
+        return JsonResponse({'succes': True, 'actif': utilisateur.is_active})
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+@login_required
+def supprimer_utilisateur(request, user_id):
+    if not hasattr(request.user, 'administrateur'):
+        return JsonResponse({'erreur': 'Accès réservé aux Administrateurs'}, status=403)
+
+    utilisateur = get_object_or_404(Utilisateurs, id=user_id)
+    if request.method == 'POST':
+        utilisateur.delete()
+        return JsonResponse({'succes': True})
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+from .models import Feedback, Recommandation, Plainte, Shift
+from .forms import FeedbackForm, RecommandationForm, PlainteForm
+
+@login_required
+def experiences_membres(request):
+    feedbacks = Feedback.objects.all().order_by('-date_soumission')
+    recommandations = Recommandation.objects.all().order_by('-date_soumission')
+    plaintes = Plainte.objects.all().order_by('-date_ajout')
+    shifts = Shift.objects.all()
+
+    return render(request, 'experiences-membres.html', {
+        'feedbacks': feedbacks,
+        'recommandations': recommandations,
+        'plaintes': plaintes,
+        'shifts': shifts,
+    })
+
+@login_required
+def ajouter_feedback(request):
+    if request.method == 'POST':
+        date_shift = request.POST.get('date_shift')
+        plage_shift = request.POST.get('plage_shift')
+        description = request.POST.get('description')
+
+        if not date_shift or not plage_shift or not description:
+            return JsonResponse({'succes': False, 'erreurs': {'champs': ['Tous les champs sont requis']}}, status=400)
+
+        shift, cree = Shift.objects.get_or_create(date=date_shift, plage=plage_shift)
+
+        feedback = Feedback.objects.create(
+            shift=shift,
+            description=description,
+            membre=getattr(request.user, 'membretechcommand', None),
+        )
+
+        return JsonResponse({'succes': True, 'description': feedback.description}, status=201)
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+
+@login_required
+def ajouter_recommandation(request):
+    if request.method == 'POST':
+        form = RecommandationForm(request.POST)
+        if form.is_valid():
+            recommandation = form.save(commit=False)
+            recommandation.membre = getattr(request.user, 'membretechcommand', None)
+            recommandation.save()
+            return JsonResponse({'succes': True, 'contenu': recommandation.contenu}, status=201)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+@login_required
+def ajouter_plainte(request):
+    if request.method == 'POST':
+        form = PlainteForm(request.POST)
+        if form.is_valid():
+            plainte = form.save(commit=False)
+            if not plainte.anonyme:
+                plainte.membre = getattr(request.user, 'membretechcommand', None)
+            plainte.save()
+            return JsonResponse({'succes': True, 'contenu': plainte.contenu}, status=201)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+@login_required
+def supprimer_feedback(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    est_auteur = feedback.membre == getattr(request.user, 'membretechcommand', None)
+    if not (hasattr(request.user, 'teamlead') or est_auteur):
+        return JsonResponse({'erreur': 'Non autorisé'}, status=403)
+    if request.method == 'POST':
+        feedback.delete()
+        return JsonResponse({'succes': True})
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+@login_required
+def supprimer_recommandation(request, recommandation_id):
+    recommandation = get_object_or_404(Recommandation, id=recommandation_id)
+    est_auteur = recommandation.membre == getattr(request.user, 'membretechcommand', None)
+    if not (hasattr(request.user, 'teamlead') or est_auteur):
+        return JsonResponse({'erreur': 'Non autorisé'}, status=403)
+
+    if request.method == 'POST':
+        recommandation.delete()
+        return JsonResponse({'succes': True})
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+@login_required
+def supprimer_plainte(request, plainte_id):
+    plainte = get_object_or_404(Plainte, id=plainte_id)
+    est_auteur = plainte.membre == getattr(request.user, 'membretechcommand', None)
+    if not (hasattr(request.user, 'teamlead') or est_auteur):
+        return JsonResponse({'erreur': 'Non autorisé'}, status=403)
+
+    if request.method == 'POST':
+        plainte.delete()
+        return JsonResponse({'succes': True})
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+>>>>>>> 5893a3b75af4b92ad2d17a91ea5801b8d8568252
