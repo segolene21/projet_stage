@@ -21,4 +21,11 @@ urlpatterns = [
     path('utilisateurs/ajouter/', views.ajouter_utilisateur, name='ajouter_utilisateur'),
     path('utilisateurs/<int:user_id>/toggle-statut/', views.toggle_statut_utilisateur, name='toggle_statut_utilisateur'),
     path('utilisateurs/<int:user_id>/supprimer/', views.supprimer_utilisateur, name='supprimer_utilisateur'),
+    path('experiences/', views.experiences_membres, name='experiences_membres'),
+    path('experiences/feedback/ajouter/', views.ajouter_feedback, name='ajouter_feedback'),
+    path('experiences/recommandation/ajouter/', views.ajouter_recommandation, name='ajouter_recommandation'),
+    path('experiences/plainte/ajouter/', views.ajouter_plainte, name='ajouter_plainte'),
+    path('experiences/feedback/<int:feedback_id>/supprimer/', views.supprimer_feedback, name='supprimer_feedback'),
+    path('experiences/recommandation/<int:recommandation_id>/supprimer/', views.supprimer_recommandation, name='supprimer_recommandation'),
+    path('experiences/plainte/<int:plainte_id>/supprimer/', views.supprimer_plainte, name='supprimer_plainte'),
 ]
