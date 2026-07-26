@@ -46,6 +46,20 @@
                 </form>
             {% else %}
                 <a href="{% url 'login' %}" class="nav-item"> Se connecter</a>
+            {% block nav %}
+            <ul>
+                <li><a href="{% url 'liste_outils' %}" class="nav-item">📖 Outils</a></li>
+                <li><a href="{% url 'liste_services' %}" class="nav-item">⚙️ Services</a></li>
+                <li><a href="{% url 'liste_mots_cles' %}" class="nav-item">🔑 Mots-clés</a></li>
+            </ul>
+            {% endblock %}
+        </nav>
+        <div class="sidebar-footer">
+            {% if user.is_authenticated %}
+                <div class="nav-item">{{ user.username }}</div>
+                <a href="#" class="nav-item logout">⎋ Se déconnecter</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-item">→ Se connecter</a>
             {% endif %}
         </div>
     </aside>

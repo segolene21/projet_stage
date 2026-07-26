@@ -230,4 +230,8 @@ def ajouter_utilisateur(request):
 def index(request):
     return render(request, 'index.html')
 def login(request):
+<<<<<<< Updated upstream
     return render(request, 'Login.html')
+=======
+    return render(request, 'Login.html')
+>>>>>>> Stashed changes
