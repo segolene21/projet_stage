@@ -3,21 +3,20 @@
 
 {% block content %}
     <h1>Liste des outils</h1>
+
     <input type="text" id="champ_recherche_outils" placeholder="Rechercher un outil...">
+
     {% if user.teamlead %}
-        <button onclick="document.getElementById('modale-ajout').style.display='block'">
-            Ajouter un outil
-        </button>
+        <button onclick="ouvrirModaleAjout()" data-url-ajout="{% url 'ajouter_outil' %}">Ajouter un outil</button>
 
         <div id="modale-ajout" style="display:none;">
             <form id="form-outil" data-url="{% url 'ajouter_outil' %}">
                 {% csrf_token %}
-                <label>Nom : <input type="text" name="nom"></label><br>
-                <label>Indicateur : <input type="text" name="indicateur"></label><br>
-                <label>Tendances (URL) : <input type="url" name="tendances"></label><br>
-                <label>Lien d'accès : <input type="url" name="lien_acces"></label><br>
-                <label>Authentification requise : <input type="checkbox" name="necessite_authentification"></label><br>
-                <label>Statut actif : <input type="checkbox" name="statut" checked></label><br>
+                <input type="hidden" name="outil_id" id="champ-outil-id">
+                <label>Nom : <input type="text" name="nom" id="champ-nom"></label><br>
+                <label>Lien d'accès : <input type="url" name="lien_acces" id="champ-lien-acces"></label><br>
+                <label>Authentification requise : <input type="checkbox" name="necessite_authentification" id="champ-auth"></label><br>
+                <label>Statut actif : <input type="checkbox" name="statut" id="champ-statut" checked></label><br>
                 <button type="submit">Enregistrer</button>
                 <button type="button" onclick="document.getElementById('modale-ajout').style.display='none'">Annuler</button>
             </form>
@@ -28,29 +27,15 @@
     <ul id="liste-outils">
         {% for outil in outils %}
             <li id="outil-{{ outil.id }}">
-              <a id="nom-outil-{{ outil.id }}" href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
+                <a id="nom-outil-{{ outil.id }}" href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
 
                 {% if user.teamlead %}
-                    <button onclick="document.getElementById('modale-modifier-{{ outil.id }}').style.display='block'">
+                    <button onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}')">
                         Modifier
                     </button>
                     <button onclick="supprimerOutil({{ outil.id }}, '{% url 'supprimer_outil' outil.id %}')">
                         Supprimer
                     </button>
-
-                    <div id="modale-modifier-{{ outil.id }}" style="display:none;">
-                        <form id="form-modifier-{{ outil.id }}" onsubmit="event.preventDefault(); modifierOutil({{ outil.id }}, '{% url 'modifier_outil' outil.id %}')">
-                            {% csrf_token %}
-                            <label>Nom : <input type="text" name="nom" value="{{ outil.nom }}"></label><br>
-                            <label>Indicateur : <input type="text" name="indicateur" value="{{ outil.indicateur }}"></label><br>
-                            <label>Tendances (URL) : <input type="url" name="tendances" value="{{ outil.tendances }}"></label><br>
-                            <label>Lien d'accès : <input type="url" name="lien_acces" value="{{ outil.lien_acces }}"></label><br>
-                            <label>Authentification requise : <input type="checkbox" name="necessite_authentification" {% if outil.necessite_authentification %}checked{% endif %}></label><br>
-                            <label>Statut actif : <input type="checkbox" name="statut" {% if outil.statut %}checked{% endif %}></label><br>
-                            <button type="submit">Enregistrer</button>
-                            <button type="button" onclick="document.getElementById('modale-modifier-{{ outil.id }}').style.display='none'">Annuler</button>
-                        </form>
-                    </div>
                 {% endif %}
             </li>
         {% endfor %}
