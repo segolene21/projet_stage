@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block content %}
     <h1>Expériences Membres</h1>
 
+<<<<<<< HEAD
     <section class="experience-section">
         <div class="section-header">
             <h2>Feedbacks</h2>
@@ -151,4 +151,40 @@
 
 {% block extra_js %}
     <script src="{% static 'js/experiences.js' %}"></script>
+=======
+    <div class="grandes-cards">
+        <div class="grande-card">
+            <h2>Feedback</h2>
+            <a href="{% url 'liste_feedbacks' %}">Voir la liste</a>
+            <a href="{% url 'liste_feedbacks' %}#soumettre">Soumettre un feedback</a>
+        </div>
+
+        <div class="grande-card">
+            <h2>Plainte</h2>
+            <a href="{% url 'liste_plaintes' %}">Voir la liste</a>
+            <a href="{% url 'liste_plaintes' %}#soumettre">Soumettre une plainte</a>
+        </div>
+
+        <div class="grande-card">
+            <h2>Recommandation</h2>
+            <a href="{% url 'liste_recommandations' %}">Voir la liste</a>
+            <a href="{% url 'liste_recommandations' %}#soumettre">Soumettre une recommandation</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .grandes-cards { display: flex; gap: 20px; flex-wrap: wrap; }
+        .grande-card {
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 24px;
+            width: 250px;
+            text-align: center;
+        }
+        .grande-card h2 { font-size: 1.8em; }
+        .grande-card a { display: block; margin-top: 10px; }
+    </style>
+>>>>>>> d501e981f75fc9a59b768f826e39c03f8378e9fe
 {% endblock %}

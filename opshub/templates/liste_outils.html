@@ -21,6 +21,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="outil_id" id="champ-outil-id">
 
+<<<<<<< HEAD
                     <div class="form-group">
                         <label>Nom</label>
                         <input type="text" name="nom" id="champ-nom">
@@ -47,6 +48,45 @@
                     </div>
                 </form>
             </div>
+=======
+        <div id="modale-ajout" style="display:none;">
+            <form id="form-outil" data-url="{% url 'ajouter_outil' %}">
+                {% csrf_token %}
+                <input type="hidden" name="outil_id" id="champ-outil-id">
+                <label>Nom : <input type="text" name="nom" id="champ-nom"></label><br>
+                <label>Lien d'accès : <input type="url" name="lien_acces" id="champ-lien-acces"></label><br>
+                <label>Authentification requise : <input type="checkbox" name="necessite_authentification" id="champ-auth"></label><br>
+                <label>Statut actif : <input type="checkbox" name="statut" id="champ-statut" checked></label><br>
+                <label>Équipe outil :
+    <select name="outil_team" id="select-outil-team">
+        {% for ot in outils_teams %}
+            <option value="{{ ot.id }}">{{ ot.nom }}</option>
+        {% endfor %}
+    </select>
+</label>
+<button type="button" onclick="document.getElementById('modale-outil-team').style.display='block'">
+    + Nouvelle équipe
+</button>
+<br>
+
+<div id="modale-outil-team" style="display:none;">
+    <form id="form-outil-team" data-url="{% url 'ajouter_outil_team' %}">
+        {% csrf_token %}
+        <label>Nom : <input type="text" name="nom"></label><br>
+        <label>Point de contact : <input type="text" name="nom_point_de_contact"></label><br>
+        <label>Contact du point de contact : <input type="text" name="contact_point_de_contact"></label><br>
+        <label>Manager : <input type="text" name="nom_manager"></label><br>
+        <label>Contact manager : <input type="text" name="contact_manager"></label><br>
+        <button type="submit">Créer l'équipe</button>
+        <button type="button" onclick="document.getElementById('modale-outil-team').style.display='none'">Annuler</button>
+    </form>
+    <p id="message-erreur-outil-team" style="color:red;"></p>
+</div>
+                <button type="submit">Enregistrer</button>
+                <button type="button" onclick="document.getElementById('modale-ajout').style.display='none'">Annuler</button>
+            </form>
+            <p id="message-erreur" style="color:red;"></p>
+>>>>>>> d501e981f75fc9a59b768f826e39c03f8378e9fe
         </div>
     {% endif %}
 

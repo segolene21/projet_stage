@@ -28,6 +28,14 @@ urlpatterns = [
     path('experiences/feedback/<int:feedback_id>/supprimer/', views.supprimer_feedback, name='supprimer_feedback'),
     path('experiences/recommandation/<int:recommandation_id>/supprimer/', views.supprimer_recommandation, name='supprimer_recommandation'),
     path('experiences/plainte/<int:plainte_id>/supprimer/', views.supprimer_plainte, name='supprimer_plainte'),
+<<<<<<< HEAD
     #path('connexion/', views.connexion, name='connexion'),#
     path('index/', views.index, name='index'),
+=======
+    path('experiences/', views.experiences_membres, name='experiences_membres'),
+    path('experiences/feedback/', views.liste_feedbacks, name='liste_feedbacks'),
+    path('experiences/plainte/', views.liste_plaintes, name='liste_plaintes'),
+    path('experiences/recommandation/', views.liste_recommandations, name='liste_recommandations'),
+    path('outil-teams/ajouter/', views.ajouter_outil_team, name='ajouter_outil_team'),
+>>>>>>> d501e981f75fc9a59b768f826e39c03f8378e9fe
 ]

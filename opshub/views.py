@@ -1,7 +1,7 @@
 from django.shortcuts import render,get_object_or_404,redirect
 from .models import OutilMonitoring,Service
 from django.contrib.auth.decorators import login_required
-from .forms import OutilMonitoringForm,ServiceForm,TeamLeadForm,MembreTechcommandForm,AdministrateurForm
+from .forms import OutilMonitoringForm,ServiceForm,TeamLeadForm,MembreTechcommandForm,AdministrateurForm,OutilTeamForm
 from .models import Administrateur, TeamLead, MembreTechcommand, Utilisateurs
 from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -281,20 +281,28 @@ def supprimer_utilisateur(request, user_id):
 
 from .models import Feedback, Recommandation, Plainte, Shift
 from .forms import FeedbackForm, RecommandationForm, PlainteForm
-
 @login_required
 def experiences_membres(request):
-    feedbacks = Feedback.objects.all().order_by('-date_soumission')
-    recommandations = Recommandation.objects.all().order_by('-date_soumission')
-    plaintes = Plainte.objects.all().order_by('-date_ajout')
-    shifts = Shift.objects.all()
+    return render(request, 'experiences-membres.html')
 
-    return render(request, 'experiences-membres.html', {
-        'feedbacks': feedbacks,
-        'recommandations': recommandations,
-        'plaintes': plaintes,
-        'shifts': shifts,
-    })
+
+@login_required
+def liste_feedbacks(request):
+    feedbacks = Feedback.objects.all().order_by('-date_soumission')
+    return render(request, 'liste-feedbacks.html', {'feedbacks': feedbacks})
+
+
+@login_required
+def liste_plaintes(request):
+    plaintes = Plainte.objects.all().order_by('-date_ajout')
+    return render(request, 'liste-plaintes.html', {'plaintes': plaintes})
+
+
+@login_required
+def liste_recommandations(request):
+    recommandations = Recommandation.objects.all().order_by('-date_soumission')
+    return render(request, 'liste-recommandations.html', {'recommandations': recommandations})
+
 
 @login_required
 def ajouter_feedback(request):
@@ -386,3 +394,22 @@ def supprimer_plainte(request, plainte_id):
         return JsonResponse({'succes': True})
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+<<<<<<< HEAD
+=======
+
+
+@login_required
+def ajouter_outil_team(request):
+    if not hasattr(request.user, 'teamlead'):
+        return JsonResponse({'erreur': 'Accès réservé aux Team-leads'}, status=403)
+
+    if request.method == 'POST':
+        form = OutilTeamForm(request.POST)
+        if form.is_valid():
+            outil_team = form.save()
+            return JsonResponse({'succes': True, 'id': outil_team.id, 'nom': outil_team.nom}, status=201)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+>>>>>>> d501e981f75fc9a59b768f826e39c03f8378e9fe

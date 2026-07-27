@@ -128,3 +128,65 @@ function supprimerPlainte(plainteId, url) {
         }
     });
 }
+
+
+// --- FILTRES ---
+
+const filtreTexteFeedbacks = document.getElementById('filtre_feedbacks');
+const filtreDateFeedbacks = document.getElementById('filtre_date_feedbacks');
+
+function appliquerFiltresFeedbacks() {
+    const texte = filtreTexteFeedbacks ? filtreTexteFeedbacks.value.toLowerCase() : '';
+    const date = filtreDateFeedbacks ? filtreDateFeedbacks.value : '';
+
+    document.querySelectorAll('#liste-feedbacks li').forEach(function(item) {
+        const contenuTexte = item.textContent.toLowerCase();
+        const dateItem = item.dataset.date;
+
+        const correspondTexte = texte === '' || contenuTexte.includes(texte);
+        const correspondDate = date === '' || dateItem === date;
+
+        item.style.display = (correspondTexte && correspondDate) ? '' : 'none';
+    });
+}
+
+if (filtreTexteFeedbacks) {
+    filtreTexteFeedbacks.addEventListener('input', appliquerFiltresFeedbacks);
+}
+if (filtreDateFeedbacks) {
+    filtreDateFeedbacks.addEventListener('input', appliquerFiltresFeedbacks);
+}
+const filtreTextePlaintes = document.getElementById('filtre_plaintes');
+const filtreDatePlaintes = document.getElementById('filtre_date_plaintes');
+
+function appliquerFiltresPlaintes() {
+    const texte = filtreTextePlaintes ? filtreTextePlaintes.value.toLowerCase() : '';
+    const date = filtreDatePlaintes ? filtreDatePlaintes.value : '';
+
+    document.querySelectorAll('#liste-plaintes li').forEach(function(item) {
+        const correspondTexte = texte === '' || item.textContent.toLowerCase().includes(texte);
+        const correspondDate = date === '' || item.dataset.date === date;
+        item.style.display = (correspondTexte && correspondDate) ? '' : 'none';
+    });
+}
+
+if (filtreTextePlaintes) filtreTextePlaintes.addEventListener('input', appliquerFiltresPlaintes);
+if (filtreDatePlaintes) filtreDatePlaintes.addEventListener('input', appliquerFiltresPlaintes);
+
+
+const filtreTexteRecommandations = document.getElementById('filtre_recommandations');
+const filtreDateRecommandations = document.getElementById('filtre_date_recommandations');
+
+function appliquerFiltresRecommandations() {
+    const texte = filtreTexteRecommandations ? filtreTexteRecommandations.value.toLowerCase() : '';
+    const date = filtreDateRecommandations ? filtreDateRecommandations.value : '';
+
+    document.querySelectorAll('#liste-recommandations li').forEach(function(item) {
+        const correspondTexte = texte === '' || item.textContent.toLowerCase().includes(texte);
+        const correspondDate = date === '' || item.dataset.date === date;
+        item.style.display = (correspondTexte && correspondDate) ? '' : 'none';
+    });
+}
+
+if (filtreTexteRecommandations) filtreTexteRecommandations.addEventListener('input', appliquerFiltresRecommandations);
+if (filtreDateRecommandations) filtreDateRecommandations.addEventListener('input', appliquerFiltresRecommandations);
