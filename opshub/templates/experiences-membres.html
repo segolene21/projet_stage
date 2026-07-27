@@ -1,116 +1,40 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block content %}
     <h1>Expériences Membres</h1>
 
-    <section>
-        <h2>Feedbacks</h2>
-        <button onclick="document.getElementById('modale-feedback').style.display='block'">
-            Ajouter un feedback
-        </button>
-
-        <div id="modale-feedback" style="display:none;">
-            <form id="form-feedback" data-url="{% url 'ajouter_feedback' %}">
-    {% csrf_token %}
-    <label>Date du shift : <input type="date" name="date_shift"></label><br>
-    <label>Plage :
-        <select name="plage_shift">
-            <option value="matin">Matin</option>
-            <option value="apres_midi">Après-midi</option>
-            <option value="nuit">Nuit</option>
-        </select>
-    </label><br>
-    <label>Description : <textarea name="description"></textarea></label><br>
-    <button type="submit">Enregistrer</button>
-    <button type="button" onclick="document.getElementById('modale-feedback').style.display='none'">Annuler</button>
-</form>
-            <p id="message-erreur-feedback" style="color:red;"></p>
+    <div class="grandes-cards">
+        <div class="grande-card">
+            <h2>Feedback</h2>
+            <a href="{% url 'liste_feedbacks' %}">Voir la liste</a>
+            <a href="{% url 'liste_feedbacks' %}#soumettre">Soumettre un feedback</a>
         </div>
 
-        <div class="cards" id="liste-feedbacks">
-            {% for feedback in feedbacks %}
-                <div class="card" id="feedback-{{ feedback.id }}">
-                    <p>{{ feedback.description }}</p>
-                    <small>{{ feedback.shift }} — {{ feedback.date_soumission|date:"d/m/Y" }}</small><br>
-                    <button onclick="supprimerFeedback({{ feedback.id }}, '{% url 'supprimer_feedback' feedback.id %}')">Supprimer</button>
-                </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    <section>
-        <h2>Recommandations</h2>
-        <button onclick="document.getElementById('modale-recommandation').style.display='block'">
-            Ajouter une recommandation
-        </button>
-
-        <div id="modale-recommandation" style="display:none;">
-            <form id="form-recommandation" data-url="{% url 'ajouter_recommandation' %}">
-                {% csrf_token %}
-                <label>Contenu : <textarea name="contenu"></textarea></label><br>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-recommandation').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-recommandation" style="color:red;"></p>
+        <div class="grande-card">
+            <h2>Plainte</h2>
+            <a href="{% url 'liste_plaintes' %}">Voir la liste</a>
+            <a href="{% url 'liste_plaintes' %}#soumettre">Soumettre une plainte</a>
         </div>
 
-        <div class="cards" id="liste-recommandations">
-            {% for recommandation in recommandations %}
-                <div class="card" id="recommandation-{{ recommandation.id }}">
-                    <p>{{ recommandation.contenu }}</p>
-                    <small>{{ recommandation.date_soumission|date:"d/m/Y" }}</small><br>
-                    <button onclick="supprimerRecommandation({{ recommandation.id }}, '{% url 'supprimer_recommandation' recommandation.id %}')">Supprimer</button>
-                </div>
-            {% endfor %}
+        <div class="grande-card">
+            <h2>Recommandation</h2>
+            <a href="{% url 'liste_recommandations' %}">Voir la liste</a>
+            <a href="{% url 'liste_recommandations' %}#soumettre">Soumettre une recommandation</a>
         </div>
-    </section>
-
-    <section>
-        <h2>Plaintes</h2>
-        <button onclick="document.getElementById('modale-plainte').style.display='block'">
-            Ajouter une plainte
-        </button>
-
-        <div id="modale-plainte" style="display:none;">
-            <form id="form-plainte" data-url="{% url 'ajouter_plainte' %}">
-                {% csrf_token %}
-                <label>Contenu : <textarea name="contenu"></textarea></label><br>
-                <label>Anonyme : <input type="checkbox" name="anonyme"></label><br>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-plainte').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-plainte" style="color:red;"></p>
-        </div>
-
-        <div class="cards" id="liste-plaintes">
-            {% for plainte in plaintes %}
-                <div class="card" id="plainte-{{ plainte.id }}">
-                    <p>{{ plainte.contenu }}</p>
-                    <small>{{ plainte.date_ajout|date:"d/m/Y H:i" }} {% if plainte.anonyme %}(Anonyme){% endif %}</small><br>
-                    <button onclick="supprimerPlainte({{ plainte.id }}, '{% url 'supprimer_plainte' plainte.id %}')">Supprimer</button>
-                </div>
-            {% endfor %}
-        </div>
-    </section>
+    </div>
 {% endblock %}
 
 {% block extra_css %}
     <style>
-        .cards {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .card {
+        .grandes-cards { display: flex; gap: 20px; flex-wrap: wrap; }
+        .grande-card {
             border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 12px;
+            border-radius: 12px;
+            padding: 24px;
             width: 250px;
+            text-align: center;
         }
+        .grande-card h2 { font-size: 1.8em; }
+        .grande-card a { display: block; margin-top: 10px; }
     </style>
-{% endblock %}
-
-{% block extra_js %}
-    <script src="{% static 'js/experiences.js' %}"></script>
 {% endblock %}

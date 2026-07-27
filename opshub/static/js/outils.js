@@ -76,3 +76,35 @@ if (champRechercheOutils) {
         });
     });
 }
+
+const formOutilTeam = document.getElementById('form-outil-team');
+
+if (formOutilTeam) {
+    formOutilTeam.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch(this.dataset.url, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.succes) {
+                const select = document.getElementById('select-outil-team');
+                const option = document.createElement('option');
+                option.value = data.id;
+                option.textContent = data.nom;
+                option.selected = true;
+                select.appendChild(option);
+
+                document.getElementById('modale-outil-team').style.display = 'none';
+                formOutilTeam.reset();
+            } else {
+                document.getElementById('message-erreur-outil-team').textContent = JSON.stringify(data.erreurs);
+            }
+        });
+    });
+}

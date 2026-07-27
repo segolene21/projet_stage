@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1>Plainte</h1>
+
+    <input type="text" id="filtre_plaintes" placeholder="Filtrer par texte...">
+    <input type="date" id="filtre_date_plaintes">
+
+    <div id="soumettre">
+        <button onclick="document.getElementById('modale-plainte').style.display='block'">
+            Soumettre une plainte
+        </button>
+
+        <div id="modale-plainte" style="display:none;">
+            <form id="form-plainte" data-url="{% url 'ajouter_plainte' %}">
+                {% csrf_token %}
+                <label>Contenu : <textarea name="contenu"></textarea></label><br>
+                <label>Anonyme : <input type="checkbox" name="anonyme"></label><br>
+                <button type="submit">Enregistrer</button>
+                <button type="button" onclick="document.getElementById('modale-plainte').style.display='none'">Annuler</button>
+            </form>
+            <p id="message-erreur-plainte" style="color:red;"></p>
+        </div>
+    </div>
+
+    <ul id="liste-plaintes">
+        {% for plainte in plaintes %}
+            <li id="plainte-{{ plainte.id }}" data-date="{{ plainte.date_ajout|date:'Y-m-d' }}">
+                <p class="plainte-contenu">{{ plainte.contenu }}</p>
+                <div class="plainte-meta">
+                    <span>Auteur : {% if plainte.anonyme %}Anonyme{% else %}{{ plainte.membre|default:"—" }}{% endif %}</span>
+                    <span>Soumis le : {{ plainte.date_ajout|date:"d/m/Y H:i" }}</span>
+                </div>
+                {% if user.teamlead or plainte.membre == user.membretechcommand %}
+                    <button onclick="supprimerPlainte({{ plainte.id }}, '{% url 'supprimer_plainte' plainte.id %}')">Supprimer</button>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        #liste-plaintes { list-style: none; padding: 0; }
+        #liste-plaintes li { border-bottom: 1px solid #ddd; padding: 12px 0; }
+        .plainte-contenu { font-size: 1.1em; margin: 0 0 6px 0; }
+        .plainte-meta { display: flex; gap: 16px; font-size: 0.9em; color: #555; }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/experiences.js' %}"></script>
+{% endblock %}

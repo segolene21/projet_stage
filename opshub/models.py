@@ -2,8 +2,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-# --- Utilisateurs et rôles (héritage) ---
-
 class Utilisateurs(AbstractUser):
     adresse = models.CharField(max_length=255, blank=True)
 
@@ -22,20 +20,20 @@ class TeamLead(Utilisateurs):
 
 class MembreTechcommand(Utilisateurs):
     statut = models.BooleanField(default=True)
+
     class Meta:
         verbose_name = "Membre Techcommand"
         verbose_name_plural = "Membres Techcommand"
 
-
-# --- Equipe ---
 
 class Equipe(models.Model):
     nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     nbr_membres = models.IntegerField()
 
+    def __str__(self):
+        return self.nom
 
-# --- Outils ---
 
 class OutilTeam(models.Model):
     nom = models.CharField(max_length=100)
@@ -44,28 +42,37 @@ class OutilTeam(models.Model):
     nom_manager = models.CharField(max_length=100)
     contact_manager = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.nom
+
 
 class OutilMonitoring(models.Model):
-    nom = models.CharField(max_length=100 ,null=True,blank=True)
+    nom = models.CharField(max_length=100, null=True, blank=True)
     statut = models.BooleanField(default=True)
     lien_acces = models.URLField()
     necessite_authentification = models.BooleanField(default=False)
     outil_team = models.ForeignKey("OutilTeam", on_delete=models.CASCADE)
 
-# --- Service ---
+    def __str__(self):
+        return f"Outil monitoring #{self.id}"
+
 
 class Service(models.Model):
-    nom = models.CharField(max_length=100,null=True,blank=True)
+    nom = models.CharField(max_length=100, null=True, blank=True)
     description = models.TextField(blank=True)
     outils_monitoring = models.ManyToManyField("OutilMonitoring")
 
-# --- Mots-clés d'assignation ---
+    def __str__(self):
+        return self.nom
+
 
 class MotsClesAssignation(models.Model):
     intitule = models.CharField(max_length=100)
-    equipe = models.ForeignKey("Equipe", on_delete=models.CASCADE,null=True,blank=True)
+    equipe = models.ForeignKey("Equipe", on_delete=models.CASCADE, null=True, blank=True)
 
-# --- Plainte ---
+    def __str__(self):
+        return self.intitule
+
 
 class Plainte(models.Model):
     contenu = models.TextField()
@@ -73,8 +80,9 @@ class Plainte(models.Model):
     anonyme = models.BooleanField(default=False)
     membre = models.ForeignKey("MembreTechcommand", on_delete=models.SET_NULL, null=True, blank=True)
 
+    def __str__(self):
+        return f"Plainte du {self.date_ajout.date()}"
 
-# --- Feedback ---
 
 class Feedback(models.Model):
     description = models.TextField()
@@ -82,16 +90,18 @@ class Feedback(models.Model):
     membre = models.ForeignKey("MembreTechcommand", on_delete=models.SET_NULL, null=True)
     shift = models.ForeignKey("Shift", on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"Feedback #{self.id} — {self.date_soumission}"
 
-# --- Recommandation ---
 
 class Recommandation(models.Model):
     contenu = models.TextField()
     date_soumission = models.DateField(auto_now_add=True)
     membre = models.ForeignKey("MembreTechcommand", on_delete=models.SET_NULL, null=True)
 
+    def __str__(self):
+        return f"Recommandation #{self.id}"
 
-# --- Shift ---
 
 class Shift(models.Model):
     PLAGE_CHOICES = [
@@ -102,26 +112,8 @@ class Shift(models.Model):
     date = models.DateField()
     plage = models.CharField(max_length=15, choices=PLAGE_CHOICES)
 
-class Meta:
+    class Meta:
         unique_together = ('date', 'plage')
 
-def __str__(self):
+    def __str__(self):
         return f"{self.date} — {self.get_plage_display()}"
-def __str__(self):
-        return self.nom
-
-def __str__(self):
-        return f"Outil monitoring #{self.id}"  # pas de champ "nom" ici
-def __str__(self):
-        return self.intitule
-    
-def __str__(self):
-        return f"Plainte du {self.date_ajout.date()}"
-
-def __str__(self):
-        return f"Feedback #{self.id} — {self.date_soumission.date()}"
-def __str__(self):
-        return f"Recommandation #{self.id}"
-
-def __str__(self):
-        return f"{self.date} — {self.plage}"
