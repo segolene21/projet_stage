@@ -231,17 +231,10 @@ def ajouter_utilisateur(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
-<<<<<<< HEAD
 def index(request):
     return render(request, 'index.html')
-<<<<<<< Updated upstream
 def login(request):
-<<<<<<< Updated upstream
-    return render(request, 'Login.html')
-=======
-    return render(request, 'Login.html')
->>>>>>> Stashed changes
-=======
+    return render(request, 'Login.html') 
 
 
 @login_required
@@ -393,8 +386,3 @@ def supprimer_plainte(request, plainte_id):
         return JsonResponse({'succes': True})
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
->>>>>>> 5893a3b75af4b92ad2d17a91ea5801b8d8568252
-=======
-def connexion(request):
-    return render(request, 'connexion.html')
->>>>>>> Stashed changes

@@ -5,7 +5,7 @@ function ouvrirModaleAjout() {
     document.getElementById('champ-auth').checked = false;
     document.getElementById('champ-statut').checked = true;
     document.getElementById('form-outil').dataset.url = document.getElementById('form-outil').getAttribute('data-url-ajout') || document.getElementById('form-outil').dataset.url;
-    document.getElementById('modale-ajout').style.display = 'block';
+    document.getElementById('modale-ajout').style.display = 'flex';
 }
 
 function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url) {
@@ -15,7 +15,7 @@ function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url) {
     document.getElementById('champ-auth').checked = auth;
     document.getElementById('champ-statut').checked = statut;
     document.getElementById('form-outil').dataset.url = url;
-    document.getElementById('modale-ajout').style.display = 'block';
+    document.getElementById('modale-ajout').style.display = 'flex';
 }
 
 

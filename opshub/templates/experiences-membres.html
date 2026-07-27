@@ -4,111 +4,149 @@
 {% block content %}
     <h1>Expériences Membres</h1>
 
-    <section>
-        <h2>Feedbacks</h2>
-        <button onclick="document.getElementById('modale-feedback').style.display='block'">
-            Ajouter un feedback
-        </button>
-
-        <div id="modale-feedback" style="display:none;">
-            <form id="form-feedback" data-url="{% url 'ajouter_feedback' %}">
-    {% csrf_token %}
-    <label>Date du shift : <input type="date" name="date_shift"></label><br>
-    <label>Plage :
-        <select name="plage_shift">
-            <option value="matin">Matin</option>
-            <option value="apres_midi">Après-midi</option>
-            <option value="nuit">Nuit</option>
-        </select>
-    </label><br>
-    <label>Description : <textarea name="description"></textarea></label><br>
-    <button type="submit">Enregistrer</button>
-    <button type="button" onclick="document.getElementById('modale-feedback').style.display='none'">Annuler</button>
-</form>
-            <p id="message-erreur-feedback" style="color:red;"></p>
+    <section class="experience-section">
+        <div class="section-header">
+            <h2>Feedbacks</h2>
+            <button class="btn-primary" onclick="document.getElementById('modale-feedback').style.display='flex'">
+                + Ajouter un feedback
+            </button>
         </div>
 
-        <div class="cards" id="liste-feedbacks">
+        <div id="modale-feedback" class="modal-overlay" style="display:none;">
+            <div class="modal-box">
+                <h2 class="modal-title">Ajouter un feedback</h2>
+                <form id="form-feedback" data-url="{% url 'ajouter_feedback' %}">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label>Date du shift</label>
+                        <input type="date" name="date_shift">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Plage</label>
+                        <select name="plage_shift">
+                            <option value="matin">Matin</option>
+                            <option value="apres_midi">Après-midi</option>
+                            <option value="nuit">Nuit</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description"></textarea>
+                    </div>
+
+                    <p id="message-erreur-feedback" class="error-message"></p>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('modale-feedback').style.display='none'">Annuler</button>
+                        <button type="submit" class="btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="exp-cards" id="liste-feedbacks">
             {% for feedback in feedbacks %}
-                <div class="card" id="feedback-{{ feedback.id }}">
+                <div class="exp-card" id="feedback-{{ feedback.id }}">
                     <p>{{ feedback.description }}</p>
-                    <small>{{ feedback.shift }} — {{ feedback.date_soumission|date:"d/m/Y" }}</small><br>
-                    <button onclick="supprimerFeedback({{ feedback.id }}, '{% url 'supprimer_feedback' feedback.id %}')">Supprimer</button>
+                    <small>{{ feedback.shift }} — {{ feedback.date_soumission|date:"d/m/Y" }}</small>
+                    <button class="btn-delete" onclick="supprimerFeedback({{ feedback.id }}, '{% url 'supprimer_feedback' feedback.id %}')">Supprimer</button>
                 </div>
+            {% empty %}
+                <p class="empty-state">Aucun feedback pour le moment.</p>
             {% endfor %}
         </div>
     </section>
 
-    <section>
-        <h2>Recommandations</h2>
-        <button onclick="document.getElementById('modale-recommandation').style.display='block'">
-            Ajouter une recommandation
-        </button>
-
-        <div id="modale-recommandation" style="display:none;">
-            <form id="form-recommandation" data-url="{% url 'ajouter_recommandation' %}">
-                {% csrf_token %}
-                <label>Contenu : <textarea name="contenu"></textarea></label><br>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-recommandation').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-recommandation" style="color:red;"></p>
+    <section class="experience-section">
+        <div class="section-header">
+            <h2>Recommandations</h2>
+            <button class="btn-primary" onclick="document.getElementById('modale-recommandation').style.display='flex'">
+                + Ajouter une recommandation
+            </button>
         </div>
 
-        <div class="cards" id="liste-recommandations">
+        <div id="modale-recommandation" class="modal-overlay" style="display:none;">
+            <div class="modal-box">
+                <h2 class="modal-title">Ajouter une recommandation</h2>
+                <form id="form-recommandation" data-url="{% url 'ajouter_recommandation' %}">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label>Contenu</label>
+                        <textarea name="contenu"></textarea>
+                    </div>
+
+                    <p id="message-erreur-recommandation" class="error-message"></p>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('modale-recommandation').style.display='none'">Annuler</button>
+                        <button type="submit" class="btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="exp-cards" id="liste-recommandations">
             {% for recommandation in recommandations %}
-                <div class="card" id="recommandation-{{ recommandation.id }}">
+                <div class="exp-card" id="recommandation-{{ recommandation.id }}">
                     <p>{{ recommandation.contenu }}</p>
-                    <small>{{ recommandation.date_soumission|date:"d/m/Y" }}</small><br>
-                    <button onclick="supprimerRecommandation({{ recommandation.id }}, '{% url 'supprimer_recommandation' recommandation.id %}')">Supprimer</button>
+                    <small>{{ recommandation.date_soumission|date:"d/m/Y" }}</small>
+                    <button class="btn-delete" onclick="supprimerRecommandation({{ recommandation.id }}, '{% url 'supprimer_recommandation' recommandation.id %}')">Supprimer</button>
                 </div>
+            {% empty %}
+                <p class="empty-state">Aucune recommandation pour le moment.</p>
             {% endfor %}
         </div>
     </section>
 
-    <section>
-        <h2>Plaintes</h2>
-        <button onclick="document.getElementById('modale-plainte').style.display='block'">
-            Ajouter une plainte
-        </button>
-
-        <div id="modale-plainte" style="display:none;">
-            <form id="form-plainte" data-url="{% url 'ajouter_plainte' %}">
-                {% csrf_token %}
-                <label>Contenu : <textarea name="contenu"></textarea></label><br>
-                <label>Anonyme : <input type="checkbox" name="anonyme"></label><br>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-plainte').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-plainte" style="color:red;"></p>
+    <section class="experience-section">
+        <div class="section-header">
+            <h2>Plaintes</h2>
+            <button class="btn-primary" onclick="document.getElementById('modale-plainte').style.display='flex'">
+                + Ajouter une plainte
+            </button>
         </div>
 
-        <div class="cards" id="liste-plaintes">
+        <div id="modale-plainte" class="modal-overlay" style="display:none;">
+            <div class="modal-box">
+                <h2 class="modal-title">Ajouter une plainte</h2>
+                <form id="form-plainte" data-url="{% url 'ajouter_plainte' %}">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label>Contenu</label>
+                        <textarea name="contenu"></textarea>
+                    </div>
+
+                    <div class="form-group form-check">
+                        <label><input type="checkbox" name="anonyme"> Anonyme</label>
+                    </div>
+
+                    <p id="message-erreur-plainte" class="error-message"></p>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('modale-plainte').style.display='none'">Annuler</button>
+                        <button type="submit" class="btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="exp-cards" id="liste-plaintes">
             {% for plainte in plaintes %}
-                <div class="card" id="plainte-{{ plainte.id }}">
+                <div class="exp-card" id="plainte-{{ plainte.id }}">
                     <p>{{ plainte.contenu }}</p>
-                    <small>{{ plainte.date_ajout|date:"d/m/Y H:i" }} {% if plainte.anonyme %}(Anonyme){% endif %}</small><br>
-                    <button onclick="supprimerPlainte({{ plainte.id }}, '{% url 'supprimer_plainte' plainte.id %}')">Supprimer</button>
+                    <small>{{ plainte.date_ajout|date:"d/m/Y H:i" }} {% if plainte.anonyme %}(Anonyme){% endif %}</small>
+                    <button class="btn-delete" onclick="supprimerPlainte({{ plainte.id }}, '{% url 'supprimer_plainte' plainte.id %}')">Supprimer</button>
                 </div>
+            {% empty %}
+                <p class="empty-state">Aucune plainte pour le moment.</p>
             {% endfor %}
         </div>
     </section>
-{% endblock %}
-
-{% block extra_css %}
-    <style>
-        .cards {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .card {
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 12px;
-            width: 250px;
-        }
-    </style>
 {% endblock %}
 
 {% block extra_js %}

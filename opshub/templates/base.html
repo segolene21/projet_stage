@@ -21,11 +21,12 @@
         <nav class="sidebar-nav">
             {% block nav %}
             <ul>
-                <li><a href="{% url 'liste_outils' %}" class="nav-item">📖 Outils</a></li>
-                <li><a href="{% url 'liste_services' %}" class="nav-item">⚙️ Services</a></li>
-                <li><a href="{% url 'liste_mots_cles' %}" class="nav-item">🔑 Mots-clés</a></li>
+                <li><a href="{% url 'liste_outils' %}" class="nav-item">Outils</a></li>
+                <li><a href="{% url 'liste_services' %}" class="nav-item">Services</a></li>
+                <li><a href="{% url 'liste_mots_cles' %}" class="nav-item">Mots-clés</a></li>
+                <li><a href="{% url 'experiences_membres' %}" class="nav-item">Expériences Membres</a></li>
                  {% if user.administrateur %} 
-             {#  <li><a href="{% url 'liste_utilisateurs' %}">Utilisateurs</a></li> #}
+                <li><a href="{% url 'liste_utilisateurs' %}" class="nav-item">Utilisateurs</a></li> 
                 {% endif %} 
             </ul>
             {% endblock %}
@@ -43,34 +44,7 @@
         </div>
     </aside>
 
-<<<<<<< Updated upstream
-    <nav>
-    {% block nav %}
-        <ul>
-            <li><a href="{% url 'liste_outils' %}">Outils</a></li>
-            <li><a href="{% url 'liste_services' %}">Services</a></li>
-            <li><a href="{% url 'liste_mots_cles' %}">Mots-clés</a></li> 
-            <li><a href="{% url 'experiences_membres' %}">Expériences Membres</a></li>
-            {% if user.administrateur %}
-                <li><a href="{% url 'liste_utilisateurs' %}">Utilisateurs</a></li>
-            {% endif %}
-            <li>
-                {% if user.is_authenticated %}
-                    Connecté en tant que {{ user.username }}
-                     <form method="post" action="{% url 'logout' %}" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit">Se déconnecter</button>
-    </form>
-{% else %}
-    <a href="{% url 'login' %}">Se connecter</a>
-                {% endif %}
-            </li>
-        </ul>
-    {% endblock %}
-</nav>
-    
-=======
->>>>>>> Stashed changes
+   
     <!-- CONTENU -->
     <div class="content-area">
         <header class="dash-header">
