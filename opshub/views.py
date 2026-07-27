@@ -394,10 +394,6 @@ def supprimer_plainte(request, plainte_id):
         return JsonResponse({'succes': True})
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
-<<<<<<< HEAD
-=======
-
-
 @login_required
 def ajouter_outil_team(request):
     if not hasattr(request.user, 'teamlead'):
@@ -412,4 +408,3 @@ def ajouter_outil_team(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
->>>>>>> d501e981f75fc9a59b768f826e39c03f8378e9fe

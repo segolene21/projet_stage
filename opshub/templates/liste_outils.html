@@ -21,7 +21,6 @@
                     {% csrf_token %}
                     <input type="hidden" name="outil_id" id="champ-outil-id">
 
-<<<<<<< HEAD
                     <div class="form-group">
                         <label>Nom</label>
                         <input type="text" name="nom" id="champ-nom">
@@ -48,7 +47,6 @@
                     </div>
                 </form>
             </div>
-=======
         <div id="modale-ajout" style="display:none;">
             <form id="form-outil" data-url="{% url 'ajouter_outil' %}">
                 {% csrf_token %}
@@ -64,7 +62,7 @@
         {% endfor %}
     </select>
 </label>
-<button type="button" onclick="document.getElementById('modale-outil-team').style.display='block'">
+<button type="button" onclick="document.getElementById('modale-outil-team').style.display='flex'">
     + Nouvelle équipe
 </button>
 <br>
@@ -86,7 +84,6 @@
                 <button type="button" onclick="document.getElementById('modale-ajout').style.display='none'">Annuler</button>
             </form>
             <p id="message-erreur" style="color:red;"></p>
->>>>>>> d501e981f75fc9a59b768f826e39c03f8378e9fe
         </div>
     {% endif %}
 

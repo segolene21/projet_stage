@@ -2,12 +2,12 @@
 {% load static %}
 
 {% block content %}
-    <h1>Feedback</h1>
+    <h1>Liste des Feedbacks</h1>
 
     <input type="text" id="filtre_feedbacks" placeholder="Filtrer par shift ou date...">
 
     <div id="soumettre">
-        <button onclick="document.getElementById('modale-feedback').style.display='block'">
+        <button class="btn-primary" onclick="document.getElementById('modale-feedback').style.display='block'">
             Soumettre un feedback
         </button>
 
@@ -40,7 +40,7 @@
                 <span>Soumis le : {{ feedback.date_soumission|date:"d/m/Y" }}</span>
             </div>
             {% if user.teamlead or feedback.membre == user.membretechcommand %}
-                <button onclick="supprimerFeedback({{ feedback.id }}, '{% url 'supprimer_feedback' feedback.id %}')">Supprimer</button>
+                <button onclick="supprimerFeedback({{ feedback.id }} , '{% url 'supprimer_feedback' feedback.id %}')">Supprimer</button>
             {% endif %}
         </li>
     {% endfor %}

@@ -70,7 +70,7 @@ a{
 
     font-size:34px;
 
-    font-weight:900;
+    font-weight:600;
 
     color:var(--primary);
 
@@ -135,7 +135,7 @@ a{
 
     padding:20px;
 
-    border-top:1px solid rgba(255,255,255,.08);
+    border-top:1px solid rgba(236, 239, 245, 0.08);
 }
 
 .sidebar-footer .nav-item{
@@ -175,7 +175,7 @@ a{
 
 .dash-header{
 
-    background:linear-gradient(90deg,#ffcc00,#ffe066);
+    background:rgb(255, 173, 20);
 
     padding:22px 40px;
 
@@ -193,7 +193,7 @@ a{
 
 .dash-header p{
 
-    color:#a07e7e;
+    color:#080707;
 
     margin-top:5px;
 }
@@ -423,7 +423,7 @@ footer{
 
 .sidebar{
 
-    width:85px;
+    width:200px;
 }
 
 .brand-name{
@@ -443,7 +443,7 @@ footer{
 
 .content-area{
 
-    margin-left:85px;
+    margin-left:200px;
 
     width:calc(100% - 85px);
 }
@@ -488,7 +488,7 @@ footer{
 }
 
 .modal-box{
-    background:linear-gradient(rgba(255,255,255,.88),rgba(255,255,255,.88)),url('../img/Image de fond/df6e50a11c1edc88fece5f94f23ca1e2.jpg' );
+    background:linear-gradient(rgba(255,255,255,.4),rgba(255,255,255,.4)),url('../img/Image de fond/a139aded2d267666470125b12119d50b.jpg.' );
     border-radius:20px;
     padding:32px;
     width:100%;
