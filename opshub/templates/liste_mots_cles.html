@@ -27,7 +27,13 @@
             {% for mot_cle in mots_cles %}
                 <tr id="mot-cle-{{ mot_cle.id }}">
                     <td id="intitule-{{ mot_cle.id }}">{{ mot_cle.intitule }}</td>
-                    <td id="equipe-{{ mot_cle.id }}">{{ mot_cle.equipe.nom|default:"—" }}</td>
+                    <td id="equipe-{{ mot_cle.id }}">
+                        {% if mot_cle.equipe%}
+                        {{ mot_cle.equipe.nom }} ({{mot_cle.equipe.nbr_membres}} membre{{mot_cle.equipe.nbr_membres|pluralize}})
+                        {% else %}
+                         __
+                         {% endif%}
+                    </td>
                     {% if user.teamlead %}
                         <td>
                             <div class="card-actions">
@@ -52,7 +58,7 @@
 
                                         <div class="form-group">
                                             <label>Équipe</label>
-                                            <select name="equipe">
+                                            <select name="equipe" id="select-equipe-mc-{{ mot_cle.id }}">
                                                 <option value="">—</option>
                                                 {% for equipe in equipes %}
                                                     <option value="{{ equipe.id }}" {% if mot_cle.equipe_id == equipe.id %}selected{% endif %}>{{ equipe.nom }}</option>
@@ -60,14 +66,9 @@
                                             </select>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label>Membres</label>
-                                            <select name="membres" multiple>
-                                                {% for membre in membres %}
-                                                    <option value="{{ membre.id }}" {% if membre in mot_cle.membres.all %}selected{% endif %}>{{ membre.username }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
+                                        <button type="button" class="btn-secondary" onclick="ouvrirModaleEquipe('select-equipe-mc-{{ mot_cle.id }}')">
+                                            + Nouvelle équipe
+                                        </button>
 
                                         <div class="form-actions">
                                             <button type="button" class="btn-secondary" onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='none'">Annuler</button>
@@ -87,6 +88,37 @@
         </tbody>
     </table>
 
+    <div id="modale-equipe" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h2 class="modal-title">Nouvelle équipe</h2>
+            <form id="form-equipe" data-url="{% url 'ajouter_equipe' %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" name="nom">
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre de membres</label>
+                    <input type="number" name="nbr_membres" value="0">
+                </div>
+
+                <p id="message-erreur-equipe" class="error-message"></p>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('modale-equipe').style.display='none'">Annuler</button>
+                    <button type="submit" class="btn-primary">Créer l'équipe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {% if user.teamlead %}
         <div id="modale-ajout-mc" class="modal-overlay" style="display:none;">
             <div class="modal-box">
@@ -101,7 +133,7 @@
 
                     <div class="form-group">
                         <label>Équipe</label>
-                        <select name="equipe">
+                        <select name="equipe" id="select-equipe-ajout">
                             <option value="">—</option>
                             {% for equipe in equipes %}
                                 <option value="{{ equipe.id }}">{{ equipe.nom }}</option>
@@ -109,14 +141,9 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label>Membres</label>
-                        <select name="membres" multiple>
-                            {% for membre in membres %}
-                                <option value="{{ membre.id }}">{{ membre.username }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                    <button type="button" class="btn-secondary" onclick="ouvrirModaleEquipe('select-equipe-ajout')">
+                        + Nouvelle équipe
+                    </button>
 
                     <p id="message-erreur-mc" class="error-message"></p>
 
@@ -131,6 +158,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/csrf.js' %}"></script>
     <script src="{% static 'js/mots-cles.js' %}"></script>
 {% endblock %}

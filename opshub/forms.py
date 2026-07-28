@@ -1,7 +1,7 @@
 from django import forms
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import OutilMonitoring, Service, MotsClesAssignation, TeamLead, Administrateur, MembreTechcommand,Recommandation,Feedback,Plainte,OutilTeam
+from .models import OutilMonitoring, Service, MotsClesAssignation, TeamLead, Administrateur, MembreTechcommand,Recommandation,Feedback,Plainte,OutilTeam,Equipe
 class OutilMonitoringForm(forms.ModelForm):
     class Meta:
         model = OutilMonitoring
@@ -61,3 +61,8 @@ class OutilTeamForm(forms.ModelForm):
     class Meta:
         model = OutilTeam
         fields = ['nom', 'nom_point_de_contact', 'contact_point_de_contact', 'nom_manager', 'contact_manager']        
+
+class EquipeForm(forms.ModelForm):
+    class Meta:
+        model = Equipe
+        fields = ['nom', 'description', 'nbr_membres']

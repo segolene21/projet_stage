@@ -44,14 +44,15 @@
                         <select name="outil_team" id="select-outil-team">
                             {% for ot in outils_teams %}
                                 <option value="{{ ot.id }}">{{ ot.nom }}</option>
+                            {% empty %}
+                                <option>Aucune équipe disponible</option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <button type="button" class="btn-secondary" onclick="document.getElementById('modale-outil-team').style.display='flex'">
-                        + Nouvelle équipe
-                    </button>
-
+                  <button type="button" class="btn-secondary" onclick="ouvrirModaleEquipe('select-outil-team')">
+    + Nouvelle équipe
+</button>
                     <p id="message-erreur" class="error-message"></p>
 
                     <div class="form-actions">
@@ -61,59 +62,58 @@
                 </form>
             </div>
         </div>
-
         <div id="modale-outil-team" class="modal-overlay" style="display:none;">
-            <div class="modal-box">
-                <h2 class="modal-title">Nouvelle équipe outil</h2>
-                <form id="form-outil-team" data-url="{% url 'ajouter_outil_team' %}">
-                    {% csrf_token %}
+    <div class="modal-box">
+        <h2 class="modal-title">Créer une nouvelle équipe outil</h2>
+        <form id="form-outil-team" data-url="{% url 'ajouter_outil_team' %}">
+            {% csrf_token %}
 
-                    <div class="form-group">
-                        <label>Nom</label>
-                        <input type="text" name="nom">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Point de contact</label>
-                        <input type="text" name="nom_point_de_contact">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Contact du point de contact</label>
-                        <input type="text" name="contact_point_de_contact">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Manager</label>
-                        <input type="text" name="nom_manager">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Contact manager</label>
-                        <input type="text" name="contact_manager">
-                    </div>
-
-                    <p id="message-erreur-outil-team" class="error-message"></p>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="document.getElementById('modale-outil-team').style.display='none'">Annuler</button>
-                        <button type="submit" class="btn-primary">Créer l'équipe</button>
-                    </div>
-                </form>
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" name="nom">
             </div>
-        </div>
+
+            <div class="form-group">
+                <label>Point de contact</label>
+                <input type="text" name="nom_point_de_contact">
+            </div>
+
+            <div class="form-group">
+                <label>Contact du point de contact</label>
+                <input type="text" name="contact_point_de_contact">
+            </div>
+
+            <div class="form-group">
+                <label>Manager</label>
+                <input type="text" name="nom_manager">
+            </div>
+
+            <div class="form-group">
+                <label>Contact manager</label>
+                <input type="text" name="contact_manager">
+            </div>
+
+            <p id="message-erreur-outil-team" class="error-message"></p>
+
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="fermerModaleEquipe()">Annuler</button>
+                <button type="submit" class="btn-primary">Créer l'équipe</button>
+            </div>
+        </form>
+    </div>
+</div>
     {% endif %}
 
     <ul id="liste-outils">
         {% for outil in outils %}
             <li id="outil-{{ outil.id }}">
-                <a id="nom-outil-{{ outil.id }}" href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
+                <a href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
 
                 {% if user.teamlead %}
                     <div class="card-actions">
-                        <button class="btn-edit" onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}', {{ outil.outil_team_id|default:'null' }})"> Modifier
+                        <button class="btn-edit" onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}', {{ outil.outil_team_id|default:'null' }})">
+                            Modifier
                         </button>
-                        
                         <button class="btn-delete" onclick="supprimerOutil({{ outil.id }}, '{% url 'supprimer_outil' outil.id %}')">
                             Supprimer
                         </button>
@@ -121,12 +121,11 @@
                 {% endif %}
             </li>
         {% empty %}
-            <p class="empty-state">Aucun outil pour le moment.</p>
+            <p class="empty-state">Aucun outil disponible</p>
         {% endfor %}
     </ul>
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/csrf.js' %}"></script>
     <script src="{% static 'js/outils.js' %}"></script>
 {% endblock %}

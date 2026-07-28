@@ -1,3 +1,7 @@
+// ===============================
+// OUVERTURE MODALE AJOUT OUTIL
+// ===============================
+
 function ouvrirModaleAjout() {
     document.getElementById('champ-outil-id').value = '';
     document.getElementById('champ-nom').value = '';
@@ -8,12 +12,18 @@ function ouvrirModaleAjout() {
     document.getElementById('modale-ajout').style.display = 'flex';
 }
 
+
+// ===============================
+// MODIFICATION OUTIL
+// ===============================
+
 function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url, equipeId) {
     document.getElementById('champ-outil-id').value = outilId;
     document.getElementById('champ-nom').value = nom;
     document.getElementById('champ-lien-acces').value = lienAcces;
     document.getElementById('champ-auth').checked = auth;
     document.getElementById('champ-statut').checked = statut;
+
     document.getElementById('form-outil').dataset.url = url;
 
     const selectEquipe = document.getElementById('select-outil-team');
@@ -24,62 +34,84 @@ function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url, eq
     document.getElementById('modale-ajout').style.display = 'flex';
 }
 
-const formOutil = document.getElementById('form-outil');
-const urlAjoutOutil = formOutil ? formOutil.dataset.url : null;
 
-if (formOutil) {
-    formOutil.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-
-        fetch(this.dataset.url, {
-            method: 'POST',
-            headers: {'X-CSRFToken': csrftoken},
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.succes) {
-                location.reload();
-            } else {
-                document.getElementById('message-erreur').textContent = JSON.stringify(data.erreurs);
-            }
-        });
-    });
-}
-
+// ===============================
+// SUPPRESSION OUTIL
+// ===============================
 
 function supprimerOutil(outilId, url) {
-    if (!confirm('Supprimer cet outil ?')) return;
+    if (!confirm("Supprimer cet outil ?")) {
+        return;
+    }
 
     fetch(url, {
-        method: 'POST',
-        headers: {'X-CSRFToken': csrftoken},
+        method: "POST",
+        headers: {
+            "X-CSRFToken": csrftoken
+        }
     })
     .then(response => response.json())
     .then(data => {
         if (data.succes) {
-            document.getElementById('outil-' + outilId).remove();
+            const element = document.getElementById("outil-" + outilId);
+            if (element) {
+                element.remove();
+            }
         } else {
             alert(data.erreur);
         }
+    })
+    .catch(() => {
+        alert("Erreur réseau.");
     });
 }
 
+
+// ===============================
+// RECHERCHE OUTILS
+// ===============================
 
 const champRechercheOutils = document.getElementById('champ_recherche_outils');
 
 if (champRechercheOutils) {
     champRechercheOutils.addEventListener('input', function() {
         const texte = this.value.toLowerCase();
-        const items = document.querySelectorAll('#liste-outils li');
+        const outils = document.querySelectorAll('#liste-outils li');
 
-        items.forEach(function(item) {
-            const nom = item.textContent.toLowerCase();
-            item.style.display = nom.includes(texte) ? '' : 'none';
+        outils.forEach(function(outil) {
+            const nom = outil.textContent.toLowerCase();
+            outil.style.display = nom.includes(texte) ? "" : "none";
         });
     });
+}
+
+
+// ===============================
+// AJOUT OUTIL TEAM
+// ===============================
+
+let selectEquipeCible = null;
+let modaleParenteEquipe = null;
+
+function ouvrirModaleEquipe(selectId) {
+    selectEquipeCible = selectId;
+
+    const select = document.getElementById(selectId);
+    modaleParenteEquipe = select.closest('.modal-overlay');
+
+    if (modaleParenteEquipe) {
+        modaleParenteEquipe.style.display = 'none';
+    }
+
+    document.getElementById('modale-outil-team').style.display = 'flex';
+}
+
+function fermerModaleEquipe() {
+    document.getElementById('modale-outil-team').style.display = 'none';
+
+    if (modaleParenteEquipe) {
+        modaleParenteEquipe.style.display = 'flex';
+    }
 }
 
 const formOutilTeam = document.getElementById('form-outil-team');
@@ -91,25 +123,72 @@ if (formOutilTeam) {
         const formData = new FormData(this);
 
         fetch(this.dataset.url, {
-            method: 'POST',
-            headers: {'X-CSRFToken': csrftoken},
-            body: formData,
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken
+            },
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.succes) {
-                const select = document.getElementById('select-outil-team');
+                const select = document.getElementById(selectEquipeCible);
                 const option = document.createElement('option');
+
                 option.value = data.id;
                 option.textContent = data.nom;
                 option.selected = true;
+
                 select.appendChild(option);
 
-                document.getElementById('modale-outil-team').style.display = 'none';
                 formOutilTeam.reset();
+                fermerModaleEquipe();
             } else {
                 document.getElementById('message-erreur-outil-team').textContent = JSON.stringify(data.erreurs);
             }
         });
     });
 }
+
+
+// ===============================
+// FORMULAIRE OUTIL (AJOUT / MODIF)
+// ===============================
+
+const formOutil = document.getElementById('form-outil');
+
+if (formOutil) {
+    formOutil.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch(this.dataset.url, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.succes) {
+                document.getElementById('modale-ajout').style.display = "none";
+                formOutil.reset();
+                window.location.reload();
+            } else {
+                document.getElementById('message-erreur').textContent = JSON.stringify(data.erreurs);
+            }
+        })
+        .catch(() => {
+            document.getElementById('message-erreur').textContent = "Erreur réseau.";
+        });
+    });
+}
+
+
+// rendre les fonctions accessibles depuis le HTML
+
+window.ouvrirModaleAjout = ouvrirModaleAjout;
+window.ouvrirModaleModification = ouvrirModaleModification;
+window.supprimerOutil = supprimerOutil;

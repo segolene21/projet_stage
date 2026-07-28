@@ -1,8 +1,8 @@
-from django.shortcuts import render,get_object_or_404,redirect
-from .models import OutilMonitoring,Service
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import OutilMonitoring, Service
 from django.contrib.auth.decorators import login_required
-from .forms import OutilMonitoringForm,ServiceForm,TeamLeadForm,MembreTechcommandForm,AdministrateurForm,OutilTeamForm
-from .models import Administrateur, TeamLead, MembreTechcommand, Utilisateurs
+from .forms import OutilMonitoringForm, ServiceForm, TeamLeadForm, MembreTechcommandForm, AdministrateurForm, OutilTeamForm,EquipeForm
+from .models import Administrateur, TeamLead, MembreTechcommand, Utilisateurs, OutilTeam
 from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -17,13 +17,29 @@ def liste_outils(request):
     requete = request.GET.get('q', '')
     outils = OutilMonitoring.objects.filter(nom__icontains=requete) if requete else OutilMonitoring.objects.all()
     outils_teams = OutilTeam.objects.all()
-    return render(request, 'liste_outils.html', {'outils': outils, 'requete': requete, 'outils_teams': outils_teams})
+    return render(request, 'liste_outils.html', {
+        'outils': outils,
+        'outils_teams': outils_teams,
+        'requete': requete,
+    })
 
 
 @login_required
 def detail_outil(request, outil_id):
     outil = get_object_or_404(OutilMonitoring, id=outil_id)
     return render(request, 'detail_outil.html', {'outil': outil})
+
+
+@login_required
+def liste_services(request):
+    requete = request.GET.get('q', '')
+    services = Service.objects.filter(nom__icontains=requete) if requete else Service.objects.all()
+    tous_les_outils = OutilMonitoring.objects.all()
+    return render(request, 'liste_services.html', {
+        'services': services,
+        'tous_les_outils': tous_les_outils,
+        'requete': requete,
+    })
 
 
 @login_required
@@ -76,14 +92,6 @@ def supprimer_outil(request, outil_id):
 
 
 @login_required
-def liste_services(request):
-    requete = request.GET.get('q', '')
-    services = Service.objects.filter(nom__icontains=requete) if requete else Service.objects.all()
-    tous_les_outils = OutilMonitoring.objects.all()
-    return render(request, 'liste_services.html', {'services': services, 'tous_les_outils': tous_les_outils, 'requete': requete})
-
-
-@login_required
 def detail_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     return render(request, 'detail_service.html', {'service': service})
@@ -91,18 +99,26 @@ def detail_service(request, service_id):
 
 @login_required
 def ajouter_service(request):
-    if not hasattr(request.user, 'teamlead'):
-        return JsonResponse({'erreur': 'Accès réservé aux Team-leads'}, status=403)
 
-    if request.method == 'POST':
+    if request.method == "POST":
+
         form = ServiceForm(request.POST)
-        if form.is_valid():
-            service = form.save()
-            return JsonResponse({'succes': True, 'id': service.id, 'nom': service.nom}, status=201)
-        else:
-            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
-    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+        if form.is_valid():
+
+            service = form.save()
+
+            return JsonResponse({
+                "succes": True,
+                "id": service.id,
+                "nom": service.nom
+            })
+
+        return JsonResponse({
+            "succes": False,
+            "erreurs": form.errors
+        })
+
 
 
 @login_required
@@ -162,6 +178,23 @@ def ajouter_mot_cle(request):
                 'intitule': mot_cle.intitule,
                 'equipe': mot_cle.equipe.nom if mot_cle.equipe else '',
             }, status=201)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+
+@login_required
+def ajouter_equipe(request):
+    if not hasattr(request.user, 'teamlead'):
+        return JsonResponse({'erreur': 'Accès réservé aux Team-leads'}, status=403)
+
+    if request.method == 'POST':
+        form = EquipeForm(request.POST)
+        if form.is_valid():
+            equipe = form.save()
+            return JsonResponse({'succes': True, 'id': equipe.id, 'nom': equipe.nom}, status=201)
         else:
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
@@ -305,6 +338,9 @@ def liste_recommandations(request):
 
 @login_required
 def ajouter_feedback(request):
+    if not hasattr(request.user, 'membretechcommand'):
+        return JsonResponse({'erreur': 'Réservé aux Membres Techcommand'}, status=403)
+
     if request.method == 'POST':
         date_shift = request.POST.get('date_shift')
         plage_shift = request.POST.get('plage_shift')
@@ -318,7 +354,7 @@ def ajouter_feedback(request):
         feedback = Feedback.objects.create(
             shift=shift,
             description=description,
-            membre=getattr(request.user, 'membretechcommand', None),
+            membre=request.user.membretechcommand,
         )
 
         return JsonResponse({'succes': True, 'description': feedback.description}, status=201)
@@ -328,11 +364,14 @@ def ajouter_feedback(request):
 
 @login_required
 def ajouter_recommandation(request):
+    if not hasattr(request.user, 'membretechcommand'):
+        return JsonResponse({'erreur': 'Réservé aux Membres Techcommand'}, status=403)
+
     if request.method == 'POST':
         form = RecommandationForm(request.POST)
         if form.is_valid():
             recommandation = form.save(commit=False)
-            recommandation.membre = getattr(request.user, 'membretechcommand', None)
+            recommandation.membre = request.user.membretechcommand
             recommandation.save()
             return JsonResponse({'succes': True, 'contenu': recommandation.contenu}, status=201)
         else:
@@ -342,12 +381,15 @@ def ajouter_recommandation(request):
 
 @login_required
 def ajouter_plainte(request):
+    if not hasattr(request.user, 'membretechcommand'):
+        return JsonResponse({'erreur': 'Réservé aux Membres Techcommand'}, status=403)
+
     if request.method == 'POST':
         form = PlainteForm(request.POST)
         if form.is_valid():
             plainte = form.save(commit=False)
             if not plainte.anonyme:
-                plainte.membre = getattr(request.user, 'membretechcommand', None)
+                plainte.membre = request.user.membretechcommand
             plainte.save()
             return JsonResponse({'succes': True, 'contenu': plainte.contenu}, status=201)
         else:
@@ -409,3 +451,7 @@ def ajouter_outil_team(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+@login_required
+def detail_outil_team(request, team_id):
+    equipe = get_object_or_404(OutilTeam, id=team_id)
+    return render(request, 'detail_outil_team.html', {'equipe': equipe})

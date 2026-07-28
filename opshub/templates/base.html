@@ -21,12 +21,12 @@
         <nav class="sidebar-nav">
             {% block nav %}
             <ul>
-                <li><a href="{% url 'liste_outils' %}" class="nav-item">Outils</a></li>
-                <li><a href="{% url 'liste_services' %}" class="nav-item">Services</a></li>
-                <li><a href="{% url 'liste_mots_cles' %}" class="nav-item">Mots-clés</a></li>
-                <li><a href="{% url 'experiences_membres' %}" class="nav-item">Expériences Membres</a></li>
+                <li><a href="{% url 'liste_outils' %}" class="nav-item">. Outils</a></li>
+                <li><a href="{% url 'liste_services' %}" class="nav-item">. Services</a></li>
+                <li><a href="{% url 'liste_mots_cles' %}" class="nav-item">. Mots-clés</a></li>
+                <li><a href="{% url 'experiences_membres' %}" class="nav-item">. Expériences Membres</a></li>
                  {% if user.administrateur %} 
-                <li><a href="{% url 'liste_utilisateurs' %}" class="nav-item">Utilisateurs</a></li> 
+                <li><a href="{% url 'liste_utilisateurs' %}" class="nav-item">. Utilisateurs</a></li> 
                 {% endif %} 
             </ul>
             {% endblock %}

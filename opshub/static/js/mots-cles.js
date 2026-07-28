@@ -8,17 +8,13 @@ if (formMotCle) {
 
         fetch(this.dataset.url, {
             method: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
             body: formData,
         })
         .then(response => response.json())
         .then(data => {
             if (data.succes) {
-                const tbody = document.querySelector('#table-mots-cles tbody');
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${data.intitule}</td><td>${data.contact}</td><td>${data.equipe}</td><td></td>`;
-                tbody.appendChild(tr);
-                document.getElementById('modale-ajout-mc').style.display = 'none';
-                formMotCle.reset();
+                location.reload();
             } else {
                 document.getElementById('message-erreur-mc').textContent = JSON.stringify(data.erreurs);
             }
@@ -32,13 +28,13 @@ function modifierMotCle(motCleId, url) {
 
     fetch(url, {
         method: 'POST',
+        headers: {'X-CSRFToken': csrftoken},
         body: formData,
     })
     .then(response => response.json())
     .then(data => {
         if (data.succes) {
             document.getElementById('intitule-' + motCleId).textContent = data.intitule;
-            document.getElementById('contact-' + motCleId).textContent = data.contact;
             document.getElementById('equipe-' + motCleId).textContent = data.equipe;
             document.getElementById('modale-modifier-mc-' + motCleId).style.display = 'none';
         } else {
@@ -76,6 +72,67 @@ if (champRechercheMotsCles) {
         lignes.forEach(function(ligne) {
             const contenu = ligne.textContent.toLowerCase();
             ligne.style.display = contenu.includes(texte) ? '' : 'none';
+        });
+    });
+}
+
+
+// --- ÉQUIPE (créée depuis n'importe quel select cible) ---
+
+// --- ÉQUIPE (créée depuis n'importe quel select cible) ---
+
+let selectEquipeCible = null;
+let modaleParenteEquipe = null;
+
+function ouvrirModaleEquipe(selectId) {
+    selectEquipeCible = selectId;
+
+    const select = document.getElementById(selectId);
+    modaleParenteEquipe = select.closest('.modal-overlay');
+
+    if (modaleParenteEquipe) {
+        modaleParenteEquipe.style.display = 'none';
+    }
+
+    document.getElementById('modale-equipe').style.display = 'flex';
+}
+
+function fermerModaleEquipe() {
+    document.getElementById('modale-equipe').style.display = 'none';
+
+    if (modaleParenteEquipe) {
+        modaleParenteEquipe.style.display = 'flex';
+    }
+}
+
+const formEquipe = document.getElementById('form-equipe');
+
+if (formEquipe) {
+    formEquipe.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch(this.dataset.url, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.succes) {
+                const select = document.getElementById(selectEquipeCible);
+                const option = document.createElement('option');
+                option.value = data.id;
+                option.textContent = data.nom;
+                option.selected = true;
+                select.appendChild(option);
+
+                formEquipe.reset();
+                fermerModaleEquipe();
+            } else {
+                document.getElementById('message-erreur-equipe').textContent = JSON.stringify(data.erreurs);
+            }
         });
     });
 }

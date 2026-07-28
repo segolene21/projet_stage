@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="detail-card">
+        <h1>{{ equipe.nom }}</h1>
+
+        <div class="detail-row">
+            <span class="detail-label">Point de contact</span>
+            <span>{{ equipe.nom_point_de_contact|default:"—" }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Contact du point de contact</span>
+            <span>{{ equipe.contact_point_de_contact|default:"—" }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Manager</span>
+            <span>{{ equipe.nom_manager|default:"—" }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Contact manager</span>
+            <span>{{ equipe.contact_manager|default:"—" }}</span>
+        </div>
+    </div>
+{% endblock %}

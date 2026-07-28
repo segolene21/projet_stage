@@ -4,9 +4,11 @@
 {% block content %}
     <div class="outils-header">
         <h1>Liste des Recommandations</h1>
-        <button class="btn-primary" onclick="document.getElementById('modale-recommandation').style.display='flex'">
-            + Soumettre une recommandation
-        </button>
+        {% if user.membretechcommand %}
+            <button class="btn-primary" onclick="document.getElementById('modale-recommandation').style.display='flex'">
+                + Soumettre une recommandation
+            </button>
+        {% endif %}
     </div>
 
     <div class="filters-row">
@@ -14,7 +16,7 @@
         <input type="date" id="filtre_date_recommandations" class="search-input date-filter">
     </div>
 
-    <div id="soumettre">
+    {% if user.membretechcommand %}
         <div id="modale-recommandation" class="modal-overlay" style="display:none;">
             <div class="modal-box">
                 <h2 class="modal-title">Soumettre une recommandation</h2>
@@ -35,7 +37,7 @@
                 </form>
             </div>
         </div>
-    </div>
+    {% endif %}
 
     <ul id="liste-recommandations" class="exp-cards">
         {% for recommandation in recommandations %}
@@ -56,6 +58,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/csrf.js' %}"></script>
     <script src="{% static 'js/experiences.js' %}"></script>
 {% endblock %}

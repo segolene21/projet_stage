@@ -58,9 +58,13 @@ class OutilMonitoring(models.Model):
 
 
 class Service(models.Model):
-    nom = models.CharField(max_length=100, null=True, blank=True)
+    nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    outils_monitoring = models.ManyToManyField("OutilMonitoring")
+
+    outils_monitoring = models.ManyToManyField(
+        OutilMonitoring,
+        related_name="services"
+    )
 
     def __str__(self):
         return self.nom

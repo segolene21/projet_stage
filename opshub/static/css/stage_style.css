@@ -69,8 +69,9 @@ a{
 .brand-name{
 
     font-size:34px;
+    font-family:'Pacifico', cursive;
 
-    font-weight:600;
+    font-weight:300;
 
     color:var(--primary);
 
@@ -175,7 +176,7 @@ a{
 
 .dash-header{
 
-    background:rgb(255, 173, 20);
+    background:black;
 
     padding:22px 40px;
 
@@ -189,11 +190,13 @@ a{
     font-size:32px;
 
     font-weight:900;
+    color:white;
+
 }
 
 .dash-header p{
 
-    color:#080707;
+    color:white;
 
     margin-top:5px;
 }
@@ -355,9 +358,9 @@ tbody tr:hover{
 
     border-left:4px solid var(--primary);
 
-    border-radius:10px;
+    border-radius:12px;
 
-    padding:3px 18px;
+    padding:10px 20px;
 
     box-shadow:var(--shadow);
     display: flex;
@@ -495,7 +498,7 @@ footer{
 }
 
 .modal-box{
-    background:linear-gradient(rgba(255,255,255,.4),rgba(255,255,255,.4)),url('../img/Image de fond/a139aded2d267666470125b12119d50b.jpg.' );
+    background:url('../img/Image de fond/32894ef5e4a3086a45b7192a7a098388.jpg' );
     border-radius:20px;
     padding:32px;
     width:100%;
@@ -562,12 +565,12 @@ footer{
 }
 
 .error-message{
-    color:#d11a2a;
+    color:#090606;
     font-size:14px;
     margin-top:6px;
 }
 
-/* ================= ACTIONS SUR CHAQUE CARTE OUTIL ================= */
+/*ACTIONS SUR CHAQUE CARTE OUTIL */
 
 .card-actions{
     display:flex;
@@ -698,7 +701,7 @@ footer{
     font-size:13px;
     margin:12px 0;
 }
-/* ================= DETAIL OUTIL/SERVICE ================= */
+/* DETAIL OUTIL/SERVICE*/
 
 .detail-card{
     background:var(--white);
@@ -822,4 +825,7 @@ footer{
     margin-top:0;
     display:flex;
     gap:10px;
+}
+#modale-equipe{
+    z-index:1100;
 }
