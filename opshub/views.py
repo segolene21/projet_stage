@@ -1,8 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import OutilMonitoring, Service
 from django.contrib.auth.decorators import login_required
-from .forms import OutilMonitoringForm, ServiceForm, TeamLeadForm, MembreTechcommandForm, AdministrateurForm, OutilTeamForm,EquipeForm
-from .models import Administrateur, TeamLead, MembreTechcommand, Utilisateurs, OutilTeam
+from .forms import OutilMonitoringForm, ServiceForm, TeamLeadForm, MembreTechcommandForm, AdministrateurForm, OutilTeamForm,EquipeForm,ProfilForm
+from .models import Administrateur, TeamLead, MembreTechcommand,Utilisateurs, OutilTeam
 from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -10,6 +10,7 @@ from .models import MotsClesAssignation, Equipe, MembreTechcommand
 from .forms import MotsClesAssignationForm
 from .models import Feedback, Recommandation, Plainte, Shift
 from .forms import FeedbackForm, RecommandationForm, PlainteForm
+from django.contrib import messages
 
 
 @login_required
@@ -441,3 +442,14 @@ def ajouter_outil_team(request):
         form = OutilTeamForm()
 
     return render(request, 'ajouter_outil_team.html', {'form': form})
+@login_required
+def parametres(request):
+    if request.method == 'POST':
+        form = ProfilForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profil mis à jour.")
+            return redirect('parametres')
+    else:
+        form = ProfilForm(instance=request.user)
+    return render(request, 'parametres.html', {'form': form})

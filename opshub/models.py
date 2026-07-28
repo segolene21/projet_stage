@@ -4,8 +4,7 @@ from django.db import models
 
 class Utilisateurs(AbstractUser):
     adresse = models.CharField(max_length=255, blank=True)
-
-
+    
 class Administrateur(Utilisateurs):
     class Meta:
         verbose_name = "Administrateur"

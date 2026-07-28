@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1>Paramètres</h1>
+
+    <section>
+        <h2>Profil</h2>
+        {% if messages %}
+            {% for message in messages %}<p style="color:green;">{{ message }}</p>{% endfor %}
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Enregistrer</button>
+        </form>
+        <a href="{% url 'password_change' %}">Changer mon mot de passe</a>
+    </section>
+
+    <section>
+        <h2>Apparence</h2>
+        <label>
+            <input type="checkbox" id="toggle-theme">
+            Mode sombre
+        </label>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/parametres.js' %}"></script>
+{% endblock %}

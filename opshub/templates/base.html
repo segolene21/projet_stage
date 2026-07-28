@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}OpsHub{% endblock %}</title>
     {% block extra_css %}{% endblock %}
+    <script>
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+    }
+</script>
+    <style>
+        .dark-mode { background-color: #1a1a1a; color: #eee; }
+        .dark-mode a { color: #8ab4f8; }
+    </style>
 </head>
 <body>
 
@@ -22,6 +31,7 @@
             <li><a href="{% url 'liste_services' %}">Services</a></li>
             <li><a href="{% url 'liste_mots_cles' %}">Mots-clés</a></li> 
             <li><a href="{% url 'experiences_membres' %}">Expériences Membres</a></li>
+            <li><a href="{% url 'parametres' %}">Paramètres</a></li>
             {% if user.administrateur %}
                 <li><a href="{% url 'liste_utilisateurs' %}">Utilisateurs</a></li>
             {% endif %}

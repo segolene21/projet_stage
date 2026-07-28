@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     
@@ -34,4 +35,7 @@ urlpatterns = [
     path('experiences/recommandation/', views.liste_recommandations, name='liste_recommandations'),
     path('ajouter-equipe/', views.ajouter_outil_team, name='ajouter_outil_team'),
     path('equipes/ajouter/', views.ajouter_equipe, name='ajouter_equipe'),
+    path('parametres/', views.parametres, name='parametres'),
+    path('parametres/mot-de-passe/', auth_views.PasswordChangeView.as_view(template_name='changer-mot-de-passe.html', success_url='/parametres/mot-de-passe/succes/'), name='password_change'),
+    path('parametres/mot-de-passe/succes/', auth_views.PasswordChangeDoneView.as_view(template_name='mot-de-passe-change.html'), name='password_change_done'),
 ]
