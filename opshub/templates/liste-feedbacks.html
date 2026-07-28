@@ -6,45 +6,47 @@
 
     <input type="text" id="filtre_feedbacks" placeholder="Filtrer par shift ou date...">
 
-    <div id="soumettre">
-        <button onclick="document.getElementById('modale-feedback').style.display='block'">
-            Soumettre un feedback
-        </button>
+    {% if user.membretechcommand %}
+        <div id="soumettre">
+            <button onclick="document.getElementById('modale-feedback').style.display='block'">
+                Soumettre un feedback
+            </button>
 
-        <div id="modale-feedback" style="display:none;">
-            <form id="form-feedback" data-url="{% url 'ajouter_feedback' %}">
-                {% csrf_token %}
-                <label>Date du shift : <input type="date" name="date_shift"></label><br>
-                <label>Plage :
-                    <select name="plage_shift">
-                        <option value="matin">Matin</option>
-                        <option value="apres_midi">Après-midi</option>
-                        <option value="nuit">Nuit</option>
-                    </select>
-                </label><br>
-                <label>Description : <textarea name="description"></textarea></label><br>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-feedback').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-feedback" style="color:red;"></p>
-        </div>
-    </div>
-
-<ul id="liste-feedbacks">
-    {% for feedback in feedbacks %}
-        <li id="feedback-{{ feedback.id }}" data-date="{{ feedback.date_soumission|date:'Y-m-d' }}">
-            <p class="feedback-description">{{ feedback.description }}</p>
-            <div class="feedback-meta">
-                <span>Shift : {{ feedback.shift }}</span>
-                <span>Auteur : {{ feedback.membre|default:"Anonyme" }}</span>
-                <span>Soumis le : {{ feedback.date_soumission|date:"d/m/Y" }}</span>
+            <div id="modale-feedback" style="display:none;">
+                <form id="form-feedback" data-url="{% url 'ajouter_feedback' %}">
+                    {% csrf_token %}
+                    <label>Date du shift : <input type="date" name="date_shift"></label><br>
+                    <label>Plage :
+                        <select name="plage_shift">
+                            <option value="matin">Matin</option>
+                            <option value="apres_midi">Après-midi</option>
+                            <option value="nuit">Nuit</option>
+                        </select>
+                    </label><br>
+                    <label>Description : <textarea name="description"></textarea></label><br>
+                    <button type="submit">Enregistrer</button>
+                    <button type="button" onclick="document.getElementById('modale-feedback').style.display='none'">Annuler</button>
+                </form>
+                <p id="message-erreur-feedback" style="color:red;"></p>
             </div>
-            {% if user.teamlead or feedback.membre == user.membretechcommand %}
-                <button onclick="supprimerFeedback({{ feedback.id }}, '{% url 'supprimer_feedback' feedback.id %}')">Supprimer</button>
-            {% endif %}
-        </li>
-    {% endfor %}
-</ul>
+        </div>
+    {% endif %}
+
+    <ul id="liste-feedbacks">
+        {% for feedback in feedbacks %}
+            <li id="feedback-{{ feedback.id }}" data-date="{{ feedback.date_soumission|date:'Y-m-d' }}">
+                <p class="feedback-description">{{ feedback.description }}</p>
+                <div class="feedback-meta">
+                    <span>Shift : {{ feedback.shift }}</span>
+                    <span>Auteur : {{ feedback.membre }}</span>
+                    <span>Soumis le : {{ feedback.date_soumission|date:"d/m/Y" }}</span>
+                </div>
+                {% if user.teamlead or feedback.membre == user.membretechcommand %}
+                    <button onclick="supprimerFeedback({{ feedback.id }}, '{% url 'supprimer_feedback' feedback.id %}')">Supprimer</button>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
 {% endblock %}
 
 {% block extra_js %}

@@ -7,10 +7,11 @@
     <input type="text" id="filtre_recommandations" placeholder="Filtrer par texte...">
     <input type="date" id="filtre_date_recommandations">
 
-    <div id="soumettre">
-        <button onclick="document.getElementById('modale-recommandation').style.display='block'">
-            Soumettre une recommandation
-        </button>
+   {% if user.membretechcommand %}
+        <div id="soumettre">
+            <button onclick="document.getElementById('modale-feedback').style.display='block'">
+                Soumettre une recommandation
+            </button>
 
         <div id="modale-recommandation" style="display:none;">
             <form id="form-recommandation" data-url="{% url 'ajouter_recommandation' %}">
@@ -22,7 +23,7 @@
             <p id="message-erreur-recommandation" style="color:red;"></p>
         </div>
     </div>
-
+ {% endif %}
     <ul id="liste-recommandations">
         {% for recommandation in recommandations %}
             <li id="recommandation-{{ recommandation.id }}" data-date="{{ recommandation.date_soumission|date:'Y-m-d' }}">

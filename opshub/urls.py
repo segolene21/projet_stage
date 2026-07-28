@@ -32,5 +32,6 @@ urlpatterns = [
     path('experiences/feedback/', views.liste_feedbacks, name='liste_feedbacks'),
     path('experiences/plainte/', views.liste_plaintes, name='liste_plaintes'),
     path('experiences/recommandation/', views.liste_recommandations, name='liste_recommandations'),
-    path('outil-teams/ajouter/', views.ajouter_outil_team, name='ajouter_outil_team'),
+    path('ajouter-equipe/', views.ajouter_outil_team, name='ajouter_outil_team'),
+    path('equipes/ajouter/', views.ajouter_equipe, name='ajouter_equipe'),
 ]

@@ -2,70 +2,184 @@
 {% load static %}
 
 {% block content %}
-    <h1>Liste des outils</h1>
 
-    <input type="text" id="champ_recherche_outils" placeholder="Rechercher un outil...">
+<h1>Liste des outils</h1>
+<input type="text" id="champ_recherche_outils" placeholder="Rechercher un outil...">
 
-    {% if user.teamlead %}
-        <button onclick="ouvrirModaleAjout()" data-url-ajout="{% url 'ajouter_outil' %}">Ajouter un outil</button>
 
-        <div id="modale-ajout" style="display:none;">
-            <form id="form-outil" data-url="{% url 'ajouter_outil' %}">
-                {% csrf_token %}
-                <input type="hidden" name="outil_id" id="champ-outil-id">
-                <label>Nom : <input type="text" name="nom" id="champ-nom"></label><br>
-                <label>Lien d'accès : <input type="url" name="lien_acces" id="champ-lien-acces"></label><br>
-                <label>Authentification requise : <input type="checkbox" name="necessite_authentification" id="champ-auth"></label><br>
-                <label>Statut actif : <input type="checkbox" name="statut" id="champ-statut" checked></label><br>
-                <label>Équipe outil :
-    <select name="outil_team" id="select-outil-team">
-        {% for ot in outils_teams %}
-            <option value="{{ ot.id }}">{{ ot.nom }}</option>
-        {% endfor %}
-    </select>
-</label>
-<button type="button" onclick="document.getElementById('modale-outil-team').style.display='block'">
-    + Nouvelle équipe
+{% if user.teamlead %}
+
+<button onclick="ouvrirModaleAjout()">
+    Ajouter un outil
 </button>
-<br>
 
-<div id="modale-outil-team" style="display:none;">
-    <form id="form-outil-team" data-url="{% url 'ajouter_outil_team' %}">
+
+<!-- Modale ajout outil -->
+<div id="modale-ajout" style="display:none;">
+
+    <form id="form-outil" data-url="{% url 'ajouter_outil' %}">
+
         {% csrf_token %}
-        <label>Nom : <input type="text" name="nom"></label><br>
-        <label>Point de contact : <input type="text" name="nom_point_de_contact"></label><br>
-        <label>Contact du point de contact : <input type="text" name="contact_point_de_contact"></label><br>
-        <label>Manager : <input type="text" name="nom_manager"></label><br>
-        <label>Contact manager : <input type="text" name="contact_manager"></label><br>
-        <button type="submit">Créer l'équipe</button>
-        <button type="button" onclick="document.getElementById('modale-outil-team').style.display='none'">Annuler</button>
+
+        <input type="hidden" name="outil_id" id="champ-outil-id">
+
+
+        <label>
+            Nom :
+            <input type="text" name="nom" id="champ-nom">
+        </label>
+        <br>
+
+
+        <label>
+            Lien d'accès :
+            <input type="url" name="lien_acces" id="champ-lien-acces">
+        </label>
+        <br>
+
+
+        <label>
+            Authentification requise :
+            <input type="checkbox" name="necessite_authentification" id="champ-auth">
+        </label>
+        <br>
+
+
+        <label>
+            Statut actif :
+            <input type="checkbox" name="statut" id="champ-statut" checked>
+        </label>
+        <br>
+
+
+        <label>
+            Équipe outil :
+
+            <select name="outil_team" id="select-outil-team">
+
+                {% for ot in outils_teams %}
+                    <option value="{{ ot.id }}">
+                        {{ ot.nom }}
+                    </option>
+
+                {% empty %}
+
+                    <option>
+                        Aucune équipe disponible
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </label>
+
+        <br>
+
+
+        <!-- Redirection vers la page création équipe -->
+        <button type="button"
+                onclick="window.location.href='{% url 'ajouter_outil_team' %}'">
+
+            + Nouvelle équipe
+
+        </button>
+
+
+        <br><br>
+
+
+        <button type="submit">
+            Enregistrer
+        </button>
+
+
+        <button type="button"
+                onclick="document.getElementById('modale-ajout').style.display='none'">
+
+            Annuler
+
+        </button>
+
+
     </form>
-    <p id="message-erreur-outil-team" style="color:red;"></p>
+
+
+    <p id="message-erreur" style="color:red;"></p>
+
 </div>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-ajout').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur" style="color:red;"></p>
-        </div>
-    {% endif %}
 
-    <ul id="liste-outils">
-        {% for outil in outils %}
-            <li id="outil-{{ outil.id }}">
-                <a id="nom-outil-{{ outil.id }}" href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
 
-                {% if user.teamlead %}
-                    <button onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}')">
-                        Modifier
-                    </button>
-                    <button onclick="supprimerOutil({{ outil.id }}, '{% url 'supprimer_outil' outil.id %}')">
-                        Supprimer
-                    </button>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
+{% endif %}
+
+
+
+<!-- Liste des outils -->
+
+<ul id="liste-outils">
+
+{% for outil in outils %}
+
+    <li id="outil-{{ outil.id }}">
+
+
+        <a href="{% url 'detail_outil' outil.id %}">
+            {{ outil.nom }}
+        </a>
+
+
+
+        {% if user.teamlead %}
+
+
+        <button onclick="ouvrirModaleModification(
+            {{ outil.id }},
+            '{{ outil.nom }}',
+            '{{ outil.lien_acces }}',
+            {{ outil.necessite_authentification|yesno:'true,false' }},
+            {{ outil.statut|yesno:'true,false' }},
+            '{% url 'modifier_outil' outil.id %}'
+        )">
+
+            Modifier
+
+        </button>
+
+
+
+        <button onclick="supprimerOutil(
+            {{ outil.id }},
+            '{% url 'supprimer_outil' outil.id %}'
+        )">
+
+            Supprimer
+
+        </button>
+
+
+
+        {% endif %}
+
+
+    </li>
+
+
+{% empty %}
+
+    <li>
+        Aucun outil disponible
+    </li>
+
+
+{% endfor %}
+
+
+</ul>
+
+
+
 {% endblock %}
+
 
 {% block extra_js %}
     <script src="{% static 'js/outils.js' %}"></script>

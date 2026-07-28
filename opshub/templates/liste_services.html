@@ -42,12 +42,33 @@
                     <button onclick="supprimerService({{ service.id }}, '{% url 'supprimer_service' service.id %}')">
                         Supprimer
                     </button>
-
                     <div id="modale-modifier-service-{{ service.id }}" style="display:none;">
-                        <form id="form-modifier-service-{{ service.id }}" onsubmit="event.preventDefault(); modifierService({{ service.id }}, '{% url 'modifier_service' service.id %}')">
+                       <form id="form-modifier-service-{{ service.id }}"
+      onsubmit="event.preventDefault(); modifierService({{ service.id }}, '{% url 'modifier_service' service.id %}')">
                             {% csrf_token %}
                             <label>Nom : <input type="text" name="nom" value="{{ service.nom }}"></label><br>
-                            <label>Description : <textarea name="description">{{ service.description }}</textarea></label><br>
+                            <label>Description :
+    <textarea name="description">{{ service.description }}</textarea>
+</label><br>
+
+
+<label>Outils :</label>
+
+<select name="outils_monitoring" multiple>
+
+    {% for outil in tous_les_outils %}
+
+        <option value="{{ outil.id }}"
+        {% if outil in service.outils_monitoring.all %}
+            selected
+        {% endif %}
+        >
+            {{ outil.nom }}
+        </option>
+
+    {% endfor %}
+<div id="modale-modifier-service-{{ service.id }}" style="display:none;">
+</select>
                             <button type="submit">Enregistrer</button>
                             <button type="button" onclick="document.getElementById('modale-modifier-service-{{ service.id }}').style.display='none'">Annuler</button>
                         </form>

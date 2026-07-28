@@ -1,0 +1,37 @@
+OpsHub
+Espace interne de documentation monitoring, développé dans le cadre d’un stage IT chez
+MTN Bénin.
+Description
+OpsHub centralise la documentation liée au monitoring pour l’équipe IT, autour de 3 grands
+modules :
+1. Catalogue des outils de monitoring — recense tous les outils (Grafana, Watcher,
+Elastic, etc.) et les services qu’ils surveillent.
+2. Documentation d’attribution des tickets — formalise les mots-clés d’assignation pour
+retrouver rapidement la bonne personne et faciliter les passations.
+3. Espace feedback des shifts — permet à l’équipe (qui travaille par shifts alternés) de
+partager difficultés rencontrées et recommandations, de façon anonyme ou non.
+Stack technique
+Backend : Django + PostgreSQL
+Frontend : Django templates + Bootstrap
+Interactions : JavaScript vanilla (pas de framework JS)
+Équipe
+Backend : Ségolène
+Frontend :Sthephanie
+Installation
+git clone https://github.com/segolene21/projet_stage.git
+cd projet_stage
+python -m venv venv
+venv\Scripts\activate 
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+Branches
+master — branche principale/stable
+backend — développement backend
+frontend — développement frontend
+Modèles principaux
+OutilMonitoring — outils de monitoring (avec lien d’accès et besoin d’authentification)
+Service — services surveillés (relation many-to-many avec les outils)
+Equipe / Utilisateurs — gestion des rôles (Manager, Team-lead, Administrateur,
+membre)
+Plainte / Feedback — retours d’équipe liés aux shift

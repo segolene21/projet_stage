@@ -7,22 +7,23 @@
     <input type="text" id="filtre_plaintes" placeholder="Filtrer par texte...">
     <input type="date" id="filtre_date_plaintes">
 
-    <div id="soumettre">
-        <button onclick="document.getElementById('modale-plainte').style.display='block'">
-            Soumettre une plainte
-        </button>
-
-        <div id="modale-plainte" style="display:none;">
-            <form id="form-plainte" data-url="{% url 'ajouter_plainte' %}">
-                {% csrf_token %}
-                <label>Contenu : <textarea name="contenu"></textarea></label><br>
-                <label>Anonyme : <input type="checkbox" name="anonyme"></label><br>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-plainte').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-plainte" style="color:red;"></p>
+    {% if user.membretechcommand %}
+        <div id="soumettre">
+            <button onclick="document.getElementById('modale-plainte').style.display='block'">
+                Soumettre une plainte
+            </button>
+            <div id="modale-plainte" style="display:none;">
+                <form id="form-plainte" data-url="{% url 'ajouter_plainte' %}">
+                    {% csrf_token %}
+                    <label>Contenu : <textarea name="contenu"></textarea></label><br>
+                    <label>Anonyme : <input type="checkbox" name="anonyme"></label><br>
+                    <button type="submit">Enregistrer</button>
+                    <button type="button" onclick="document.getElementById('modale-plainte').style.display='none'">Annuler</button>
+                </form>
+                <p id="message-erreur-plainte" style="color:red;"></p>
+            </div>
         </div>
-    </div>
+    {% endif %}
 
     <ul id="liste-plaintes">
         {% for plainte in plaintes %}
