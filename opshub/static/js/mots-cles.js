@@ -53,6 +53,7 @@ function supprimerMotCle(motCleId, url) {
 
     fetch(url, {
         method: 'POST',
+        headers: {'X-CSRFToken': csrftoken},
     })
     .then(response => response.json())
     .then(data => {

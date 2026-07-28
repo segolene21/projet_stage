@@ -8,16 +8,21 @@ function ouvrirModaleAjout() {
     document.getElementById('modale-ajout').style.display = 'flex';
 }
 
-function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url) {
+function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url, equipeId) {
     document.getElementById('champ-outil-id').value = outilId;
     document.getElementById('champ-nom').value = nom;
     document.getElementById('champ-lien-acces').value = lienAcces;
     document.getElementById('champ-auth').checked = auth;
     document.getElementById('champ-statut').checked = statut;
     document.getElementById('form-outil').dataset.url = url;
+
+    const selectEquipe = document.getElementById('select-outil-team');
+    if (selectEquipe && equipeId) {
+        selectEquipe.value = equipeId;
+    }
+
     document.getElementById('modale-ajout').style.display = 'flex';
 }
-
 
 const formOutil = document.getElementById('form-outil');
 const urlAjoutOutil = formOutil ? formOutil.dataset.url : null;

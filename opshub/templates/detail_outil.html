@@ -1,9 +1,31 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h2>{{ outil.nom }}</h2>
-    <p>Lien d'accès : <a href="{{ outil.lien_acces }}">{{ outil.lien_acces }}</a></p>
-    <p>Authentification requise : {{ outil.necessite_authentification }}</p>
-    <p>Statut : {{ outil.statut }}</p>
-    <p>Team :{{outil.outil_team.nom}}</p>
+    <div class="detail-card">
+        <h1>{{ outil.nom }}</h1>
+
+        <div class="detail-row">
+            <span class="detail-label">Lien d'accès</span>
+            <a href="{{ outil.lien_acces }}" target="_blank" class="detail-link">{{ outil.lien_acces }}</a>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Authentification requise</span>
+            <span class="badge {% if outil.necessite_authentification %}badge-yes{% else %}badge-no{% endif %}">
+                {{ outil.necessite_authentification|yesno:"Oui,Non" }}
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Statut</span>
+            <span class="badge {% if outil.statut %}badge-yes{% else %}badge-no{% endif %}">
+                {{ outil.statut|yesno:"Actif,Inactif" }}
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Équipe</span>
+            <span>{{ outil.outil_team.nom|default:"—" }}</span>
+        </div>
+    </div>
 {% endblock %}

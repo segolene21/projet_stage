@@ -8,24 +8,23 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import MotsClesAssignation, Equipe, MembreTechcommand
 from .forms import MotsClesAssignationForm
-from .models import Feedback, Recommandation, Plainte, Shift
+from .models import Feedback, Recommandation, Plainte, Shift, OutilTeam
 from .forms import FeedbackForm, RecommandationForm, PlainteForm
 
 
 @login_required
 def liste_outils(request):
-    outils = OutilMonitoring.objects.all()
-    return render(request, 'liste_outils.html', {'outils': outils})
+    requete = request.GET.get('q', '')
+    outils = OutilMonitoring.objects.filter(nom__icontains=requete) if requete else OutilMonitoring.objects.all()
+    outils_teams = OutilTeam.objects.all()
+    return render(request, 'liste_outils.html', {'outils': outils, 'requete': requete, 'outils_teams': outils_teams})
+
 
 @login_required
 def detail_outil(request, outil_id):
     outil = get_object_or_404(OutilMonitoring, id=outil_id)
     return render(request, 'detail_outil.html', {'outil': outil})
 
-@login_required
-def liste_services(request):
-    services= Service.objects.all()
-    return render(request, 'liste_services.html', {'outils': services})
 
 @login_required
 @csrf_exempt
@@ -42,6 +41,7 @@ def ajouter_outil(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
 
 @login_required
 def modifier_outil(request, outil_id):
@@ -60,8 +60,8 @@ def modifier_outil(request, outil_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-@login_required
 
+@login_required
 def supprimer_outil(request, outil_id):
     if not hasattr(request.user, 'teamlead'):
         return JsonResponse({'erreur': 'Accès réservé aux Team-leads'}, status=403)
@@ -77,18 +77,17 @@ def supprimer_outil(request, outil_id):
 
 @login_required
 def liste_services(request):
-    services = Service.objects.all()
-    return render(request, 'liste_services.html', {'services': services})
-@login_required
-def liste_services(request):
-    services = Service.objects.all()
+    requete = request.GET.get('q', '')
+    services = Service.objects.filter(nom__icontains=requete) if requete else Service.objects.all()
     tous_les_outils = OutilMonitoring.objects.all()
-    return render(request, 'liste_services.html', {'services': services, 'tous_les_outils': tous_les_outils})
+    return render(request, 'liste_services.html', {'services': services, 'tous_les_outils': tous_les_outils, 'requete': requete})
+
 
 @login_required
 def detail_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     return render(request, 'detail_service.html', {'service': service})
+
 
 @login_required
 def ajouter_service(request):
@@ -104,6 +103,7 @@ def ajouter_service(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
 
 @login_required
 def modifier_service(request, service_id):
@@ -121,6 +121,7 @@ def modifier_service(request, service_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
+
 @login_required
 def supprimer_service(request, service_id):
     if not hasattr(request.user, 'teamlead'):
@@ -132,17 +133,7 @@ def supprimer_service(request, service_id):
         return JsonResponse({'succes': True}, status=200)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
-@login_required
-def liste_outils(request):
-    requete = request.GET.get('q', '')
-    outils = OutilMonitoring.objects.filter(nom__icontains=requete) if requete else OutilMonitoring.objects.all()
-    return render(request, 'liste_outils.html', {'outils': outils, 'requete': requete})
-@login_required
-def liste_services(request):
-    requete = request.GET.get('q', '')
-    services = Service.objects.filter(nom__icontains=requete) if requete else Service.objects.all()
-    tous_les_outils = OutilMonitoring.objects.all()
-    return render(request, 'liste_services.html', {'services': services, 'tous_les_outils': tous_les_outils, 'requete': requete})
+
 
 @login_required
 def liste_mots_cles(request):
@@ -154,6 +145,7 @@ def liste_mots_cles(request):
         'equipes': equipes,
         'membres': membres,
     })
+
 
 @login_required
 def ajouter_mot_cle(request):
@@ -174,6 +166,7 @@ def ajouter_mot_cle(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
 
 @login_required
 def modifier_mot_cle(request, mot_cle_id):
@@ -196,6 +189,7 @@ def modifier_mot_cle(request, mot_cle_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
+
 @login_required
 def supprimer_mot_cle(request, mot_cle_id):
     if not hasattr(request.user, 'teamlead'):
@@ -207,6 +201,8 @@ def supprimer_mot_cle(request, mot_cle_id):
         return JsonResponse({'succes': True}, status=200)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
 @login_required
 def ajouter_utilisateur(request):
     if not hasattr(request.user, 'administrateur'):
@@ -231,10 +227,14 @@ def ajouter_utilisateur(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
 def index(request):
     return render(request, 'index.html')
+
+
 def login(request):
-    return render(request, 'Login.html') 
+    return render(request, 'Login.html')
 
 
 @login_required
@@ -279,8 +279,7 @@ def supprimer_utilisateur(request, user_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-from .models import Feedback, Recommandation, Plainte, Shift
-from .forms import FeedbackForm, RecommandationForm, PlainteForm
+
 @login_required
 def experiences_membres(request):
     return render(request, 'experiences-membres.html')
@@ -327,7 +326,6 @@ def ajouter_feedback(request):
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
-
 @login_required
 def ajouter_recommandation(request):
     if request.method == 'POST':
@@ -368,6 +366,7 @@ def supprimer_feedback(request, feedback_id):
         return JsonResponse({'succes': True})
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
+
 @login_required
 def supprimer_recommandation(request, recommandation_id):
     recommandation = get_object_or_404(Recommandation, id=recommandation_id)
@@ -394,6 +393,8 @@ def supprimer_plainte(request, plainte_id):
         return JsonResponse({'succes': True})
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
 @login_required
 def ajouter_outil_team(request):
     if not hasattr(request.user, 'teamlead'):
