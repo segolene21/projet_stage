@@ -665,3 +665,101 @@ body{
 .setting-value { font-weight: 700; color: #111; }
 
 .month-label { font-size: 11px; color: #888; }
+
+/* ================= RESPONSIVE WELCOME / LOGIN ================= */
+
+@media (max-width:768px){
+
+    .hero-card{
+        min-height:auto;
+        border-radius:24px;
+    }
+
+    .hero-card-body{
+        padding:24px 20px;
+    }
+
+    .hero-card-top{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:12px;
+    }
+
+    #yello{
+        font-size:clamp(2.4rem, 12vw, 3.5rem);
+    }
+
+    #welcome{
+        font-size:clamp(2.8rem, 14vw, 4.5rem);
+    }
+
+    .hero-subtext{
+        font-size:1rem;
+    }
+
+    .hero-card-footer{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:16px;
+        margin-top:40px;
+    }
+
+    .footer-text{
+        font-size:1rem;
+    }
+
+    .cta-button{
+        width:100%;
+        padding:14px;
+    }
+}
+
+@media (max-width:768px){
+
+    .login-card{
+        flex-direction:column;
+        min-height:auto;
+        border-radius:24px;
+    }
+
+    .left-side,
+    .right-side{
+        width:100%;
+    }
+
+    .left-side{
+        padding:30px 24px;
+    }
+
+    .monitor-text .line{
+        font-size:26px;
+    }
+
+    .right-side{
+        padding:30px 24px;
+    }
+
+    .form-title{
+        font-size:22px;
+    }
+}
+
+@media (max-width:480px){
+
+    .hero-card-body{
+        padding:18px 16px;
+    }
+
+    #yello{
+        font-size:2rem;
+    }
+
+    #welcome{
+        font-size:2.4rem;
+    }
+
+    .logo-placeholder{
+        padding:6px 14px;
+        font-size:12px;
+    }
+}
