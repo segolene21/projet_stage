@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<a href="{% url 'liste_outils' %}" class="back-link">← Retour à la liste des outils</a>
     <div class="detail-card">
         <h1>{{ equipe.nom }}</h1>
 

@@ -46,9 +46,9 @@ class OutilTeam(models.Model):
 
 
 class OutilMonitoring(models.Model):
-    nom = models.CharField(max_length=100, null=True, blank=True)
+    nom = models.CharField(max_length=100 )
     statut = models.BooleanField(default=True)
-    lien_acces = models.URLField()
+    lien_acces = models.CharField(max_length=225)
     necessite_authentification = models.BooleanField(default=False)
     outil_team = models.ForeignKey("OutilTeam", on_delete=models.CASCADE)
 

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<a href="{% url 'liste_services' %}" class="back-link">← Retour à la liste des services</a>
     <div class="detail-card">
         <h1>{{ service.nom }}</h1>
         <p class="detail-description">{{ service.description }}</p>
