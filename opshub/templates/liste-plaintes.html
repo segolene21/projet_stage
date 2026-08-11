@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+<a href="{% url 'experiences_membres' %}" class="back-link">← Retour aux expériences des membres</a>
     <div class="outils-header">
         <h1>Liste des Plaintes</h1>
         {% if user.membretechcommand %}

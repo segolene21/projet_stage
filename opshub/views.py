@@ -518,9 +518,16 @@ def export_tickets_excel(request):
 
 
 def liste_tickets(request):
-    tickets = list(Ticket.objects.values(
+    qs = list(Ticket.objects.values(
         "ticket_id", "state", "requester", "details", "feedback", "cree_le", "modifie_le"
     ))
+
+    tickets = []
+    for t in qs:
+        t['cree_le'] = t['cree_le'].strftime("%d/%m/%Y %H:%M") if t.get('cree_le') else ""
+        t['modifie_le'] = t['modifie_le'].strftime("%d/%m/%Y %H:%M") if t.get('modifie_le') else ""
+        tickets.append(t)
+
     return JsonResponse(tickets, safe=False)
 
 

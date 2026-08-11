@@ -32,11 +32,14 @@
 
                     <div class="form-group">
                         <label>Outils</label>
-                        <select name="outils_monitoring" multiple>
+                        <div class="checkbox-list">
                             {% for outil in tous_les_outils %}
-                                <option value="{{ outil.id }}">{{ outil.nom }}</option>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="outils_monitoring" value="{{ outil.id }}">
+                                    {{ outil.nom }}
+                                </label>
                             {% endfor %}
-                        </select>
+                        </div>
                     </div>
 
                     <p id="message-erreur-service" class="error-message"></p>
@@ -83,11 +86,14 @@
 
                                 <div class="form-group">
                                     <label>Outils</label>
-                                    <select name="outils_monitoring" multiple>
+                                    <div class="checkbox-list">
                                         {% for outil in tous_les_outils %}
-                                            <option value="{{ outil.id }}" {% if outil in service.outils_monitoring.all %}selected{% endif %}>{{ outil.nom }}</option>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" name="outils_monitoring" value="{{ outil.id }}" {% if outil in service.outils_monitoring.all %}checked{% endif %}>
+                                                {{ outil.nom }}
+                                            </label>
                                         {% endfor %}
-                                    </select>
+                                    </div>
                                 </div>
 
                                 <div class="form-actions">
