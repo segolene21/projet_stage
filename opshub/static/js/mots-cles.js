@@ -79,11 +79,30 @@ if (champRechercheMotsCles) {
 
 // --- ÉQUIPE (créée depuis n'importe quel select cible) ---
 
+// --- ÉQUIPE (créée depuis n'importe quel select cible) ---
+
 let selectEquipeCible = null;
+let modaleParenteEquipe = null;
 
 function ouvrirModaleEquipe(selectId) {
     selectEquipeCible = selectId;
-    document.getElementById('modale-equipe').style.display = 'block';
+
+    const select = document.getElementById(selectId);
+    modaleParenteEquipe = select.closest('.modal-overlay');
+
+    if (modaleParenteEquipe) {
+        modaleParenteEquipe.style.display = 'none';
+    }
+
+    document.getElementById('modale-equipe').style.display = 'flex';
+}
+
+function fermerModaleEquipe() {
+    document.getElementById('modale-equipe').style.display = 'none';
+
+    if (modaleParenteEquipe) {
+        modaleParenteEquipe.style.display = 'flex';
+    }
 }
 
 const formEquipe = document.getElementById('form-equipe');
@@ -109,8 +128,8 @@ if (formEquipe) {
                 option.selected = true;
                 select.appendChild(option);
 
-                document.getElementById('modale-equipe').style.display = 'none';
                 formEquipe.reset();
+                fermerModaleEquipe();
             } else {
                 document.getElementById('message-erreur-equipe').textContent = JSON.stringify(data.erreurs);
             }

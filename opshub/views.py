@@ -94,6 +94,7 @@ def detail_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     return render(request, 'detail_service.html', {'service': service})
 
+
 @login_required
 def ajouter_service(request):
 
@@ -115,6 +116,7 @@ def ajouter_service(request):
             "succes": False,
             "erreurs": form.errors
         })
+
 
 
 @login_required
@@ -256,6 +258,14 @@ def ajouter_utilisateur(request):
             return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+def index(request):
+    return render(request, 'index.html')
+
+
+def login(request):
+    return render(request, 'Login.html')
 
 
 @login_required
@@ -428,17 +438,25 @@ def supprimer_plainte(request, plainte_id):
 @login_required
 def ajouter_outil_team(request):
     if not hasattr(request.user, 'teamlead'):
-        return redirect('liste_outils')
+        return JsonResponse({'erreur': 'Accès réservé aux Team-leads'}, status=403)
 
     if request.method == 'POST':
         form = OutilTeamForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('liste_outils')
-    else:
-        form = OutilTeamForm()
+            outil_team = form.save()
+            return JsonResponse({'succes': True, 'id': outil_team.id, 'nom': outil_team.nom}, status=201)
+        else:
+            return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
 
-    return render(request, 'ajouter_outil_team.html', {'form': form})
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+@login_required
+def detail_outil_team(request, team_id):
+    equipe = get_object_or_404(OutilTeam, id=team_id)
+    return render(request, 'detail_outil_team.html', {'equipe': equipe})
+
+
 @login_required
 def parametres(request):
     if request.method == 'POST':

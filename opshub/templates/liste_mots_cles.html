@@ -2,11 +2,18 @@
 {% load static %}
 
 {% block content %}
-    <h1>Mots-clés d'assignation</h1>
+    <div class="outils-header">
+        <h1>Mots-clés d'assignation</h1>
+        {% if user.teamlead %}
+            <button class="btn-primary" onclick="document.getElementById('modale-ajout-mc').style.display='flex'">
+                + Ajouter un mot-clé
+            </button>
+        {% endif %}
+    </div>
 
-    <input type="text" id="champ_recherche_mots_cles" placeholder="Rechercher un mot-clé...">
+    <input type="text" id="champ_recherche_mots_cles" class="search-input" placeholder="Rechercher un mot-clé...">
 
-    <table id="table-mots-cles" border="1">
+    <table id="table-mots-cles">
         <thead>
             <tr>
                 <th>Intitulé</th>
@@ -20,76 +27,132 @@
             {% for mot_cle in mots_cles %}
                 <tr id="mot-cle-{{ mot_cle.id }}">
                     <td id="intitule-{{ mot_cle.id }}">{{ mot_cle.intitule }}</td>
-                    <td id="equipe-{{ mot_cle.id }}">{{ mot_cle.equipe.nom|default:"—" }}</td>
+                    <td id="equipe-{{ mot_cle.id }}">
+                        {% if mot_cle.equipe%}
+                        {{ mot_cle.equipe.nom }} ({{mot_cle.equipe.nbr_membres}} membre{{mot_cle.equipe.nbr_membres|pluralize}})
+                        {% else %}
+                         __
+                         {% endif%}
+                    </td>
                     {% if user.teamlead %}
                         <td>
-                            <button onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='block'">
-                                Modifier
-                            </button>
-                            <button onclick="supprimerMotCle({{ mot_cle.id }}, '{% url 'supprimer_mot_cle' mot_cle.id %}')">
-                                Supprimer
-                            </button>
+                            <div class="card-actions">
+                                <button class="btn-edit" onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='flex'">
+                                    Modifier
+                                </button>
+                                <button class="btn-delete" onclick="supprimerMotCle({{ mot_cle.id }}, '{% url 'supprimer_mot_cle' mot_cle.id %}')">
+                                    Supprimer
+                                </button>
+                            </div>
 
-                            <div id="modale-modifier-mc-{{ mot_cle.id }}" style="display:none;">
-                                <form id="form-modifier-mc-{{ mot_cle.id }}" onsubmit="event.preventDefault(); modifierMotCle({{ mot_cle.id }}, '{% url 'modifier_mot_cle' mot_cle.id %}')">
-                                    {% csrf_token %}
-                                    <label>Intitulé : <input type="text" name="intitule" value="{{ mot_cle.intitule }}"></label><br>
-                                    <label>Équipe :
-                                        <select name="equipe" id="select-equipe-mc-{{ mot_cle.id }}">
-                                            <option value="">—</option>
-                                            {% for equipe in equipes %}
-                                                <option value="{{ equipe.id }}" {% if mot_cle.equipe_id == equipe.id %}selected{% endif %}>{{ equipe.nom }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </label>
-                                    <button type="button" onclick="ouvrirModaleEquipe('select-equipe-mc-{{ mot_cle.id }}')">+ Nouvelle équipe</button>
-                                    <br>
-                                    <button type="submit">Enregistrer</button>
-                                    <button type="button" onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='none'">Annuler</button>
-                                </form>
+                            <div id="modale-modifier-mc-{{ mot_cle.id }}" class="modal-overlay" style="display:none;">
+                                <div class="modal-box">
+                                    <h2 class="modal-title">Modifier le mot-clé</h2>
+                                    <form id="form-modifier-mc-{{ mot_cle.id }}" onsubmit="event.preventDefault(); modifierMotCle({{ mot_cle.id }}, '{% url 'modifier_mot_cle' mot_cle.id %}')">
+                                        {% csrf_token %}
+
+                                        <div class="form-group">
+                                            <label>Intitulé</label>
+                                            <input type="text" name="intitule" value="{{ mot_cle.intitule }}">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Équipe</label>
+                                            <select name="equipe" id="select-equipe-mc-{{ mot_cle.id }}">
+                                                <option value="">—</option>
+                                                {% for equipe in equipes %}
+                                                    <option value="{{ equipe.id }}" {% if mot_cle.equipe_id == equipe.id %}selected{% endif %}>{{ equipe.nom }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <button type="button" class="btn-secondary" onclick="ouvrirModaleEquipe('select-equipe-mc-{{ mot_cle.id }}')">
+                                            + Nouvelle équipe
+                                        </button>
+
+                                        <div class="form-actions">
+                                            <button type="button" class="btn-secondary" onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='none'">Annuler</button>
+                                            <button type="submit" class="btn-primary">Enregistrer</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </td>
                     {% endif %}
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="empty-state">Aucun mot-clé pour le moment.</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div id="modale-equipe" style="display:none;">
-        <form id="form-equipe" data-url="{% url 'ajouter_equipe' %}">
-            {% csrf_token %}
-            <label>Nom : <input type="text" name="nom"></label><br>
-            <label>Description : <textarea name="description"></textarea></label><br>
-            <label>Nombre de membres : <input type="number" name="nbr_membres" value="0"></label><br>
-            <button type="submit">Créer l'équipe</button>
-            <button type="button" onclick="document.getElementById('modale-equipe').style.display='none'">Annuler</button>
-        </form>
-        <p id="message-erreur-equipe" style="color:red;"></p>
+    <div id="modale-equipe" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h2 class="modal-title">Nouvelle équipe</h2>
+            <form id="form-equipe" data-url="{% url 'ajouter_equipe' %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" name="nom">
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre de membres</label>
+                    <input type="number" name="nbr_membres" value="0">
+                </div>
+
+                <p id="message-erreur-equipe" class="error-message"></p>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('modale-equipe').style.display='none'">Annuler</button>
+                    <button type="submit" class="btn-primary">Créer l'équipe</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     {% if user.teamlead %}
-        <button onclick="document.getElementById('modale-ajout-mc').style.display='block'">
-            Ajouter un mot-clé
-        </button>
+        <div id="modale-ajout-mc" class="modal-overlay" style="display:none;">
+            <div class="modal-box">
+                <h2 class="modal-title">Ajouter un mot-clé</h2>
+                <form id="form-mot-cle" data-url="{% url 'ajouter_mot_cle' %}">
+                    {% csrf_token %}
 
-        <div id="modale-ajout-mc" style="display:none;">
-            <form id="form-mot-cle" data-url="{% url 'ajouter_mot_cle' %}">
-                {% csrf_token %}
-                <label>Intitulé : <input type="text" name="intitule"></label><br>
-                <label>Équipe :
-                    <select name="equipe" id="select-equipe-ajout">
-                        <option value="">—</option>
-                        {% for equipe in equipes %}
-                            <option value="{{ equipe.id }}">{{ equipe.nom }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <button type="button" onclick="ouvrirModaleEquipe('select-equipe-ajout')">+ Nouvelle équipe</button>
-                <br>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-ajout-mc').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-mc" style="color:red;"></p>
+                    <div class="form-group">
+                        <label>Intitulé</label>
+                        <input type="text" name="intitule">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Équipe</label>
+                        <select name="equipe" id="select-equipe-ajout">
+                            <option value="">—</option>
+                            {% for equipe in equipes %}
+                                <option value="{{ equipe.id }}">{{ equipe.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn-secondary" onclick="ouvrirModaleEquipe('select-equipe-ajout')">
+                        + Nouvelle équipe
+                    </button>
+
+                    <p id="message-erreur-mc" class="error-message"></p>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('modale-ajout-mc').style.display='none'">Annuler</button>
+                        <button type="submit" class="btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
         </div>
     {% endif %}
 {% endblock %}

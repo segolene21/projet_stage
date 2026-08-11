@@ -1,0 +1,48 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bienvenue</title>
+        <link rel="prenct" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Raleway:wght@700;800;900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    </head>
+    <body>
+        <div class="hero-card">
+            <div class="hero-card-bg">
+                <div class="card-slide active"></div>
+                <div class="card-slide"></div>
+                <div class="hero-card-overlay"></div>
+            </div>
+            <div class="hero-card-body">
+                <div class="hero-card-top">
+                    <h1 id="yello" class="typing-text"><span class="yello-letter">Y</span><span class="yello-rest">'ello.</span></h1>
+                    <div class="logo-placeholder">MTN</div>
+                </div>
+                <div class="hero-card-content">
+                    <h2 id="welcome" class="typing-text">Welcome!</h2>
+                </div>
+                <div class="hero-card-footer">
+                    <p class="footer-text">Tech command Center Portal</p>
+                    <a href="{% url 'login'%}"><button type="button" class="cta-button">SIGN IN</button></a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            window.backgroundImages = [
+                
+                "{% static 'img/Image de fond/d204faac905f260e5afba1991ec49d1f.jpg' %}",
+                "{% static 'img/Image de fond/825632caf40d69aabdb37123585606ef.jpg' %}",
+                "{% static 'img/Image de fond/a139aded2d267666470125b12119d50b.jpg' %}",
+                "{% static 'img/Image de fond/df6e50a11c1edc88fece5f94f23ca1e2.jpg' %}",
+                "{% static 'img/Image de fond/cd3ddeea1696bd33644d3ff4d30931e6.jpg' %}",
+            ];
+        </script>
+        <script src="{% static 'js/background.js' %}"></script>
+    </body>
+</html>

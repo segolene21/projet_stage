@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <p>Mot de passe changé avec succès. <a href="{% url 'parametres' %}">Retour aux paramètres</a></p>
+    <div class="settings-card">
+        <p class="success-message">✓ Mot de passe changé avec succès.</p>
+        <a href="{% url 'parametres' %}" class="btn-primary settings-link">Retour aux paramètres</a>
+    </div>
 {% endblock %}

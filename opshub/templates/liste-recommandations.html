@@ -2,51 +2,59 @@
 {% load static %}
 
 {% block content %}
-    <h1>Recommandation</h1>
-
-    <input type="text" id="filtre_recommandations" placeholder="Filtrer par texte...">
-    <input type="date" id="filtre_date_recommandations">
-
-   {% if user.membretechcommand %}
-        <div id="soumettre">
-            <button onclick="document.getElementById('modale-feedback').style.display='block'">
-                Soumettre une recommandation
+    <div class="outils-header">
+        <h1>Liste des Recommandations</h1>
+        {% if user.membretechcommand %}
+            <button class="btn-primary" onclick="document.getElementById('modale-recommandation').style.display='flex'">
+                + Soumettre une recommandation
             </button>
-
-        <div id="modale-recommandation" style="display:none;">
-            <form id="form-recommandation" data-url="{% url 'ajouter_recommandation' %}">
-                {% csrf_token %}
-                <label>Contenu : <textarea name="contenu"></textarea></label><br>
-                <button type="submit">Enregistrer</button>
-                <button type="button" onclick="document.getElementById('modale-recommandation').style.display='none'">Annuler</button>
-            </form>
-            <p id="message-erreur-recommandation" style="color:red;"></p>
-        </div>
+        {% endif %}
     </div>
- {% endif %}
-    <ul id="liste-recommandations">
+
+    <div class="filters-row">
+        <input type="text" id="filtre_recommandations" class="search-input" placeholder="Filtrer par texte...">
+        <input type="date" id="filtre_date_recommandations" class="search-input date-filter">
+    </div>
+
+    {% if user.membretechcommand %}
+        <div id="modale-recommandation" class="modal-overlay" style="display:none;">
+            <div class="modal-box">
+                <h2 class="modal-title">Soumettre une recommandation</h2>
+                <form id="form-recommandation" data-url="{% url 'ajouter_recommandation' %}">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label>Contenu</label>
+                        <textarea name="contenu"></textarea>
+                    </div>
+
+                    <p id="message-erreur-recommandation" class="error-message"></p>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('modale-recommandation').style.display='none'">Annuler</button>
+                        <button type="submit" class="btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    <ul id="liste-recommandations" class="exp-cards">
         {% for recommandation in recommandations %}
-            <li id="recommandation-{{ recommandation.id }}" data-date="{{ recommandation.date_soumission|date:'Y-m-d' }}">
+            <li class="exp-card" id="recommandation-{{ recommandation.id }}" data-date="{{ recommandation.date_soumission|date:'Y-m-d' }}">
                 <p class="recommandation-contenu">{{ recommandation.contenu }}</p>
                 <div class="recommandation-meta">
                     <span>Auteur : {{ recommandation.membre|default:"—" }}</span>
                     <span>Soumis le : {{ recommandation.date_soumission|date:"d/m/Y" }}</span>
                 </div>
                 {% if user.teamlead or recommandation.membre == user.membretechcommand %}
-                    <button onclick="supprimerRecommandation({{ recommandation.id }}, '{% url 'supprimer_recommandation' recommandation.id %}')">Supprimer</button>
+                    <button class="btn-delete" onclick="supprimerRecommandation({{ recommandation.id }}, '{% url 'supprimer_recommandation' recommandation.id %}')">Supprimer</button>
                 {% endif %}
             </li>
+        {% empty %}
+            <p class="empty-state">Aucune recommandation pour le moment.</p>
         {% endfor %}
     </ul>
-{% endblock %}
-
-{% block extra_css %}
-    <style>
-        #liste-recommandations { list-style: none; padding: 0; }
-        #liste-recommandations li { border-bottom: 1px solid #ddd; padding: 12px 0; }
-        .recommandation-contenu { font-size: 1.1em; margin: 0 0 6px 0; }
-        .recommandation-meta { display: flex; gap: 16px; font-size: 0.9em; color: #555; }
-    </style>
 {% endblock %}
 
 {% block extra_js %}
