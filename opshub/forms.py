@@ -72,3 +72,7 @@ class ProfilForm(forms.ModelForm):
     class Meta:
         model = Utilisateurs
         fields = ['first_name', 'last_name', 'email', 'adresse']
+
+
+class TicketImportForm(forms.Form):
+    fichier = forms.FileField(label="Fichier Excel des tickets")
