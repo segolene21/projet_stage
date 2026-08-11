@@ -41,4 +41,8 @@ urlpatterns = [
     path('parametres/', views.parametres, name='parametres'),
     path('parametres/mot-de-passe/', auth_views.PasswordChangeView.as_view(template_name='changer-mot-de-passe.html', success_url='/parametres/mot-de-passe/succes/'), name='password_change'),
     path('parametres/mot-de-passe/succes/', auth_views.PasswordChangeDoneView.as_view(template_name='mot-de-passe-change.html'), name='password_change_done'),
+    path("api/tickets/", views.liste_tickets, name="liste_tickets"),
+    path("api/tickets/import/", views.import_tickets_excel, name="import_tickets_excel"),
+    path("api/tickets/export/", views.export_tickets_excel, name="export_tickets_excel"),
+    path("api/tickets/<str:ticket_id>/feedback/", views.ajouter_feedback, name="ajouter_feedback"),
 ]

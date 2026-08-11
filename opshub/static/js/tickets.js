@@ -1,5 +1,4 @@
 let donneesTicket = null;
-let ticketsImportes = JSON.parse(localStorage.getItem('ticketsImportes') || '[]');
 
 function fermerModaleImport() {
     document.getElementById('modale-import').style.display = 'none';
@@ -42,7 +41,23 @@ function previsualiserTicket(input) {
     reader.readAsArrayBuffer(fichier);
 }
 
-function confirmerImport() {
+// Récupère le cookie CSRF (nécessaire pour les requêtes POST/DELETE Django)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+async function confirmerImport() {
     if (!donneesTicket) {
         alert('Veuillez choisir un fichier Excel.');
         return;
@@ -53,107 +68,105 @@ function confirmerImport() {
         return;
     }
 
-    document.getElementById('btn-confirmer').style.display = 'none';
-    document.getElementById('zone-telechargement').style.display = 'block';
+    const fichier = document.getElementById('fichier-ticket').files[0];
+    const formData = new FormData();
+    formData.append('fichier', fichier);
 
-    // Sauvegarder dans localStorage pour affichage dans la liste
-    const maintenant = new Date().toLocaleString('fr-FR');
-    const entetes = donneesTicket[0] || [];
-    const premiereRangee = donneesTicket[1] || [];
-    
-    // Trouver le numéro du ticket (première colonne généralement)
-    const nomTicket = premiereRangee[0] || 'Ticket sans nom';
-    
-    const ticket = {
-        id: Date.now(),
-        nom: nomTicket,
-        appreciation: appreciation,
-        date: maintenant,
-        donnees: donneesTicket
-    };
+    try {
+        // 1. Envoie le fichier Excel au backend pour import en base
+        const resImport = await fetch('/api/tickets/import/', {
+            method: 'POST',
+            body: formData,
+        });
+        if (!resImport.ok) throw new Error('Échec de l\'import');
+        const resultatImport = await resImport.json();
 
-    ticketsImportes.push(ticket);
-    localStorage.setItem('ticketsImportes', JSON.stringify(ticketsImportes));
-    afficherTicketsImportes();
+        // 2. Récupère l'ID du ticket (première colonne, première ligne de données)
+        const premiereRangee = donneesTicket[1] || [];
+        const ticketId = premiereRangee[0];
+
+        // 3. Envoie le feedback/appréciation pour ce ticket
+        const resFeedback = await fetch(`/api/tickets/${ticketId}/feedback/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({ feedback: appreciation }),
+        });
+        if (!resFeedback.ok) throw new Error('Échec de l\'enregistrement du feedback');
+
+        document.getElementById('btn-confirmer').style.display = 'none';
+        document.getElementById('zone-telechargement').style.display = 'block';
+
+        await afficherTicketsImportes();
+    } catch (erreur) {
+        alert('Erreur : ' + erreur.message);
+        console.error(erreur);
+    }
 }
 
-function telechargerFichier(ticketId) {
-    let ticket;
-    if (ticketId) {
-        ticket = ticketsImportes.find(t => t.id === ticketId);
-    } else {
-        const appreciation = document.getElementById('appreciation-client').value.trim();
-        const maintenant = new Date().toLocaleString('fr-FR');
-        ticket = { donnees: donneesTicket, appreciation, date: maintenant };
-    }
-
-    if (!ticket) return;
-
-    const donneesCopie = ticket.donnees.map((row, i) => {
-        if (i === 0) {
-            return [...row, 'Appréciation client', 'Date d\'importation'];
-        } else if (i === 1) {
-            return [...row, ticket.appreciation, ticket.date];
-        } else {
-            return [...row, '', ''];
-        }
-    });
-
-    // Ajuster la largeur des colonnes
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(donneesCopie);
-
-    // Calculer la largeur de chaque colonne
-    const colWidths = [];
-    donneesCopie.forEach(row => {
-        row.forEach((cell, j) => {
-            const longueur = cell ? String(cell).length : 10;
-            if (!colWidths[j] || colWidths[j] < longueur) {
-                colWidths[j] = longueur;
-            }
-        });
-    });
-    ws['!cols'] = colWidths.map(w => ({ wch: w + 2 }));
-
-    XLSX.utils.book_append_sheet(wb, ws, 'Ticket');
-    XLSX.writeFile(wb, `ticket_${ticket.id || 'import'}.xlsx`);
+// Télécharge tous les tickets depuis la base (génération Excel côté backend)
+function telechargerFichier() {
+    window.location.href = '/api/tickets/export/';
 }
 
 function fermerApresTelechargement() {
     fermerModaleImport();
 }
 
-function afficherTicketsImportes() {
+async function afficherTicketsImportes() {
     const liste = document.getElementById('liste-tickets-importes');
     if (!liste) return;
 
-    if (ticketsImportes.length === 0) {
-        liste.innerHTML = '<p class="empty-state">Aucun ticket importé</p>';
-        return;
-    }
+    try {
+        const res = await fetch('/api/tickets/');
+        const tickets = await res.json();
 
-    liste.innerHTML = '';
-    ticketsImportes.forEach(ticket => {
-        const li = document.createElement('li');
-        li.id = `ticket-${ticket.id}`;
-        li.innerHTML = `
-            <span>${ticket.nom}</span>
-            <span style="font-size:11px; color:#888;">${ticket.date}</span>
-            <div class="card-actions">
-                <button class="btn-edit" onclick="telechargerFichier(${ticket.id})">Télécharger</button>
-                <button class="btn-delete" onclick="supprimerTicket(${ticket.id})">Supprimer</button>
-            </div>
-        `;
-        liste.appendChild(li);
-    });
+        if (tickets.length === 0) {
+            liste.innerHTML = '<p class="empty-state">Aucun ticket importé</p>';
+            return;
+        }
+
+        liste.innerHTML = '';
+        tickets.forEach(ticket => {
+            const li = document.createElement('li');
+            li.id = `ticket-${ticket.ticket_id}`;
+            li.innerHTML = `
+                <span>${ticket.ticket_id}</span>
+                <span style="font-size:11px; color:#888;">${ticket.modifie_le}</span>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="telechargerFichier()">Télécharger</button>
+                    <button class="btn-delete" onclick="supprimerTicket('${ticket.ticket_id}')">Supprimer</button>
+                </div>
+            `;
+            liste.appendChild(li);
+        });
+    } catch (erreur) {
+        console.error('Erreur de chargement des tickets :', erreur);
+        liste.innerHTML = '<p class="empty-state">Erreur de chargement</p>';
+    }
 }
 
-function supprimerTicket(id) {
+async function supprimerTicket(ticketId) {
     if (!confirm('Supprimer ce ticket ?')) return;
-    ticketsImportes = ticketsImportes.filter(t => t.id !== id);
-    localStorage.setItem('ticketsImportes', JSON.stringify(ticketsImportes));
-    afficherTicketsImportes();
+
+    try {
+        const res = await fetch(`/api/tickets/${ticketId}/`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        });
+        if (!res.ok) throw new Error('Échec de la suppression');
+        await afficherTicketsImportes();
+    } catch (erreur) {
+        alert('Erreur : ' + erreur.message);
+        console.error(erreur);
+    }
 }
 
 // Afficher les tickets au chargement de la page
 document.addEventListener('DOMContentLoaded', afficherTicketsImportes);
+function ouvrirModaleImport() {
+    const modale = document.getElementById('modale-import');
+    modale.style.display = 'flex';
+}

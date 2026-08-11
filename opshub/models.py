@@ -120,3 +120,20 @@ class Shift(models.Model):
 
     def __str__(self):
         return f"{self.date} — {self.get_plage_display()}"
+
+
+
+from django.db import models
+
+class Ticket(models.Model):
+    ticket_id = models.CharField(max_length=50, unique=True, verbose_name="ID")
+    state = models.CharField(max_length=50, verbose_name="State")
+    requester = models.CharField(max_length=150, verbose_name="Requester")
+    details = models.TextField(verbose_name="Details")
+
+    feedback = models.TextField(blank=True, null=True, verbose_name="Feedback")
+    cree_le = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
+    modifie_le = models.DateTimeField(auto_now=True, verbose_name="Modifié le")
+
+    def __str__(self):
+        return self.ticket_id

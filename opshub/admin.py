@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     Utilisateurs, Administrateur, TeamLead, MembreTechcommand,
     Equipe, OutilTeam, OutilMonitoring, Service,
-    MotsClesAssignation, Plainte, Feedback, Recommandation, Shift
+    MotsClesAssignation, Plainte, Feedback, Recommandation, Shift,Ticket
 )
 
 admin.site.register(Administrateur, UserAdmin)
@@ -19,3 +19,4 @@ admin.site.register(Plainte)
 admin.site.register(Feedback)
 admin.site.register(Recommandation)
 admin.site.register(Shift)
+admin.site.register(Ticket)
