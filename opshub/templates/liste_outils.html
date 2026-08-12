@@ -174,14 +174,17 @@
                     <li id="outil-{{ outil.id }}">
                         <a href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
                         {% if user.teamlead %}
-                            <div class="card-actions">
-                                <button class="btn-edit" onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}', {{ outil.outil_team_id|default:'null' }})">
-                                    Modifier
-                                </button>
-                                <button class="btn-delete" onclick="supprimerOutil({{ outil.id }}, '{% url 'supprimer_outil' outil.id %}')">
-                                    Supprimer
-                                </button>
-                            </div>
+                            <div class="action-menu-wrapper">
+    <button class="btn-three-dots" onclick="toggleMenu(this)">⋮</button>
+    <div class="action-dropdown">
+        <button onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}', {{ outil.outil_team_id|default:'null' }})">
+            Modifier
+        </button>
+        <button class="btn-danger" onclick="supprimerOutil({{ outil.id }}, '{% url 'supprimer_outil' outil.id %}')">
+            Supprimer
+        </button>
+    </div>
+</div>
                         {% endif %}
                     </li>
                 {% empty %}
@@ -203,6 +206,9 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script>
+        window.canDeleteTicket = {% if user.teamlead or user.membretechcommand %}true{% else %}false{% endif %};
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="{% static 'js/outils.js' %}"></script>
     <script src="{% static 'js/tickets.js' %}"></script>

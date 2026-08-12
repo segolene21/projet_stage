@@ -1,3 +1,33 @@
+function toggleMenu(btn) {
+    const menu = btn.closest('.action-menu-wrapper')?.querySelector('.action-dropdown');
+
+    if (!menu) {
+        return;
+    }
+
+    const doitOuvrir = !menu.classList.contains('open');
+    document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+
+    if (doitOuvrir) {
+        menu.classList.add('open');
+    }
+}
+
+window.toggleMenu = toggleMenu;
+
+document.addEventListener('click', function(e) {
+    const wrapper = e.target.closest('.action-menu-wrapper');
+
+    if (!wrapper) {
+        document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+        return;
+    }
+
+    if (!e.target.closest('.btn-three-dots') && !e.target.closest('.action-dropdown')) {
+        document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+});
+
 const formService = document.getElementById('form-service');
 
 if (formService) {
@@ -41,8 +71,12 @@ function supprimerService(serviceId, url) {
         if (data.succes) {
             document.getElementById('service-' + serviceId).remove();
         } else {
-            alert(data.erreur);
+            alert(data.erreur || 'Impossible de supprimer le service.');
         }
+    })
+    .catch(error => {
+        console.error('Erreur suppression service :', error);
+        alert('Erreur réseau lors de la suppression du service.');
     });
 }
 
@@ -71,42 +105,27 @@ function modifierService(serviceId, url) {
     })
 
     .then(response => {
-
         console.log("Réponse reçue");
         console.log("Status :", response.status);
-
         return response.json();
-
     })
-
     .then(data => {
-
         console.log("Django répond :", data);
-
         if (data.succes) {
-
-    // Fermer la modale
-    const modale = document.getElementById(
-        'modale-modifier-service-' + serviceId
-    );
-
-    if (modale) {
-        modale.style.display = 'none';
-    }
-
-    // Recharger la page pour afficher les changements
-    setTimeout(function() {
-        window.location.reload();
-    }, 300);
-
-}
-
+            const modale = document.getElementById('modale-modifier-service-' + serviceId);
+            if (modale) {
+                modale.style.display = 'none';
+            }
+            setTimeout(function() {
+                window.location.reload();
+            }, 300);
+        } else {
+            alert(data.erreurs ? JSON.stringify(data.erreurs) : 'Impossible de modifier le service.');
+        }
     })
-
     .catch(error => {
-
-        console.error("Erreur fetch :", error);
-
+        console.error('Erreur fetch :', error);
+        alert('Erreur réseau lors de la modification du service.');
     });
 }
 

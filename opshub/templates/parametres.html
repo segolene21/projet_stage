@@ -2,7 +2,20 @@
 {% load static %}
 
 {% block content %}
-    <h1>Paramètres</h1>
+    <div class="parametres-header">
+        <div>
+            <h1>Paramètres</h1>
+        </div>
+        <div class="settings-card settings-card--compact">
+            <h2 class="settings-subtitle">Apparence</h2>
+            <label class="form-check">
+                <input type="checkbox" id="toggle-theme">
+                Mode sombre
+            </label>
+        </div>
+    </div>
+
+    <p class="settings-intro">Mettre à jour son profil</p>
 
     <div class="modal-box">
         <h2 class="settings-subtitle">Profil</h2>
@@ -42,14 +55,6 @@
         </form>
 
         <a href="{% url 'password_change' %}" class="btn-secondary settings-link">Changer mon mot de passe</a>
-    </div>
-
-    <div class="settings-card">
-        <h2 class="settings-subtitle">Apparence</h2>
-        <label class="form-check">
-            <input type="checkbox" id="toggle-theme">
-            Mode sombre
-        </label>
     </div>
 {% endblock %}
 
