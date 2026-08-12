@@ -5,6 +5,7 @@ from .forms import OutilMonitoringForm, ServiceForm, TeamLeadForm, MembreTechcom
 from .models import Administrateur, TeamLead, MembreTechcommand,Utilisateurs, OutilTeam,Feedback, Recommandation, Plainte, Shift,MotsClesAssignation, Equipe, MembreTechcommand,Ticket
 from django.http import HttpResponseForbidden, JsonResponse,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 import json
 from django.contrib import messages
 from openpyxl import load_workbook, Workbook
@@ -498,7 +499,11 @@ def import_tickets_excel(request):
 
 
 def export_tickets_excel(request):
+    ticket_id = request.GET.get('ticket_id')
     tickets = Ticket.objects.all()
+    if ticket_id:
+        tickets = tickets.filter(ticket_id=ticket_id)
+
     wb = Workbook()
     ws = wb.active
     ws.title = "Tickets"
@@ -507,12 +512,13 @@ def export_tickets_excel(request):
     for t in tickets:
         ws.append([
             t.ticket_id, t.state, t.requester, t.details, t.feedback or "",
-            t.cree_le.strftime("%d/%m/%Y %H:%M") if t.cree_le else "",
-            t.modifie_le.strftime("%d/%m/%Y %H:%M") if t.modifie_le else "",
+            timezone.localtime(t.cree_le).strftime("%d/%m/%Y %H:%M") if t.cree_le else "",
+            timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M") if t.modifie_le else "",
         ])
 
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = 'attachment; filename="tickets_export.xlsx"'
+    filename = 'tickets_export.xlsx' if not ticket_id else f'ticket_{ticket_id}.xlsx'
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
     wb.save(response)
     return response
 
@@ -524,11 +530,39 @@ def liste_tickets(request):
 
     tickets = []
     for t in qs:
-        t['cree_le'] = t['cree_le'].strftime("%d/%m/%Y %H:%M") if t.get('cree_le') else ""
-        t['modifie_le'] = t['modifie_le'].strftime("%d/%m/%Y %H:%M") if t.get('modifie_le') else ""
+        t['cree_le'] = timezone.localtime(t['cree_le']).strftime("%d/%m/%Y %H:%M") if t.get('cree_le') else ""
+        t['modifie_le'] = timezone.localtime(t['modifie_le']).strftime("%d/%m/%Y %H:%M") if t.get('modifie_le') else ""
         tickets.append(t)
 
     return JsonResponse(tickets, safe=False)
+
+
+@csrf_exempt
+def ticket_detail(request, ticket_id):
+    if request.method == 'DELETE':
+        if not (hasattr(request.user, 'teamlead') or hasattr(request.user, 'membretechcommand')):
+            return JsonResponse({"erreur": "Accès interdit"}, status=403)
+
+        try:
+            ticket = Ticket.objects.get(ticket_id=ticket_id)
+        except Ticket.DoesNotExist:
+            return JsonResponse({"erreur": "Ticket introuvable"}, status=404)
+
+        ticket.delete()
+        return JsonResponse({"message": "Ticket supprimé"})
+
+    if request.method == 'GET':
+        ticket = Ticket.objects.filter(ticket_id=ticket_id).values(
+            "ticket_id", "state", "requester", "details", "feedback", "cree_le", "modifie_le"
+        ).first()
+        if not ticket:
+            return JsonResponse({"erreur": "Ticket introuvable"}, status=404)
+
+        ticket['cree_le'] = timezone.localtime(ticket['cree_le']).strftime("%d/%m/%Y %H:%M") if ticket.get('cree_le') else ""
+        ticket['modifie_le'] = timezone.localtime(ticket['modifie_le']).strftime("%d/%m/%Y %H:%M") if ticket.get('modifie_le') else ""
+        return JsonResponse(ticket, safe=False)
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
 @csrf_exempt

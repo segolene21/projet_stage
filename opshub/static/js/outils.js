@@ -192,3 +192,35 @@ if (formOutil) {
 window.ouvrirModaleAjout = ouvrirModaleAjout;
 window.ouvrirModaleModification = ouvrirModaleModification;
 window.supprimerOutil = supprimerOutil;
+
+function toggleMenu(btn) {
+    const menu = btn.closest('.action-menu-wrapper')?.querySelector('.action-dropdown');
+
+    if (!menu) {
+        return;
+    }
+
+    const doitOuvrir = !menu.classList.contains('open');
+
+    document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+
+    if (doitOuvrir) {
+        menu.classList.add('open');
+    }
+}
+
+// Fermer le menu si on clique ailleurs
+document.addEventListener('click', function(e) {
+    const wrapper = e.target.closest('.action-menu-wrapper');
+
+    if (!wrapper) {
+        document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+        return;
+    }
+
+    if (!e.target.closest('.btn-three-dots') && !e.target.closest('.action-dropdown')) {
+        document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+});
+
+window.toggleMenu = toggleMenu;

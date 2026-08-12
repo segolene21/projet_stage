@@ -308,6 +308,7 @@ footer{
     padding:32px;
     width:100%;
     max-width:450px;
+    margin: 0 auto 25px;
     max-height: 85vh;
     overflow-y:auto;
     box-shadow:var(--shadow);
@@ -674,6 +675,20 @@ footer{
 
 /* ================= PARAMETRES ================= */
 
+.parametres-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    margin-bottom:24px;
+}
+
+.settings-intro{
+    margin:8px 0 0;
+    color:var(--muted);
+    max-width:600px;
+}
+
 .settings-card{
     background:var(--white);
     border-radius:20px;
@@ -681,6 +696,16 @@ footer{
     max-width:550px;
     box-shadow:var(--shadow);
     margin-bottom:25px;
+}
+
+.settings-card--compact{
+    max-width:260px;
+    padding:18px 20px;
+    margin-bottom:0;
+}
+
+.settings-card--compact .settings-subtitle{
+    margin-bottom:12px;
 }
 
 .settings-subtitle{
@@ -1143,4 +1168,149 @@ footer{
     flex-shrink: 0;
     position: relative;
     z-index: 5;
+}
+#liste-tickets-importes {
+    list-style: none;
+    counter-reset: row-num;
+    background: rgb(246, 240, 204);
+    border-radius: 12px;
+}
+
+#liste-tickets-importes li {
+    counter-increment: row-num;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,.08);
+    border-radius: 0;
+    padding: 10px 14px;
+    box-shadow: none;
+}
+
+#liste-tickets-importes li::before {
+    content: counter(row-num);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+#liste-tickets-importes li:nth-child(even) {
+    background: rgba(255,204,0,.08);
+}
+
+#liste-tickets-importes li:last-child {
+    border-bottom: none;
+}
+
+#liste-tickets-importes li:hover {
+    background: rgba(255,204,0,.15);
+}
+
+#liste-tickets-importes .ticket-nom {
+    flex: 1;
+    color: #111;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+#liste-tickets-importes .ticket-date {
+    font-size: 11px;
+    color: #888;
+    flex-shrink: 0;
+}
+
+#liste-tickets-importes .card-actions {
+    margin-top: 0;
+    flex-shrink: 0;
+}
+/* ================= MENU TROIS POINTS ================= */
+
+.action-menu-wrapper {
+    position: relative;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+.btn-three-dots {
+    background: none;
+    border: none;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 8px;
+    line-height: 1;
+    transition: background 0.2s;
+    position: relative;
+    z-index: 2;
+}
+
+.btn-three-dots:hover {
+    background: rgba(0,0,0,0.07);
+    color: #111;
+}
+
+.action-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 110%;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    z-index: 999;
+    min-width: 150px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+
+.action-dropdown.open {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.action-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 11px 18px;
+    text-align: left;
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #111;
+    transition: background 0.15s;
+}
+
+.action-dropdown button:hover {
+    background: rgba(255,204,0,0.15);
+}
+
+.action-dropdown .btn-danger {
+    color: #d11a2a;
+}
+
+.action-dropdown .btn-danger:hover {
+    background: #fff0f0;
+}
+
+.dark-mode .action-dropdown {
+    background: #1f232b;
+}
+
+.dark-mode .action-dropdown button {
+    color: #e5e7eb;
+}
+
+.dark-mode .action-dropdown button:hover {
+    background: rgba(255,204,0,0.1);
 }

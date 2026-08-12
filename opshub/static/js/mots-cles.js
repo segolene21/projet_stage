@@ -1,3 +1,33 @@
+function toggleMenu(btn) {
+    const menu = btn.closest('.action-menu-wrapper')?.querySelector('.action-dropdown');
+
+    if (!menu) {
+        return;
+    }
+
+    const doitOuvrir = !menu.classList.contains('open');
+    document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+
+    if (doitOuvrir) {
+        menu.classList.add('open');
+    }
+}
+
+window.toggleMenu = toggleMenu;
+
+document.addEventListener('click', function(e) {
+    const wrapper = e.target.closest('.action-menu-wrapper');
+
+    if (!wrapper) {
+        document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+        return;
+    }
+
+    if (!e.target.closest('.btn-three-dots') && !e.target.closest('.action-dropdown')) {
+        document.querySelectorAll('.action-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+});
+
 const formMotCle = document.getElementById('form-mot-cle');
 
 if (formMotCle) {
@@ -56,8 +86,12 @@ function supprimerMotCle(motCleId, url) {
         if (data.succes) {
             document.getElementById('mot-cle-' + motCleId).remove();
         } else {
-            alert(data.erreur);
+            alert(data.erreur || 'Impossible de supprimer le mot-clé.');
         }
+    })
+    .catch(error => {
+        console.error('Erreur suppression mot-clé :', error);
+        alert('Erreur réseau lors de la suppression du mot-clé.');
     });
 }
 
