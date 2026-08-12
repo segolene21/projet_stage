@@ -388,7 +388,7 @@ footer{
     background:var(--primary);
     border:none;
     border-radius:10px;
-    padding:10px 18px;
+    padding:6px 10px;
     font-weight:bold;
     cursor:pointer;
     white-space:nowrap;
@@ -399,7 +399,7 @@ footer{
     color:#d11a2a;
     border:none;
     border-radius:10px;
-    padding:10px 18px;
+    padding:6px 10px;
     font-weight:bold;
     cursor:pointer;
     white-space:nowrap;

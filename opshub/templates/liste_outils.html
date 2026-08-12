@@ -9,9 +9,10 @@
                 <button class="btn-primary" onclick="ouvrirModaleAjout()" data-url-ajout="{% url 'ajouter_outil' %}">
                     + Ajouter un outil
                 </button>
-                <button class="btn-primary" onclick="document.getElementById('modale-import').style.display='block'">
-                    Importer un ticket
-                </button>
+                  <button class="btn-primary" onclick="ouvrirModaleImport()">
+    Importer un ticket
+</button>
+
             {% endif %}
         </div>
     </div>
@@ -114,10 +115,7 @@
         <!-- MODALE IMPORT TICKET -->
 <div id="modale-import" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:none; justify-content:center; align-items:center;">
     <div class="modal-box" style="max-width:650px; width:90%; max-height:90vh; overflow-y:auto;">
-       <button class="btn-primary" onclick="ouvrirModaleImport()">
-    Importer un ticket
-</button>
-
+     
         <div class="form-group">
             <label>Fichier Excel du ticket (ServiceNow)</label>
             <input type="file" id="fichier-ticket" accept=".xlsx,.xls"
