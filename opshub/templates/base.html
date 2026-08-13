@@ -45,7 +45,7 @@
                 <li><a href="{% url 'liste_services' %}" class="nav-item"><img src="{% static 'img/Image de fond/services .jpg' %}" class="nav-icon" alt=""> Services</a></li>
                 <li><a href="{% url 'liste_mots_cles' %}" class="nav-item"><img src="{% static 'img/Image de fond/mots-clés.jpg' %}" class="nav-icon" alt=""> Mots-clés</a></li>
                 <li><a href="{% url 'experiences_membres' %}" class="nav-item"><img src="{% static 'img/Image de fond/membre.jpg' %}" class="nav-icon" alt=""> Expériences Membres</a></li>
-                 {% if user.administrateur %} 
+                 {% if user.is_administrateur %} 
                 <li><a href="{% url 'liste_utilisateurs' %}" class="nav-item"><img src="{% static 'img/Image de fond/utilisateurs .jpg' %}" class="nav-icon" alt=""> Utilisateurs</a></li> 
                 {% endif %} 
             </ul>

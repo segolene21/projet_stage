@@ -4,7 +4,7 @@
 {% block content %}
     <div class="outils-header">
         <h1>Liste des services</h1>
-        {% if user.teamlead %}
+        {% if user.is_teamlead %}
             <button class="btn-primary" onclick="document.getElementById('modale-ajout-service').style.display='flex'">
                 + Ajouter un service
             </button>
@@ -13,7 +13,7 @@
 
     <input type="text" id="champ_recherche_services" class="search-input" placeholder="Rechercher un service...">
 
-    {% if user.teamlead %}
+    {% if user.is_teamlead %}
         <div id="modale-ajout-service" class="modal-overlay" style="display:none;">
             <div class="modal-box">
                 <h2 class="modal-title">Ajouter un service</h2>
@@ -58,7 +58,7 @@
             <li id="service-{{ service.id }}">
                 <a id="nom-service-{{ service.id }}" href="{% url 'detail_service' service.id %}">{{ service.nom }}</a>
 
-                {% if user.teamlead %}
+                {% if user.is_teamlead %}
                     <div class="action-menu-wrapper">
                         <button type="button" class="btn-three-dots" onclick="toggleMenu(this)">⋮</button>
                         <div class="action-dropdown">

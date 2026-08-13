@@ -2,27 +2,85 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
+class Permission(models.Model):
+    class Code(models.TextChoices):
+        GERER_OUTILS = 'gerer_outils', 'Créer, modifier, supprimer un outil de monitoring'
+        CONSULTER_OUTILS = 'consulter_outils', 'Consulter le catalogue des outils'
+        GERER_SERVICES = 'gerer_services', 'Créer, modifier, supprimer un service'
+        CONSULTER_SERVICES = 'consulter_services', 'Consulter la liste des services'
+        GERER_MOTS_CLES = 'gerer_mots_cles', 'Créer, modifier, supprimer un mot-clé et son équipe'
+        CONSULTER_MOTS_CLES = 'consulter_mots_cles', 'Consulter les mots-clés d\'assignation'
+        GERER_UTILISATEURS = 'gerer_utilisateurs', 'Créer, modifier, supprimer un utilisateur'
+        GERER_ROLES = 'gerer_roles', 'Créer/modifier les rôles et leurs permissions'
+        SOUMETTRE_FEEDBACK = 'soumettre_feedback', 'Soumettre un feedback/plainte/recommandation'
+        CONSULTER_FEEDBACK = 'consulter_feedback', 'Consulter les feedbacks/plaintes/recommandations'
+        SUPPRIMER_FEEDBACK_TOUS = 'supprimer_feedback_tous', 'Supprimer n\'importe quelle contribution'
+        SUPPRIMER_FEEDBACK_PROPRE = 'supprimer_feedback_propre', 'Supprimer ses propres contributions'
+
+    code = models.CharField(max_length=50, unique=True, choices=Code.choices)
+    description = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.get_code_display()
+
+
+class Role(models.Model):
+    class Nom(models.TextChoices):
+        ADMINISTRATEUR = 'administrateur', 'Administrateur'
+        TEAMLEAD = 'teamlead', 'Team-lead'
+        MEMBRE_TECHCOMMAND = 'membre_techcommand', 'Membre Techcommand'
+
+    nom = models.CharField(max_length=50, unique=True, choices=Nom.choices)
+    description = models.TextField(blank=True)
+    permissions = models.ManyToManyField(Permission, through="RolePermission", related_name="roles")
+
+    def __str__(self):
+        return self.get_nom_display()
+
+    def a_la_permission(self, code_permission):
+        return self.permissions.filter(code=code_permission).exists()
+    
+    
+
+class RolePermission(models.Model):
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('role', 'permission')
+
+    def __str__(self):
+        return f"{self.role} — {self.permission}"
+
+
 class Utilisateurs(AbstractUser):
     adresse = models.CharField(max_length=255, blank=True)
-    
-class Administrateur(Utilisateurs):
-    class Meta:
-        verbose_name = "Administrateur"
-        verbose_name_plural = "Administrateurs"
-
-
-class TeamLead(Utilisateurs):
-    class Meta:
-        verbose_name = "Team-lead"
-        verbose_name_plural = "Team-leads"
-
-
-class MembreTechcommand(Utilisateurs):
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name="utilisateurs")
     statut = models.BooleanField(default=True)
 
-    class Meta:
-        verbose_name = "Membre Techcommand"
-        verbose_name_plural = "Membres Techcommand"
+    def a_la_permission(self, code_permission):
+        """Vérifie si l'utilisateur possède une permission donnée."""
+        if self.is_superuser:
+            return True
+        return self.role and self.role.a_la_permission(code_permission)
+
+    def a_le_role(self, code_role):
+        """Vérifie si l'utilisateur a un rôle spécifique."""
+        if self.is_superuser:
+            return True
+        return self.role and self.role.nom == code_role
+
+    @property
+    def is_administrateur(self):
+        return self.is_superuser or self.a_la_permission(Permission.Code.GERER_UTILISATEURS)
+
+    @property
+    def is_teamlead(self):
+        return self.is_superuser or self.a_la_permission(Permission.Code.GERER_OUTILS)
+
+    @property
+    def is_membre_techcommand(self):
+        return self.is_superuser or self.a_la_permission(Permission.Code.SOUMETTRE_FEEDBACK)
 
 
 class Equipe(models.Model):
@@ -46,24 +104,20 @@ class OutilTeam(models.Model):
 
 
 class OutilMonitoring(models.Model):
-    nom = models.CharField(max_length=100 )
+    nom = models.CharField(max_length=100)
     statut = models.BooleanField(default=True)
     lien_acces = models.CharField(max_length=225)
     necessite_authentification = models.BooleanField(default=False)
-    outil_team = models.ForeignKey("OutilTeam", on_delete=models.CASCADE)
+    outil_team = models.ForeignKey(OutilTeam, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Outil monitoring #{self.id}"
+        return f"Outil monitoring #{self.id} — {self.nom}"
 
 
 class Service(models.Model):
     nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-
-    outils_monitoring = models.ManyToManyField(
-        OutilMonitoring,
-        related_name="services"
-    )
+    outils_monitoring = models.ManyToManyField(OutilMonitoring, related_name="services")
 
     def __str__(self):
         return self.nom
@@ -71,7 +125,7 @@ class Service(models.Model):
 
 class MotsClesAssignation(models.Model):
     intitule = models.CharField(max_length=100)
-    equipe = models.ForeignKey("Equipe", on_delete=models.CASCADE, null=True, blank=True)
+    equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.intitule
@@ -81,7 +135,7 @@ class Plainte(models.Model):
     contenu = models.TextField()
     date_ajout = models.DateTimeField(auto_now_add=True)
     anonyme = models.BooleanField(default=False)
-    membre = models.ForeignKey("MembreTechcommand", on_delete=models.SET_NULL, null=True, blank=True)
+    membre = models.ForeignKey(Utilisateurs, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"Plainte du {self.date_ajout.date()}"
@@ -90,7 +144,7 @@ class Plainte(models.Model):
 class Feedback(models.Model):
     description = models.TextField()
     date_soumission = models.DateField(auto_now_add=True)
-    membre = models.ForeignKey("MembreTechcommand", on_delete=models.SET_NULL, null=True)
+    membre = models.ForeignKey(Utilisateurs, on_delete=models.SET_NULL, null=True)
     shift = models.ForeignKey("Shift", on_delete=models.CASCADE)
 
     def __str__(self):
@@ -100,7 +154,7 @@ class Feedback(models.Model):
 class Recommandation(models.Model):
     contenu = models.TextField()
     date_soumission = models.DateField(auto_now_add=True)
-    membre = models.ForeignKey("MembreTechcommand", on_delete=models.SET_NULL, null=True)
+    membre = models.ForeignKey(Utilisateurs, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"Recommandation #{self.id}"
@@ -122,15 +176,11 @@ class Shift(models.Model):
         return f"{self.date} — {self.get_plage_display()}"
 
 
-
-from django.db import models
-
 class Ticket(models.Model):
     ticket_id = models.CharField(max_length=50, unique=True, verbose_name="ID")
     state = models.CharField(max_length=50, verbose_name="State")
     requester = models.CharField(max_length=150, verbose_name="Requester")
     details = models.TextField(verbose_name="Details")
-
     feedback = models.TextField(blank=True, null=True, verbose_name="Feedback")
     cree_le = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
     modifie_le = models.DateTimeField(auto_now=True, verbose_name="Modifié le")
