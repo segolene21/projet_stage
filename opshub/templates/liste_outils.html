@@ -2,10 +2,11 @@
 {% load static %}
 
 {% block content %}
+
     <div class="outils-header">
         <h1>Outils de monitoring</h1>
         <div style="display:flex; gap:10px;">
-            {% if user.teamlead %}
+            {% if user.is_teamlead %}
                 <button class="btn-primary" onclick="ouvrirModaleAjout()" data-url-ajout="{% url 'ajouter_outil' %}">
                     + Ajouter un outil
                 </button>
@@ -15,7 +16,7 @@
 
     <input type="text" id="champ_recherche_outils" class="search-input" placeholder="Rechercher un outil...">
 
-    {% if user.teamlead %}
+    {% if user.is_teamlead %}
         <!-- MODALE AJOUT OUTIL -->
         <div id="modale-ajout" class="modal-overlay" style="display:none;">
             <div class="modal-box">
@@ -116,7 +117,7 @@
             {% for outil in outils %}
                 <li id="outil-{{ outil.id }}">
                     <a href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
-                    {% if user.teamlead %}
+                    {% if user.is_teamlead %}
                         <div class="action-buttons-inline">
                             <button class="btn-action-icon btn-action-edit" title="Modifier" aria-label="Modifier" onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}', {{ outil.outil_team_id|default:'null' }})">
                                 <i class="bi bi-pencil-square"></i>
@@ -136,7 +137,7 @@
 
 {% block extra_js %}
     <script>
-        window.isTeamLead = {{ user.teamlead|yesno:'true,false' }};
+        window.canDeleteTicket = {% if user.is_teamlead or user.is_membre_techcommand %}true{% else %}false{% endif %};
     </script>
     <script src="{% static 'js/outils.js' %}"></script>
 {% endblock %}

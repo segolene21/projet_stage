@@ -17,7 +17,7 @@
         <input type="date" id="filtre_date_recommandations" class="search-input date-filter">
     </div>
 
-    {% if user.membretechcommand %}
+    {% if user.is_membretechcommand %}
         <div id="modale-recommandation" class="modal-overlay" style="display:none;">
             <div class="modal-box">
                 <h2 class="modal-title">Soumettre une recommandation</h2>
@@ -48,7 +48,7 @@
                     <span>Auteur : {{ recommandation.membre|default:"—" }}</span>
                     <span>Soumis le : {{ recommandation.date_soumission|date:"d/m/Y" }}</span>
                 </div>
-                {% if user.teamlead or recommandation.membre == user.membretechcommand %}
+                {% if user.is_teamlead or recommandation.membre == user.membretechcommand %}
                     <div class="action-buttons-inline">
                         <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerRecommandation({{ recommandation.id }}, '{% url 'supprimer_recommandation' recommandation.id %}')">
                             <i class="bi bi-trash"></i>
