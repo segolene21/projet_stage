@@ -1,18 +1,24 @@
-const toggleTheme = document.getElementById('toggle-theme');
+const themeButtons = document.querySelectorAll('.theme-btn');
 
-if (toggleTheme) {
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-        toggleTheme.checked = true;
-    }
+function applyTheme(theme) {
+    const isDark = theme === 'dark';
+    document.body.classList.toggle('dark-mode', isDark);
+    localStorage.setItem('theme', theme);
 
-    toggleTheme.addEventListener('change', function() {
-        if (this.checked) {
-            document.body.classList.add('dark-mode');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.body.classList.remove('dark-mode');
-            localStorage.setItem('theme', 'light');
-        }
+    themeButtons.forEach((button) => {
+        const isActive = button.dataset.theme === theme;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+    });
+}
+
+if (themeButtons.length) {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
+    themeButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            applyTheme(button.dataset.theme);
+        });
     });
 }

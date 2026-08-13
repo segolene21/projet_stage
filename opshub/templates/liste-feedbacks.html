@@ -61,7 +61,11 @@
                     <span>Soumis le : {{ feedback.date_soumission|date:"d/m/Y" }}</span>
                 </div>
                 {% if user.teamlead or feedback.membre == user.membretechcommand %}
-                    <button class="btn-delete" onclick="supprimerFeedback({{ feedback.id }}, '{% url 'supprimer_feedback' feedback.id %}')">Supprimer</button>
+                    <div class="action-buttons-inline">
+                        <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerFeedback({{ feedback.id }}, '{% url 'supprimer_feedback' feedback.id %}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 {% endif %}
             </li>
         {% empty %}

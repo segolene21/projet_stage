@@ -36,17 +36,14 @@
                     </td>
                     {% if user.teamlead %}
                         <td>
-                            <div class="action-menu-wrapper">
-                            <button type="button" class="btn-three-dots" onclick="toggleMenu(this)">⋮</button>
-                            <div class="action-dropdown">
-                                <button type="button" onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='flex'">
-                                    Modifier
+                            <div class="action-buttons-inline">
+                                <button type="button" class="btn-action-icon btn-action-edit" title="Modifier" aria-label="Modifier" onclick="document.getElementById('modale-modifier-mc-{{ mot_cle.id }}').style.display='flex'">
+                                    <i class="bi bi-pencil-square"></i>
                                 </button>
-                                <button type="button" class="btn-danger" onclick="supprimerMotCle({{ mot_cle.id }}, '{% url 'supprimer_mot_cle' mot_cle.id %}')">
-                                    Supprimer
+                                <button type="button" class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerMotCle({{ mot_cle.id }}, '{% url 'supprimer_mot_cle' mot_cle.id %}')">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </div>
-                        </div>
 
                             <div id="modale-modifier-mc-{{ mot_cle.id }}" class="modal-overlay" style="display:none;">
                                 <div class="modal-box">

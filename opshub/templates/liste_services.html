@@ -59,16 +59,13 @@
                 <a id="nom-service-{{ service.id }}" href="{% url 'detail_service' service.id %}">{{ service.nom }}</a>
 
                 {% if user.teamlead %}
-                    <div class="action-menu-wrapper">
-                        <button type="button" class="btn-three-dots" onclick="toggleMenu(this)">⋮</button>
-                        <div class="action-dropdown">
-                            <button type="button" onclick="document.getElementById('modale-modifier-service-{{ service.id }}').style.display='flex'">
-                                Modifier
-                            </button>
-                            <button type="button" class="btn-danger" onclick="supprimerService({{ service.id }}, '{% url 'supprimer_service' service.id %}')">
-                                Supprimer
-                            </button>
-                        </div>
+                    <div class="action-buttons-inline">
+                        <button type="button" class="btn-action-icon btn-action-edit" title="Modifier" aria-label="Modifier" onclick="document.getElementById('modale-modifier-service-{{ service.id }}').style.display='flex'">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button type="button" class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerService({{ service.id }}, '{% url 'supprimer_service' service.id %}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
 
                     <div id="modale-modifier-service-{{ service.id }}" class="modal-overlay" style="display:none;">

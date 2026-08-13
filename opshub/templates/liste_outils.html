@@ -3,16 +3,12 @@
 
 {% block content %}
     <div class="outils-header">
-        <h1>Liste des outils</h1>
+        <h1>Outils de monitoring</h1>
         <div style="display:flex; gap:10px;">
             {% if user.teamlead %}
                 <button class="btn-primary" onclick="ouvrirModaleAjout()" data-url-ajout="{% url 'ajouter_outil' %}">
                     + Ajouter un outil
                 </button>
-                  <button class="btn-primary" onclick="ouvrirModaleImport()">
-    Importer un ticket
-</button>
-
             {% endif %}
         </div>
     </div>
@@ -112,104 +108,35 @@
                 </form>
             </div>
         </div>
-        <!-- MODALE IMPORT TICKET -->
-<div id="modale-import" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:none; justify-content:center; align-items:center;">
-    <div class="modal-box" style="max-width:650px; width:90%; max-height:90vh; overflow-y:auto;">
-     
-        <div class="form-group">
-            <label>Fichier Excel du ticket (ServiceNow)</label>
-            <input type="file" id="fichier-ticket" accept=".xlsx,.xls"
-                style="width:100%; padding:10px; border:2px dashed #FFCC00; border-radius:8px; background:#FFF8D6; font-size:13px; cursor:pointer;"
-                onchange="previsualiserTicket(this)"/>
-        </div>
-
-        <div id="apercu-ticket" style="display:none;">
-            <div class="form-group">
-                <label>Aperçu du ticket</label>
-                <div id="tableau-ticket" style="border:1px solid #eee; border-radius:8px; overflow:auto; max-height:200px;"></div>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Appréciation du client</label>
-            <textarea id="appreciation-client" rows="4"
-                placeholder="Saisir l'appréciation du client après résolution de l'incident..."
-                style="width:100%; padding:12px; border:1.5px solid #eee; border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; outline:none;"
-                onfocus="this.style.borderColor='#FFCC00'" onblur="this.style.borderColor='#eee'">
-            </textarea>
-        </div>
-
-        <div class="form-actions">
-            <button type="button" class="btn-secondary" onclick="fermerModaleImport()">Annuler</button>
-            <button type="button" class="btn-primary" id="btn-confirmer" onclick="confirmerImport()">
-                Confirmer l'import
-            </button>
-        </div>
-
-        <div id="zone-telechargement" style="display:none; margin-top:20px; padding:16px; background:#f4f5f7; border-radius:8px; text-align:center;">
-            <p style="font-size:13px; color:#111; font-weight:700; margin-bottom:12px;">Ticket importé avec succès !</p>
-            <div style="display:flex; gap:10px; justify-content:center;">
-                <button type="button" class="btn-primary" onclick="telechargerFichier()">
-                    Télécharger le ticket + appréciation
-                </button>
-                <button type="button" class="btn-secondary" onclick="fermerApresTelechargement()">
-                    OK
-                </button>
-            </div>
-        </div>
-
-    </div>
-</div>
-
     {% endif %}
 
-   <!-- LAYOUT 2 COLONNES -->
-    <div style="display:flex; gap:24px; align-items:flex-start; margin-top:20px;">
-        
-        <!-- COLONNE GAUCHE - OUTILS -->
-        <div style="flex:1;">
-            <h2 style="font-size:16px; font-weight:700; color:#111; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">Outils de monitoring</h2>
-            <ul id="liste-outils">
-                {% for outil in outils %}
-                    <li id="outil-{{ outil.id }}">
-                        <a href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
-                        {% if user.teamlead %}
-                            <div class="action-menu-wrapper">
-    <button class="btn-three-dots" onclick="toggleMenu(this)">⋮</button>
-    <div class="action-dropdown">
-        <button onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}', {{ outil.outil_team_id|default:'null' }})">
-            Modifier
-        </button>
-        <button class="btn-danger" onclick="supprimerOutil({{ outil.id }}, '{% url 'supprimer_outil' outil.id %}')">
-            Supprimer
-        </button>
+    <div style="margin-top:20px;">
+        <h2 style="font-size:16px; font-weight:700; color:#111; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">Outils de monitoring</h2>
+        <ul id="liste-outils">
+            {% for outil in outils %}
+                <li id="outil-{{ outil.id }}">
+                    <a href="{% url 'detail_outil' outil.id %}">{{ outil.nom }}</a>
+                    {% if user.teamlead %}
+                        <div class="action-buttons-inline">
+                            <button class="btn-action-icon btn-action-edit" title="Modifier" aria-label="Modifier" onclick="ouvrirModaleModification({{ outil.id }}, '{{ outil.nom }}', '{{ outil.lien_acces }}', {{ outil.necessite_authentification|yesno:'true,false' }}, {{ outil.statut|yesno:'true,false' }}, '{% url 'modifier_outil' outil.id %}', {{ outil.outil_team_id|default:'null' }})">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerOutil({{ outil.id }}, '{% url 'supprimer_outil' outil.id %}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <p class="empty-state">Aucun outil disponible</p>
+            {% endfor %}
+        </ul>
     </div>
-</div>
-                        {% endif %}
-                    </li>
-                {% empty %}
-                    <p class="empty-state">Aucun outil disponible</p>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <!-- COLONNE DROITE - TICKETS -->
-        <div style="flex:1;">
-            <h2 style="font-size:16px; font-weight:700; color:#111; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">Tickets importés</h2>
-            <ul id="liste-tickets-importes">
-                <p class="empty-state">Aucun ticket importé</p>
-            </ul>
-        </div>
-
-    </div>
-
 {% endblock %}
 
 {% block extra_js %}
     <script>
-        window.canDeleteTicket = {% if user.teamlead or user.membretechcommand %}true{% else %}false{% endif %};
+        window.isTeamLead = {{ user.teamlead|yesno:'true,false' }};
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="{% static 'js/outils.js' %}"></script>
-    <script src="{% static 'js/tickets.js' %}"></script>
 {% endblock %}

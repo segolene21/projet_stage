@@ -72,10 +72,14 @@
                      <td>{{ u.email }}</td>
                      <td id="statut-{{ u.id }}">{{ u.is_active|yesno:"Actif,Inactif" }}</td>
                      <td>
-                        <div class="card-actions">
-                            <button class="btn-edit" onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">Activer/Désactiver</button>
-                                <button class="btn-delete" onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">Supprimer</button>
-                            </div>
+                        <div class="action-buttons-inline">
+                            <button class="btn-action-icon btn-action-edit" title="Activer / Désactiver statut" aria-label="Activer / Désactiver statut" onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">
+                                <i class="bi bi-power"></i>
+                            </button>
+                            <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                         </td>
                     </tr>
                 {% empty %}
@@ -98,10 +102,14 @@
                         <td>{{ u.email }}</td>
                         <td id="statut-{{ u.id }}">{{ u.is_active|yesno:"Actif,Inactif" }}</td>
                         <td>
-                            <div class="card-actions">
-                                <button class="btn-edit" onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">Activer/Désactiver</button>
-                                <button class="btn-delete" onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">Supprimer</button>
-                            </div>
+                            <div class="action-buttons-inline">
+                            <button class="btn-action-icon btn-action-edit" title="Activer / Désactiver statut" aria-label="Activer / Désactiver statut" onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">
+                                <i class="bi bi-power"></i>
+                            </button>
+                            <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                         </td>
                     </tr>
                 {% empty %}
@@ -124,10 +132,14 @@
                         <td>{{ u.email }}</td>
                         <td id="statut-{{ u.id }}">{{ u.is_active|yesno:"Actif,Inactif" }}</td>
                         <td>
-                            <div class="card-actions">
-                                <button class="btn-edit" onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">Activer/Désactiver</button>
-                                <button class="btn-delete" onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">Supprimer</button>
-                            </div>
+                            <div class="action-buttons-inline">
+                            <button class="btn-action-icon btn-action-edit" title="Activer / Désactiver statut" aria-label="Activer / Désactiver statut" onclick="toggleStatut({{ u.id }}, '{% url 'toggle_statut_utilisateur' u.id %}')">
+                                <i class="bi bi-power"></i>
+                            </button>
+                            <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerUtilisateur({{ u.id }}, '{% url 'supprimer_utilisateur' u.id %}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                         </td>
                     </tr>
                 {% empty %}

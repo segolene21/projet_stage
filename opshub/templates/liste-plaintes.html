@@ -53,7 +53,11 @@
                     <span>Soumis le : {{ plainte.date_ajout|date:"d/m/Y H:i" }}</span>
                 </div>
                 {% if user.teamlead or plainte.membre == user.membretechcommand %}
-                    <button class="btn-delete" onclick="supprimerPlainte({{ plainte.id }}, '{% url 'supprimer_plainte' plainte.id %}')">Supprimer</button>
+                    <div class="action-buttons-inline">
+                        <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerPlainte({{ plainte.id }}, '{% url 'supprimer_plainte' plainte.id %}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 {% endif %}
             </li>
         {% empty %}

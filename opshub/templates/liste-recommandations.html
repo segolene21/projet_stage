@@ -49,7 +49,11 @@
                     <span>Soumis le : {{ recommandation.date_soumission|date:"d/m/Y" }}</span>
                 </div>
                 {% if user.teamlead or recommandation.membre == user.membretechcommand %}
-                    <button class="btn-delete" onclick="supprimerRecommandation({{ recommandation.id }}, '{% url 'supprimer_recommandation' recommandation.id %}')">Supprimer</button>
+                    <div class="action-buttons-inline">
+                        <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerRecommandation({{ recommandation.id }}, '{% url 'supprimer_recommandation' recommandation.id %}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 {% endif %}
             </li>
         {% empty %}

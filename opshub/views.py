@@ -523,6 +523,11 @@ def export_tickets_excel(request):
     return response
 
 
+@login_required
+def page_tickets(request):
+    return render(request, 'liste_tickets.html')
+
+
 def liste_tickets(request):
     qs = list(Ticket.objects.values(
         "ticket_id", "state", "requester", "details", "feedback", "cree_le", "modifie_le"

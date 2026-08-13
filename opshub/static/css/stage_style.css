@@ -684,9 +684,12 @@ footer{
 }
 
 .settings-intro{
-    margin:8px 0 0;
-    color:var(--muted);
-    max-width:600px;
+    display:block;
+    max-width:450px;
+    margin:0 auto 16px;
+    color:#0b63ff;
+    text-align:center;
+    font-weight:600;
 }
 
 .settings-card{
@@ -815,6 +818,12 @@ footer{
 .dark-mode .modal-box{
     background:#f0f3f9;
     color:#1c1e20;
+}
+.dark-mode .modal-box .settings-subtitle{
+    color: #000 !important;
+}
+.dark-mode .dashboard-section-title {
+    color: #f3f4f6 !important;
 }
 .dark-mode #liste-outils li a,
 .dark-mode #liste-services li a,
@@ -1171,61 +1180,69 @@ footer{
 }
 #liste-tickets-importes {
     list-style: none;
-    counter-reset: row-num;
-    background: rgb(246, 240, 204);
-    border-radius: 12px;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 #liste-tickets-importes li {
-    counter-increment: row-num;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 16px;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(0,0,0,.08);
-    border-radius: 0;
-    padding: 10px 14px;
-    box-shadow: none;
-}
-
-#liste-tickets-importes li::before {
-    content: counter(row-num);
-    color: var(--muted);
-    font-size: 13px;
-    font-weight: 600;
-    width: 20px;
-    flex-shrink: 0;
-}
-
-#liste-tickets-importes li:nth-child(even) {
-    background: rgba(255,204,0,.08);
-}
-
-#liste-tickets-importes li:last-child {
-    border-bottom: none;
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 14px;
+    padding: 14px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.03);
+    transition: all 0.2s ease;
 }
 
 #liste-tickets-importes li:hover {
-    background: rgba(255,204,0,.15);
+    box-shadow: 0 6px 16px rgba(0,0,0,.08);
+    border-color: rgba(255,204,0,.5);
+}
+
+.dark-mode #liste-tickets-importes li {
+    background: #242832;
+    border-color: rgba(255,255,255,.08);
+}
+
+.dark-mode #liste-tickets-importes li:hover {
+    border-color: rgba(255,204,0,.4);
+}
+
+#liste-tickets-importes .ticket-info-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
 }
 
 #liste-tickets-importes .ticket-nom {
-    flex: 1;
-    color: #111;
+    color: #111827;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
+}
+
+.dark-mode #liste-tickets-importes .ticket-nom {
+    color: #f3f4f6;
 }
 
 #liste-tickets-importes .ticket-date {
-    font-size: 11px;
-    color: #888;
-    flex-shrink: 0;
+    font-size: 12px;
+    color: #6b7280;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
 }
 
-#liste-tickets-importes .card-actions {
-    margin-top: 0;
-    flex-shrink: 0;
+.dark-mode #liste-tickets-importes .ticket-date {
+    color: #9ca3af;
 }
 /* ================= MENU TROIS POINTS ================= */
 
@@ -1313,4 +1330,113 @@ footer{
 
 .dark-mode .action-dropdown button:hover {
     background: rgba(255,204,0,0.1);
+}
+
+/* Inline Action Buttons (Visible Icons) */
+.action-buttons-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.btn-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background-color: #ffffff;
+    color: #4b5563;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btn-action-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Edit action icon */
+.btn-action-icon.btn-action-edit {
+    color: #2563eb;
+    border-color: rgba(37, 99, 235, 0.2);
+    background-color: rgba(37, 99, 235, 0.05);
+}
+
+.btn-action-icon.btn-action-edit:hover {
+    background-color: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+/* Delete action icon */
+.btn-action-icon.btn-action-delete {
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.2);
+    background-color: rgba(220, 38, 38, 0.05);
+}
+
+.btn-action-icon.btn-action-delete:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+}
+
+/* Download action icon */
+.btn-action-icon.btn-action-download {
+    color: #059669;
+    border-color: rgba(5, 150, 105, 0.2);
+    background-color: rgba(5, 150, 105, 0.05);
+}
+
+.btn-action-icon.btn-action-download:hover {
+    background-color: #059669;
+    color: #ffffff;
+    border-color: #059669;
+}
+
+/* Dark mode compatibility */
+.dark-mode .btn-action-icon {
+    background-color: #262b36;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #d1d5db;
+}
+
+.dark-mode .btn-action-icon.btn-action-edit {
+    color: #60a5fa;
+    background-color: rgba(37, 99, 235, 0.15);
+    border-color: rgba(96, 165, 250, 0.3);
+}
+
+.dark-mode .btn-action-icon.btn-action-edit:hover {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.dark-mode .btn-action-icon.btn-action-delete {
+    color: #f87171;
+    background-color: rgba(220, 38, 38, 0.15);
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
+.dark-mode .btn-action-icon.btn-action-delete:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+.dark-mode .btn-action-icon.btn-action-download {
+    color: #34d399;
+    background-color: rgba(5, 150, 105, 0.15);
+    border-color: rgba(52, 211, 153, 0.3);
+}
+
+.dark-mode .btn-action-icon.btn-action-download:hover {
+    background-color: #059669;
+    color: #ffffff;
 }
