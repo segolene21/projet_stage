@@ -1,710 +1,325 @@
 let donneesTicket = null;
-let ticketsImportes = [];
+let lotActuelId = null;
 
-const TICKETS_API_URL = '/api/tickets/';
-const TICKET_IMPORT_URL = '/api/tickets/import/';
-const TICKET_EXPORT_URL = '/api/tickets/export/';
-
-
-
-
-
-function echapperHTML(valeur) {
-    if (valeur === null || valeur === undefined) return '';
-
-    return String(valeur)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+function echapperHtml(texte) {
+    const div = document.createElement('div');
+    div.textContent = texte || '';
+    return div.innerHTML;
 }
 
-
-function obtenirCSRFToken() {
-    if (typeof csrftoken !== 'undefined' && csrftoken) {
-        return csrftoken;
-    }
-
-    const cookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrftoken='));
-
-    return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
-}
-
-
-async function lireJSON(response) {
-    const contentType = response.headers.get('content-type') || '';
-
-    if (!contentType.includes('application/json')) {
-        throw new Error(`Réponse serveur inattendue (${response.status})`);
-    }
-
-    return await response.json();
-}
-
-
-
-
-
-
-async function chargerTicketsImportes() {
-    const liste = document.getElementById('liste-tickets-importes');
-
-    if (!liste) return;
-
-    try {
-        const response = await fetch(TICKETS_API_URL);
-
-        if (!response.ok) {
-            throw new Error('Impossible de charger les tickets');
-        }
-
-        const data = await lireJSON(response);
-
-        if (!Array.isArray(data)) {
-            throw new Error('Réponse inattendue du serveur');
-        }
-
-        ticketsImportes = data.map(ticket => ({
-            id: ticket.ticket_id,
-            ticket_id: ticket.ticket_id,
-            nom: ticket.ticket_id || ticket.requester || 'Ticket',
-            requester: ticket.requester || '',
-            appreciation: ticket.feedback || '',
-            date: ticket.cree_le || ticket.modifie_le || '',
-            donnees: []
-        }));
-
-        afficherTicketsImportes();
-
-    } catch (error) {
-        console.error('Erreur chargement tickets :', error);
-
-        liste.innerHTML = `
-            <p class="empty-state">
-                Erreur de chargement des tickets
-            </p>
-        `;
-    }
-}
-
-
-
-
-
-
-
-function ouvrirModaleImport() {
-    const modale = document.getElementById('modale-import');
-
-    if (modale) {
-        modale.style.display = 'flex';
-    }
-}
-
-
-
-
-
-
+// --- Import ---
 
 function fermerModaleImport() {
-    const modale = document.getElementById('modale-import');
-    const apercu = document.getElementById('apercu-ticket');
-    const zoneTelechargement = document.getElementById('zone-telechargement');
-    const boutonConfirmer = document.getElementById('btn-confirmer');
-    const fichier = document.getElementById('fichier-ticket');
-    const appreciation = document.getElementById('appreciation-client');
-    const tableau = document.getElementById('tableau-ticket');
-
-    if (modale) modale.style.display = 'none';
-    if (apercu) apercu.style.display = 'none';
-    if (zoneTelechargement) zoneTelechargement.style.display = 'none';
-    if (boutonConfirmer) boutonConfirmer.style.display = 'inline-block';
-
-    if (fichier) fichier.value = '';
-    if (appreciation) appreciation.value = '';
-    if (tableau) tableau.innerHTML = '';
-
+    document.getElementById('modale-import').style.display = 'none';
+    document.getElementById('apercu-ticket').style.display = 'none';
+    document.getElementById('fichier-ticket').value = '';
+    document.getElementById('titre-import').value = '';
     donneesTicket = null;
 }
 
-
-
-
-function fermerApresTelechargement() {
-    fermerModaleImport();
-}
-
-
-
-
-
-
-
 function previsualiserTicket(input) {
-    const fichier = input?.files?.[0];
-
+    const fichier = input.files[0];
     if (!fichier) return;
 
-    const tableau = document.getElementById('tableau-ticket');
-    const apercu = document.getElementById('apercu-ticket');
-
-    if (!tableau || !apercu) return;
-
     const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const lignes = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        donneesTicket = lignes;
 
-    reader.onload = function (e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-
-            const workbook = XLSX.read(data, {
-                type: 'array'
-            });
-
-            if (!workbook.SheetNames.length) {
-                throw new Error('Le fichier Excel ne contient aucune feuille.');
-            }
-
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-            donneesTicket = XLSX.utils.sheet_to_json(sheet, {
-                header: 1
-            });
-
-            if (!donneesTicket || donneesTicket.length === 0) {
-                throw new Error('Le fichier Excel est vide.');
-            }
-
-            let html = `
-                <table style="width:100%; border-collapse:collapse; font-size:12px;">
-            `;
-
-            donneesTicket.forEach((row, i) => {
-                html += '<tr>';
-
-                row.forEach(cell => {
-                    const valeur = echapperHTML(cell);
-
-                    if (i === 0) {
-                        html += `
-                            <th style="
-                                background:#1a1a1a;
-                                color:#FFCC00;
-                                padding:8px;
-                                text-align:left;
-                                white-space:nowrap;
-                            ">
-                                ${valeur}
-                            </th>
-                        `;
-                    } else {
-                        html += `
-                            <td style="
-                                padding:8px;
-                                border-bottom:1px solid #eee;
-                                white-space:nowrap;
-                            ">
-                                ${valeur}
-                            </td>
-                        `;
-                    }
-                });
-
-                html += '</tr>';
-            });
-
-            html += '</table>';
-
-            tableau.innerHTML = html;
-            apercu.style.display = 'block';
-
-        } catch (error) {
-            console.error('Erreur lecture Excel :', error);
-
-            donneesTicket = null;
-
-            alert(
-                error.message ||
-                'Impossible de lire le fichier Excel.'
-            );
+        if (lignes.length === 0) {
+            document.getElementById('tableau-ticket').innerHTML = '<p>Fichier vide</p>';
+            document.getElementById('apercu-ticket').style.display = 'block';
+            return;
         }
-    };
 
-    reader.onerror = function () {
-        donneesTicket = null;
-        alert('Impossible de lire le fichier.');
-    };
+        const entetes = Object.keys(lignes[0]);
+        const colId = entetes[0];
 
+        let html = '<table style="width:100%; border-collapse:collapse; font-size:12px;">';
+        html += '<tr>';
+        entetes.forEach(e => {
+            html += `<th style="background:#1a1a1a; color:#FFCC00; padding:8px; text-align:left;">${echapperHtml(e)}</th>`;
+        });
+        html += '<th style="background:#1a1a1a; color:#FFCC00; padding:8px;">Feedback</th></tr>';
+
+        lignes.forEach(ligne => {
+            const ticketId = ligne[colId];
+            html += '<tr>';
+            entetes.forEach(e => {
+                html += `<td style="padding:8px; border-bottom:1px solid #eee; max-width:250px; white-space:normal; word-wrap:break-word;">${echapperHtml(ligne[e])}</td>`;
+            });
+            html += `<td><input type="text" class="feedback-import" data-ticket-id="${echapperHtml(ticketId)}" placeholder="Feedback (optionnel)" /></td>`;
+            html += '</tr>';
+        });
+        html += '</table>';
+
+        document.getElementById('tableau-ticket').innerHTML = html;
+        document.getElementById('apercu-ticket').style.display = 'block';
+    };
     reader.readAsArrayBuffer(fichier);
 }
 
-
-
-
-
-
-
 async function confirmerImport() {
-    if (!donneesTicket) {
-        alert('Veuillez choisir un fichier Excel.');
-        return;
-    }
-
-    const appreciationElement =
-        document.getElementById('appreciation-client');
-
-    const appreciation =
-        appreciationElement?.value.trim() || '';
-
-    if (!appreciation) {
-        alert('Veuillez saisir l\'appréciation du client.');
-        return;
-    }
-
-    const inputFichier =
-        document.getElementById('fichier-ticket');
-
-    const fichier =
-        inputFichier?.files?.[0];
-
+    const inputFichier = document.getElementById('fichier-ticket');
+    const fichier = inputFichier.files[0];
     if (!fichier) {
         alert('Veuillez choisir un fichier Excel.');
         return;
     }
 
+    const titre = document.getElementById('titre-import').value.trim();
+
+    const feedbacks = {};
+    document.querySelectorAll('.feedback-import').forEach(input => {
+        if (input.value.trim()) {
+            feedbacks[input.dataset.ticketId] = input.value.trim();
+        }
+    });
+
     const formData = new FormData();
     formData.append('fichier', fichier);
+    formData.append('titre', titre);
+    formData.append('feedbacks', JSON.stringify(feedbacks));
 
     try {
-        const response = await fetch(TICKET_IMPORT_URL, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': obtenirCSRFToken()
-            },
-            body: formData
-        });
-
-        const result = await lireJSON(response);
-
-        if (!response.ok || result.succes === false) {
-            throw new Error(
-                result.erreur ||
-                'Erreur lors de l\'import'
-            );
-        }
-
-        
-        let ticketId = result.ticket_id;
-
-        if (!ticketId) {
-            const premiereRangee =
-                donneesTicket[1] || [];
-
-            ticketId = premiereRangee[0];
-        }
-
-        // Enregistrement de l'appréciation
-        if (ticketId) {
-            try {
-                const feedbackResponse = await fetch(
-                    `/api/tickets/${encodeURIComponent(ticketId)}/feedback/`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': obtenirCSRFToken()
-                        },
-                        body: JSON.stringify({
-                            feedback: appreciation
-                        })
-                    }
-                );
-
-                if (!feedbackResponse.ok) {
-                    console.warn(
-                        'Feedback non enregistré :',
-                        feedbackResponse.status
-                    );
-                }
-
-            } catch (error) {
-                console.warn(
-                    'Feedback non envoyé :',
-                    error
-                );
-            }
-        }
-
-        const boutonConfirmer =
-            document.getElementById('btn-confirmer');
-
-        const zoneTelechargement =
-            document.getElementById('zone-telechargement');
-
-        if (boutonConfirmer) {
-            boutonConfirmer.style.display = 'none';
-        }
-
-        if (zoneTelechargement) {
-            zoneTelechargement.style.display = 'block';
-        }
-
-        await chargerTicketsImportes();
-
-    } catch (error) {
-        console.error('Erreur import ticket :', error);
-
-        alert(
-            error.message ||
-            'Erreur lors de l\'import du ticket.'
-        );
-    }
-}
-
-
-
-
-
-function telechargerFichier(ticketId) {
-    if (ticketId) {
-        window.location.href =
-            `${TICKET_EXPORT_URL}?ticket_id=${encodeURIComponent(ticketId)}`;
-
-        return;
-    }
-
-    if (!donneesTicket) {
-        alert(
-            'Aucun ticket sélectionné pour le téléchargement.'
-        );
-        return;
-    }
-
-    const appreciationElement =
-        document.getElementById('appreciation-client');
-
-    const appreciation =
-        appreciationElement?.value.trim() || '';
-
-    const maintenant =
-        new Date().toLocaleString('fr-FR');
-
-    const ticket = {
-        donnees: donneesTicket,
-        appreciation: appreciation,
-        date: maintenant
-    };
-
-    const donneesCopie =
-        ticket.donnees.map((row, i) => {
-            const ligne = Array.isArray(row)
-                ? [...row]
-                : [];
-
-            if (i === 0) {
-                return [
-                    ...ligne,
-                    'Appréciation client',
-                    'Date d\'importation'
-                ];
-            }
-
-            if (i === 1) {
-                return [
-                    ...ligne,
-                    ticket.appreciation,
-                    ticket.date
-                ];
-            }
-
-            return [
-                ...ligne,
-                '',
-                ''
-            ];
-        });
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(donneesCopie);
-
-    const colWidths = [];
-
-    donneesCopie.forEach(row => {
-        row.forEach((cell, j) => {
-            const longueur =
-                cell !== null &&
-                cell !== undefined &&
-                String(cell).length
-                    ? String(cell).length
-                    : 10;
-
-            if (!colWidths[j] || colWidths[j] < longueur) {
-                colWidths[j] = longueur;
-            }
-        });
-    });
-
-    ws['!cols'] = colWidths.map(
-        width => ({
-            wch: Math.min(width + 2, 60)
-        })
-    );
-
-    XLSX.utils.book_append_sheet(
-        wb,
-        ws,
-        'Ticket'
-    );
-
-    XLSX.writeFile(
-        wb,
-        'ticket_preview.xlsx'
-    );
-}
-
-
-
-// AFFICHAGE DES TICKETS
-
-
-function afficherTicketsImportes() {
-    const liste =
-        document.getElementById(
-            'liste-tickets-importes'
-        );
-
-    if (!liste) return;
-
-    if (
-        !ticketsImportes ||
-        ticketsImportes.length === 0
-    ) {
-        liste.innerHTML = `
-            <p class="empty-state">
-                Aucun ticket importé
-            </p>
-        `;
-
-        return;
-    }
-
-    liste.innerHTML = '';
-
-    ticketsImportes.forEach(ticket => {
-        const ticketId = ticket.ticket_id || ticket.id;
-        const li = document.createElement('li');
-        li.id = `ticket-${ticketId}`;
-
-        const informations = document.createElement('div');
-        informations.className = 'ticket-info-wrapper';
-
-        const nom = document.createElement('div');
-        nom.className = 'ticket-nom';
-
-        const ticketTitle = ticket.ticket_id || ticket.nom || `Ticket #${ticketId}`;
-        const stateBadge = ticket.state ? ` <span class="badge bg-warning text-dark style-badge" style="font-size:11px; margin-left:8px; padding:3px 8px; border-radius:12px; font-weight:600;">${echapperHTML(ticket.state)}</span>` : '';
-        nom.innerHTML = `<strong>${echapperHTML(ticketTitle)}</strong>${stateBadge}`;
-
-        const details = document.createElement('div');
-        details.className = 'ticket-date';
-
-        const elements = [];
-        if (ticket.requester) {
-            elements.push(`<span><i class="bi bi-person"></i> ${echapperHTML(ticket.requester)}</span>`);
-        }
-        if (ticket.date || ticket.cree_le) {
-            elements.push(`<span><i class="bi bi-calendar3"></i> ${echapperHTML(ticket.date || ticket.cree_le)}</span>`);
-        }
-        if (ticket.appreciation || ticket.feedback) {
-            elements.push(`<span><i class="bi bi-chat-left-text"></i> ${echapperHTML(ticket.appreciation || ticket.feedback)}</span>`);
-        }
-
-        details.innerHTML = elements.join('<span style="margin: 0 4px; color:#cbd5e1;">•</span>');
-
-        informations.appendChild(nom);
-        informations.appendChild(details);
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'action-buttons-inline';
-
-        const boutonTelecharger = document.createElement('button');
-        boutonTelecharger.type = 'button';
-        boutonTelecharger.className = 'btn-action-icon btn-action-download';
-        boutonTelecharger.title = 'Télécharger le ticket';
-        boutonTelecharger.setAttribute('aria-label', 'Télécharger');
-        boutonTelecharger.innerHTML = '<i class="bi bi-download"></i>';
-
-        boutonTelecharger.addEventListener('click', function (event) {
-            event.stopPropagation();
-            telechargerFichier(ticketId);
-        });
-
-        wrapper.appendChild(boutonTelecharger);
-
-        if (window.canDeleteTicket) {
-            const boutonSupprimer = document.createElement('button');
-            boutonSupprimer.type = 'button';
-            boutonSupprimer.className = 'btn-action-icon btn-action-delete';
-            boutonSupprimer.title = 'Supprimer le ticket';
-            boutonSupprimer.setAttribute('aria-label', 'Supprimer');
-            boutonSupprimer.innerHTML = '<i class="bi bi-trash"></i>';
-
-            boutonSupprimer.addEventListener('click', function (event) {
-                event.stopPropagation();
-                supprimerTicket(ticketId);
-            });
-
-            wrapper.appendChild(boutonSupprimer);
-        }
-
-        li.appendChild(informations);
-        li.appendChild(wrapper);
-        liste.appendChild(li);
-    });
-}
-
-
-
-
-async function supprimerTicket(id) {
-    if (!id) {
-        alert('ID du ticket introuvable');
-        return;
-    }
-
-    if (!confirm('Supprimer ce ticket ?')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            `/api/tickets/${encodeURIComponent(id)}/`,
-            {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': obtenirCSRFToken()
-                }
-            }
-        );
-
-        const contentType =
-            response.headers.get('content-type') || '';
-
-        let errorData = null;
-
-        if (contentType.includes('application/json')) {
-            errorData = await response.json();
-        }
-
-        if (!response.ok) {
-            throw new Error(
-                errorData?.erreur ||
-                'Erreur lors de la suppression'
-            );
-        }
-
-        await chargerTicketsImportes();
-
-    } catch (error) {
-        console.error(
-            'Erreur suppression ticket :',
-            error
-        );
-
-        alert(
-            error.message ||
-            'Erreur réseau lors de la suppression'
-        );
-    }
-}
-
-
-
-function toggleMenu(btn) {
-    const wrapper =
-        btn.closest('.action-menu-wrapper');
-
-    const menu =
-        wrapper?.querySelector(
-            '.action-dropdown'
-        );
-
-    if (!menu) return;
-
-    const doitOuvrir =
-        !menu.classList.contains('open');
-
-    document
-        .querySelectorAll(
-            '.action-dropdown.open'
-        )
-        .forEach(dropdown => {
-            dropdown.classList.remove('open');
-        });
-
-    if (doitOuvrir) {
-        menu.classList.add('open');
-    }
-}
-
-window.toggleMenu = toggleMenu;
-
-
-
-document.addEventListener(
-    'click',
-    function (e) {
-        const wrapper =
-            e.target.closest(
-                '.action-menu-wrapper'
-            );
-
-        if (!wrapper) {
-            document
-                .querySelectorAll(
-                    '.action-dropdown.open'
-                )
-                .forEach(menu => {
-                    menu.classList.remove('open');
-                });
-
+        const res = await fetch('/api/imports/import/', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.erreur || 'Échec de l\'import');
             return;
         }
 
-        if (
-            !e.target.closest('.btn-three-dots') &&
-            !e.target.closest('.action-dropdown')
-        ) {
-            document
-                .querySelectorAll(
-                    '.action-dropdown.open'
-                )
-                .forEach(menu => {
-                    menu.classList.remove('open');
-                });
-        }
+        fermerModaleImport();
+        await chargerListeImports();
+        // Ouvre directement la modale du lot fraîchement importé
+        await ouvrirModaleTickets(data.lot_id, data.titre);
+    } catch (erreur) {
+        alert('Erreur : ' + erreur.message);
+        console.error(erreur);
     }
-);
+}
 
+// --- Liste des imports (extraits en tableau) ---
 
+async function chargerListeImports(recherche = '') {
+    const zone = document.getElementById('liste-imports');
+    if (!zone) return;
 
-document.addEventListener(
-    'DOMContentLoaded',
-    function () {
-        chargerTicketsImportes();
+    try {
+        const res = await fetch('/api/imports/');
+        if (res.status === 403) {
+            zone.innerHTML = '<p>Accès interdit</p>';
+            return;
+        }
+        let imports = await res.json();
 
-        const inputFiltre = document.getElementById('filtre_tickets');
-        if (inputFiltre) {
-            inputFiltre.addEventListener('input', function () {
-                const query = this.value.toLowerCase().trim();
-                document.querySelectorAll('#liste-tickets-importes li').forEach(li => {
-                    const text = li.textContent.toLowerCase();
-                    li.style.display = text.includes(query) ? '' : 'none';
-                });
+        if (recherche) {
+            imports = imports.filter(imp => imp.titre.toLowerCase().includes(recherche.toLowerCase()));
+        }
+
+        if (imports.length === 0) {
+            zone.innerHTML = '<p>Aucun import pour l\'instant</p>';
+            return;
+        }
+
+        zone.innerHTML = '';
+        imports.forEach(imp => {
+            const bloc = document.createElement('div');
+            bloc.className = 'bloc-import';
+            bloc.innerHTML = `
+                <div class="bloc-import-header">
+                    <h3>${echapperHtml(imp.titre)} <span style="font-size:11px; color:#888;">(${imp.nombre_tickets} tickets — ${imp.cree_le})</span></h3>
+                    <div>
+                        <button onclick="ouvrirModaleTickets(${imp.id}, '${echapperHtml(imp.titre)}')">Voir</button>
+                        <button onclick="telechargerLot(${imp.id}, 'xlsx')">Télécharger</button>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>State</th><th>Requester</th><th>Details</th><th>Feedback</th></tr>
+                    </thead>
+                    <tbody>
+                        ${imp.apercu.map(t => `
+                            <tr>
+                                <td>${echapperHtml(t.ticket_id)}</td>
+                                <td>${echapperHtml(t.state)}</td>
+                                <td>${echapperHtml(t.requester)}</td>
+                                <td style="max-width:300px; white-space:normal; word-wrap:break-word;">${echapperHtml(t.details)}</td>
+                                <td>${echapperHtml(t.feedback)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            zone.appendChild(bloc);
+        });
+    } catch (erreur) {
+        console.error('Erreur de chargement des imports :', erreur);
+        zone.innerHTML = '<p>Erreur de chargement</p>';
+    }
+}
+
+let timerRechercheImports = null;
+function rechercherImports() {
+    clearTimeout(timerRechercheImports);
+    const valeur = document.getElementById('recherche-import').value;
+    timerRechercheImports = setTimeout(() => chargerListeImports(valeur), 300);
+}
+
+// --- Modale : tableau complet d'un import, édition inline ---
+
+async function ouvrirModaleTickets(lotId, titre) {
+    lotActuelId = lotId;
+    document.getElementById('titre-modale-tickets').textContent = titre || 'Tickets';
+    document.getElementById('modale-tickets').style.display = 'block';
+    document.getElementById('recherche-ticket-modale').value = '';
+    await chargerTicketsDuLot();
+}
+
+function fermerModaleTickets() {
+    document.getElementById('modale-tickets').style.display = 'none';
+    lotActuelId = null;
+}
+
+async function chargerTicketsDuLot(recherche = '') {
+    const corps = document.getElementById('corps-tableau-tickets');
+    if (!corps || !lotActuelId) return;
+
+    try {
+        const url = recherche
+            ? `/api/imports/${lotActuelId}/tickets/?q=${encodeURIComponent(recherche)}`
+            : `/api/imports/${lotActuelId}/tickets/`;
+        const res = await fetch(url);
+        if (res.status === 403) {
+            corps.innerHTML = '<tr><td colspan="7">Accès interdit</td></tr>';
+            return;
+        }
+        const data = await res.json();
+        const tickets = data.tickets || [];
+
+        if (tickets.length === 0) {
+            corps.innerHTML = '<tr><td colspan="7">Aucun ticket</td></tr>';
+            return;
+        }
+
+        corps.innerHTML = '';
+        tickets.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="cellule-editable" data-champ="ticket_id" data-pk="${t.id}">${echapperHtml(t.ticket_id)}</td>
+                <td class="cellule-editable" data-champ="state" data-pk="${t.id}">${echapperHtml(t.state)}</td>
+                <td class="cellule-editable" data-champ="requester" data-pk="${t.id}">${echapperHtml(t.requester)}</td>
+                <td class="cellule-editable" data-champ="details" data-pk="${t.id}" style="max-width:300px;">${echapperHtml(t.details)}</td>
+                <td class="cellule-editable" data-champ="feedback" data-pk="${t.id}">${echapperHtml(t.feedback)}</td>
+                <td>${echapperHtml(t.modifie_le)}</td>
+                <td><button class="btn-delete" onclick="supprimerTicket(${t.id})">Supprimer</button></td>
+            `;
+            corps.appendChild(tr);
+        });
+
+        activerEditionInline();
+    } catch (erreur) {
+        console.error('Erreur de chargement des tickets :', erreur);
+        corps.innerHTML = '<tr><td colspan="7">Erreur de chargement</td></tr>';
+    }
+}
+
+let timerRechercheModale = null;
+function rechercherDansModale() {
+    clearTimeout(timerRechercheModale);
+    const valeur = document.getElementById('recherche-ticket-modale').value;
+    timerRechercheModale = setTimeout(() => chargerTicketsDuLot(valeur), 300);
+}
+
+function activerEditionInline() {
+    document.querySelectorAll('.cellule-editable').forEach(cellule => {
+        cellule.addEventListener('click', function gererClic() {
+            if (cellule.querySelector('input')) return;
+
+            const valeurActuelle = cellule.textContent;
+            const champ = cellule.dataset.champ;
+            const pk = cellule.dataset.pk;
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = valeurActuelle;
+            input.style.width = '100%';
+
+            cellule.textContent = '';
+            cellule.appendChild(input);
+            input.focus();
+
+            const valider = async () => {
+                const nouvelleValeur = input.value;
+                if (nouvelleValeur === valeurActuelle) {
+                    cellule.textContent = valeurActuelle;
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/api/tickets/${pk}/`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ [champ]: nouvelleValeur }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        alert(data.erreur || 'Échec de la modification');
+                        cellule.textContent = valeurActuelle;
+                        return;
+                    }
+                    cellule.textContent = nouvelleValeur;
+                    await chargerListeImports();
+                } catch (erreur) {
+                    alert('Erreur : ' + erreur.message);
+                    cellule.textContent = valeurActuelle;
+                }
+            };
+
+            input.addEventListener('blur', valider);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') input.blur();
+                if (e.key === 'Escape') { cellule.textContent = valeurActuelle; }
             });
+        }, { once: true });
+    });
+}
+
+async function supprimerTicket(pk) {
+    if (!confirm('Supprimer ce ticket ?')) return;
+
+    try {
+        const res = await fetch(`/api/tickets/${pk}/`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.erreur || 'Échec de la suppression');
+            return;
         }
+        await chargerTicketsDuLot();
+        await chargerListeImports();
+    } catch (erreur) {
+        alert('Erreur : ' + erreur.message);
+        console.error(erreur);
     }
-);
+}
+
+// --- Téléchargement ---
+
+function telechargerLot(lotId, format) {
+    window.location.href = `/api/imports/${lotId}/export/?format=${format}`;
+}
+
+function telechargerLotActuel(format) {
+    if (!lotActuelId) return;
+    telechargerLot(lotActuelId, format);
+}
+
+// --- Init ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    chargerListeImports();
+});

@@ -428,39 +428,161 @@ def parametres(request):
         form = ProfilForm(instance=request.user)
     return render(request, 'parametres.html', {'form': form})
 
+import json
+from openpyxl import load_workbook, Workbook
+from django.http import HttpResponse, JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Q
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+from .models import Ticket, ImportLot, Permission
+
+
+@login_required
+def page_tickets(request):
+    return render(request, 'liste_tickets.html')
+
 
 @csrf_exempt
 def import_tickets_excel(request):
-    if request.method == "POST":
-        fichier = request.FILES.get("fichier")
-        if not fichier:
-            return JsonResponse({"erreur": "Aucun fichier reçu"}, status=400)
+    if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_TICKETS):
+        return JsonResponse({"erreur": "Accès interdit"}, status=403)
 
-        wb = load_workbook(fichier, data_only=True)
-        ws = wb.active
+    if request.method != "POST":
+        return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
 
-        count = 0
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            ticket_id, state, requester, details = row[:4]
-            if not ticket_id:
-                continue
+    fichier = request.FILES.get("fichier")
+    if not fichier:
+        return JsonResponse({"erreur": "Aucun fichier reçu"}, status=400)
 
-            Ticket.objects.update_or_create(
-                ticket_id=ticket_id,
-                defaults={"state": state or "", "requester": requester or "", "details": details or ""}
-            )
-            count += 1
+    titre = request.POST.get("titre", "").strip() or f"Import du {timezone.localtime().strftime('%d/%m/%Y %H:%M')}"
 
-        return JsonResponse({"message": f"{count} tickets importés"})
+    feedbacks_bruts = request.POST.get("feedbacks", "{}")
+    try:
+        feedbacks = json.loads(feedbacks_bruts)
+    except json.JSONDecodeError:
+        feedbacks = {}
 
-    return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
+    wb = load_workbook(fichier, data_only=True)
+    ws = wb.active
+
+    lot = ImportLot.objects.create(titre=titre, cree_par=request.user)
+
+    count = 0
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        ticket_id, state, requester, details = row[:4]
+        if not ticket_id:
+            continue
+
+        ticket_id_str = str(ticket_id)
+        Ticket.objects.create(
+            import_lot=lot,
+            ticket_id=ticket_id_str,
+            state=state or "",
+            requester=requester or "",
+            details=details or "",
+            feedback=feedbacks.get(ticket_id_str, ""),
+        )
+        count += 1
+
+    return JsonResponse({"message": f"{count} tickets importés", "lot_id": lot.id, "titre": lot.titre})
 
 
-def export_tickets_excel(request):
-    ticket_id = request.GET.get('ticket_id')
-    tickets = Ticket.objects.all()
-    if ticket_id:
-        tickets = tickets.filter(ticket_id=ticket_id)
+@login_required
+def liste_imports(request):
+    """Liste des lots d'import, avec un aperçu (5 premiers tickets) pour chacun."""
+    lots = ImportLot.objects.all().order_by('-cree_le')
+    resultat = []
+
+    for lot in lots:
+        tickets = lot.tickets.all()[:5]
+        resultat.append({
+            "id": lot.id,
+            "titre": lot.titre,
+            "cree_le": timezone.localtime(lot.cree_le).strftime("%d/%m/%Y %H:%M"),
+            "nombre_tickets": lot.tickets.count(),
+            "apercu": [
+                {
+                    "ticket_id": t.ticket_id, "state": t.state, "requester": t.requester,
+                    "details": t.details, "feedback": t.feedback,
+                } for t in tickets
+            ],
+        })
+
+    return JsonResponse(resultat, safe=False)
+
+
+@login_required
+def tickets_du_lot(request, lot_id):
+    q = request.GET.get('q', '').strip()
+
+    try:
+        lot = ImportLot.objects.get(id=lot_id)
+    except ImportLot.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    qs = lot.tickets.all()
+    if q:
+        qs = qs.filter(
+            Q(ticket_id__icontains=q) | Q(state__icontains=q) |
+            Q(requester__icontains=q) | Q(details__icontains=q) | Q(feedback__icontains=q)
+        )
+
+    tickets = []
+    for t in qs:
+        tickets.append({
+            "id": t.id, "ticket_id": t.ticket_id, "state": t.state, "requester": t.requester,
+            "details": t.details, "feedback": t.feedback,
+            "modifie_le": timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M"),
+        })
+
+    return JsonResponse({"titre": lot.titre, "tickets": tickets})
+
+
+def _generer_pdf(tickets, response):
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+    donnees = [["ID", "State", "Requester", "Details", "Feedback", "Modifié le"]]
+
+    for t in tickets:
+        donnees.append([
+            t.ticket_id, t.state, t.requester, (t.details or "")[:80], (t.feedback or "")[:60],
+            timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M") if t.modifie_le else "",
+        ])
+
+    tableau = Table(donnees, repeatRows=1)
+    tableau.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1a1a1a")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor("#FFCC00")),
+        ('FONTSIZE', (0, 0), (-1, -1), 7),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    doc.build([tableau])
+
+
+@login_required
+def export_lot(request, lot_id):
+    format_export = request.GET.get('format', 'xlsx')
+
+    try:
+        lot = ImportLot.objects.get(id=lot_id)
+    except ImportLot.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    tickets = lot.tickets.all()
+    nom_base = lot.titre.replace(" ", "_")
+
+    if format_export == 'pdf':
+        response = HttpResponse(content_type='application/pdf')
+        response["Content-Disposition"] = f'attachment; filename="{nom_base}.pdf"'
+        _generer_pdf(tickets, response)
+        return response
 
     wb = Workbook()
     ws = wb.active
@@ -475,54 +597,33 @@ def export_tickets_excel(request):
         ])
 
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    filename = 'tickets_export.xlsx' if not ticket_id else f'ticket_{ticket_id}.xlsx'
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response["Content-Disposition"] = f'attachment; filename="{nom_base}.xlsx"'
     wb.save(response)
     return response
 
 
-@login_required
-def page_tickets(request):
-    return render(request, 'liste_tickets.html')
-
-
-def liste_tickets(request):
-    qs = list(Ticket.objects.values(
-        "ticket_id", "state", "requester", "details", "feedback", "cree_le", "modifie_le"
-    ))
-
-    tickets = []
-    for t in qs:
-        t['cree_le'] = timezone.localtime(t['cree_le']).strftime("%d/%m/%Y %H:%M") if t.get('cree_le') else ""
-        t['modifie_le'] = timezone.localtime(t['modifie_le']).strftime("%d/%m/%Y %H:%M") if t.get('modifie_le') else ""
-        tickets.append(t)
-
-    return JsonResponse(tickets, safe=False)
-
-
 @csrf_exempt
-def ticket_detail(request, ticket_id):
-    if request.method == 'DELETE':
-        if not (request.user.a_la_permission(Permission.Code.GERER_OUTILS) or request.user.a_la_permission(Permission.Code.SOUMETTRE_FEEDBACK)):
+def ticket_detail(request, ticket_pk):
+    """Modifier/supprimer un ticket précis via sa clé primaire Django."""
+    if request.method in ('DELETE', 'PUT'):
+        if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_TICKETS):
             return JsonResponse({"erreur": "Accès interdit"}, status=403)
 
         try:
-            ticket = Ticket.objects.get(ticket_id=ticket_id)
+            ticket = Ticket.objects.get(pk=ticket_pk)
         except Ticket.DoesNotExist:
             return JsonResponse({"erreur": "Ticket introuvable"}, status=404)
 
-        ticket.delete()
-        return JsonResponse({"message": "Ticket supprimé"})
+        if request.method == 'DELETE':
+            ticket.delete()
+            return JsonResponse({"message": "Ticket supprimé"})
 
-    if request.method == 'GET':
-        ticket = Ticket.objects.filter(ticket_id=ticket_id).values(
-            "ticket_id", "state", "requester", "details", "feedback", "cree_le", "modifie_le"
-        ).first()
-        if not ticket:
-            return JsonResponse({"erreur": "Ticket introuvable"}, status=404)
-
-        ticket['cree_le'] = timezone.localtime(ticket['cree_le']).strftime("%d/%m/%Y %H:%M") if ticket.get('cree_le') else ""
-        ticket['modifie_le'] = timezone.localtime(ticket['modifie_le']).strftime("%d/%m/%Y %H:%M") if ticket.get('modifie_le') else ""
-        return JsonResponse(ticket, safe=False)
+        if request.method == 'PUT':
+            data = json.loads(request.body)
+            for champ in ('ticket_id', 'state', 'requester', 'details', 'feedback'):
+                if champ in data:
+                    setattr(ticket, champ, data[champ])
+            ticket.save()
+            return JsonResponse({"message": "Ticket modifié"})
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
