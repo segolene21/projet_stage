@@ -151,7 +151,7 @@ a{
 .dash-header h2{
     font-size:clamp(18px, 3vw, 32px);
     font-weight:900;
-    color:rgb(0, 0, 0);
+    color:rgb(55, 55, 255);
 }
 
 .dash-header p{
