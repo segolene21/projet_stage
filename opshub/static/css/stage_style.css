@@ -773,7 +773,7 @@ footer{
 }
 
 .dark-mode .sidebar{
-    background:#1f232b !important;
+    background:#040303 !important;
 }
 
 .dark-mode .sidebar-brand p,
@@ -783,20 +783,23 @@ footer{
 }
 
 .dark-mode .content-area{
-    background:#15181d;
+    background:#0a0b0e;
 }
 
 .dark-mode main{
-    background:#15181d;
+    background:#07080a;
     color:#e5e7eb;
 }
 
 .dark-mode .dash-header{
     background:rgb(255, 198, 52);
 }
+.dark-mode h2{
+    color: #000;
+}
 
 .dark-mode h1,
-.dark-mode h2,
+
 .dark-mode h3{
     color:#f3f4f6;
 }
