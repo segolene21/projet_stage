@@ -21,6 +21,7 @@ def creer_roles_et_permissions(sender, **kwargs):
         Permission.Code.CONSULTER_SERVICES,
         Permission.Code.CONSULTER_MOTS_CLES,
         Permission.Code.CONSULTER_FEEDBACK,
+        Permission.Code.CONSULTER_TICKETS,
     
     ]))
 
@@ -38,6 +39,8 @@ def creer_roles_et_permissions(sender, **kwargs):
         Permission.Code.CONSULTER_MOTS_CLES,
         Permission.Code.CONSULTER_FEEDBACK,
         Permission.Code.SUPPRIMER_FEEDBACK_TOUS,
+        Permission.Code.GERER_TICKETS,
+        Permission.Code.CONSULTER_TICKETS,
     ]))
 
     # 4. Rôle Membre Techcommand
@@ -52,6 +55,7 @@ def creer_roles_et_permissions(sender, **kwargs):
         Permission.Code.SOUMETTRE_FEEDBACK,
         Permission.Code.CONSULTER_FEEDBACK,
         Permission.Code.SUPPRIMER_FEEDBACK_PROPRE,
+        Permission.Code.CONSULTER_TICKETS,
     ]))
 
 

@@ -1,86 +1,103 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
+{% block title %}Tickets — OpsHub{% endblock %}
+
 {% block content %}
-    <div class="outils-header">
-        <h1>Tickets Requests</h1>
-        <div style="display:flex; gap:10px;">
-            {% if user.teamlead %}
-                <button class="btn-primary" onclick="ouvrirModaleImport()">
-                    + Importer un ticket (ServiceNow)
-                </button>
-            {% endif %}
+
+<div class="outils-header">
+    <h1>Gestion des tickets</h1>
+    {% if user.is_teamlead %}
+    <button class="btn-primary" onclick="document.getElementById('modale-import').style.display='flex'">
+        + Importer un ticket
+    </button>
+    {% endif %}
+</div>
+
+<input type="text" id="recherche-import" class="search-input"
+    placeholder="Rechercher un import par titre..."
+    oninput="rechercherImports()" />
+
+<div id="liste-imports" style="margin-top:20px;">
+    <!-- rempli dynamiquement -->
+</div>
+
+<!-- ===== MODALE IMPORT ===== -->
+<div id="modale-import" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:650px; width:90%;">
+        <h2 class="modal-title">Importer des tickets</h2>
+
+        <div class="form-group">
+            <label>Titre de l'import</label>
+            <input type="text" id="titre-import" placeholder="Ex : Tickets semaine 33" />
         </div>
-    </div>
 
-    <input type="text" id="filtre_tickets" class="search-input" placeholder="Rechercher un ticket par ID, état, demandeur...">
+        <div class="form-group">
+            <label>Fichier Excel (ServiceNow)</label>
+            <input type="file" id="fichier-ticket" accept=".xlsx"
+                style="width:100%; padding:10px; border:2px dashed #FFCC00; border-radius:8px; background:#FFF8D6; font-size:13px; cursor:pointer;"
+                onchange="previsualiserTicket(this)" />
+        </div>
 
-    {% if user.teamlead %}
-        <!-- MODALE IMPORT TICKET -->
-        <div id="modale-import" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-            <div class="modal-box" style="max-width:650px; width:90%; max-height:90vh; overflow-y:auto;">
-             
-                <div class="form-group">
-                    <label>Fichier Excel du ticket (ServiceNow)</label>
-                    <input type="file" id="fichier-ticket" accept=".xlsx,.xls"
-                        style="width:100%; padding:10px; border:2px dashed #FFCC00; border-radius:8px; background:#FFF8D6; font-size:13px; cursor:pointer;"
-                        onchange="previsualiserTicket(this)"/>
+        <div id="apercu-ticket" style="display:none;">
+            <div class="form-group">
+                <label>Aperçu — ajoutez un feedback si besoin</label>
+                <div id="tableau-ticket"
+                    style="border:1px solid #eee; border-radius:8px; overflow:auto; max-height:220px;">
                 </div>
-
-                <div id="apercu-ticket" style="display:none;">
-                    <div class="form-group">
-                        <label>Aperçu du ticket</label>
-                        <div id="tableau-ticket" style="border:1px solid #eee; border-radius:8px; overflow:auto; max-height:200px;"></div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Appréciation du client</label>
-                    <textarea id="appreciation-client" rows="4"
-                        placeholder="Saisir l'appréciation du client après résolution de l'incident..."
-                        style="width:100%; padding:12px; border:1.5px solid #eee; border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; outline:none;"
-                        onfocus="this.style.borderColor='#FFCC00'" onblur="this.style.borderColor='#eee'">
-                    </textarea>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="fermerModaleImport()">Annuler</button>
-                    <button type="button" class="btn-primary" id="btn-confirmer" onclick="confirmerImport()">
-                        Confirmer l'import
-                    </button>
-                </div>
-
-                <div id="zone-telechargement" style="display:none; margin-top:20px; padding:16px; background:#f4f5f7; border-radius:8px; text-align:center;">
-                    <p style="font-size:13px; color:#111; font-weight:700; margin-bottom:12px;">Ticket importé avec succès !</p>
-                    <div style="display:flex; gap:10px; justify-content:center;">
-                        <button type="button" class="btn-primary" onclick="telechargerFichier()">
-                            Télécharger le ticket + appréciation
-                        </button>
-                        <button type="button" class="btn-secondary" onclick="fermerApresTelechargement()">
-                            OK
-                        </button>
-                    </div>
-                </div>
-
             </div>
         </div>
-    {% endif %}
 
-    <div style="margin-top:20px;">
-        <h2 style="font-size:16px; font-weight:700; color:#FFCC00; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">
-            Liste des tickets importés
-        </h2>
-        <ul id="liste-tickets-importes" style="list-style:none; padding:0; margin:0;">
-            <p class="empty-state">Chargement des tickets...</p>
-        </ul>
+        <div class="form-actions">
+            <button class="btn-secondary" onclick="fermerModaleImport()">Annuler</button>
+            <button class="btn-primary" id="btn-confirmer" onclick="confirmerImport()">
+                Confirmer l'import
+            </button>
+        </div>
     </div>
-{% endblock %}
+</div>
 
-{% block extra_js %}
-    <script>
-        window.isTeamLead = {{ user.teamlead|yesno:'true,false' }};
-        window.canDeleteTicket = {{ user.teamlead|yesno:'true,false' }};
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="{% static 'js/tickets.js' %}"></script>
+<!-- ===== MODALE TABLEAU COMPLET ===== -->
+<div id="modale-tickets" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:90vw; width:90%; max-height:90vh; overflow-y:auto;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 class="modal-title" id="titre-modale-tickets" style="margin:0;">Tickets</h2>
+            <button class="btn-secondary" onclick="fermerModaleTickets()">Fermer</button>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="telechargerLotActuel('xlsx')">
+                Télécharger Excel
+            </button>
+            <button class="btn-secondary" onclick="telechargerLotActuel('pdf')">
+                Télécharger PDF
+            </button>
+        </div>
+
+        <input type="text" id="recherche-ticket-modale" class="search-input"
+            placeholder="Rechercher dans cet import..."
+            oninput="rechercherDansModale()"
+            style="margin-bottom:16px;" />
+
+        <div style="overflow-x:auto;">
+            <table id="tableau-tickets">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>State</th>
+                        <th>Requester</th>
+                        <th>Details</th>
+                        <th>Feedback</th>
+                        <th>Modifié le</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="corps-tableau-tickets"></tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
 {% endblock %}

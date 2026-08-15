@@ -36,8 +36,7 @@
     <aside class="sidebar" style='background-image: url("{% static "img/Image de fond/fd0fd43fdb82bde64923f43559a1e335.jpg" %}"); background-size: cover; background-position: center;'>
         <div class="sidebar-brand">
             <img src="{% static 'img/Image de fond/MTN.jpg' %}" class="brand-icon" alt="">
-            <span class="brand-name">MTN-BENIN</span>
-            <p>TechCommand Center </p>
+            
         </div>
         <nav class="sidebar-nav">
             {% block nav %}
@@ -75,10 +74,10 @@
                 <div class="dash-header-top">
                     <div>
                         <h2>TechCommand Center Portal</h2>
-                        <p>Gestion des outils de monitoring, des mots clés d'assignation de tickets incidents , des services et des expéreiences-membres.</p>
+                        <p>Connect         -        Manage        -       Simpify        -       Perform</p>
                     </div>
                     <a href="{% url 'parametres' %}" class="header-settings-link">
-                        <img src="{% static 'img/Image de fond/parametre.jpg' %}" class="header-settings-icon" alt="Paramètres">
+                        <img src="{% static 'img/Image de fond/6624d6d3f06dfbbee42af47079bee12c.jpg' %}" class="header-settings-icon" alt="Paramètres">
                     </a>
                 </div>
             {% endblock %}
@@ -90,15 +89,21 @@
 
         <footer>
             {% block footer %}
-                <p>OpsHub — Projet de stage MTN Bénin</p>
+                <p>TechCommand Center - MTN-BENIN</p>
             {% endblock %}
         </footer>
     </div>
 
     <script src="{% static 'js/csrf.js' %}"></script>
     <script src="{% static 'js/sidebar.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="/static/js/csrf.js"></script>
+<script src="/static/js/sidebar.js"></script>
+<script src="/static/js/tickets.js"></script>
+    <script src="{% static 'js/tickets.js' %}"></script>
     {% block extra_js %}{% endblock %}
 
 </div>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
 </body>
 </html>

@@ -151,7 +151,7 @@ a{
 .dash-header h2{
     font-size:clamp(18px, 3vw, 32px);
     font-weight:900;
-    color:rgb(55, 55, 255);
+    color:rgb(25, 25, 33);
 }
 
 .dash-header p{
@@ -1442,4 +1442,112 @@ footer{
 .dark-mode .btn-action-icon.btn-action-download:hover {
     background-color: #059669;
     color: #ffffff;
+}
+
+
+
+/* ================= LISTE IMPORTS ================= */
+
+.import-bloc {
+    background: rgb(246, 240, 204);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.import-bloc-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0,0,0,.08);
+    cursor: pointer;
+}
+
+.import-bloc-header:hover {
+    background: rgba(255,204,0,.15);
+}
+
+.import-titre {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: #111;
+}
+
+.import-date {
+    font-size: 11px;
+    color: #888;
+    flex-shrink: 0;
+}
+
+.import-bloc .card-actions {
+    margin-top: 0;
+    flex-shrink: 0;
+}
+
+/* Tableau dans modale */
+#tableau-tickets {
+    min-width: 700px;
+}
+
+#tableau-tickets th {
+    background: #1a1a1a;
+    color: #FFCC00;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+#tableau-tickets td {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    vertical-align: top;
+}
+
+#tableau-tickets tbody tr:nth-child(even) {
+    background: rgba(255,204,0,.06);
+}
+
+#tableau-tickets tbody tr:hover {
+    background: rgba(255,204,0,.12);
+}
+
+.dark-mode #tableau-tickets th {
+    background: #1a1a1a;
+    color: #FFCC00;
+}
+
+.dark-mode #tableau-tickets td {
+    color: #04060a;
+    border-bottom: 1px solid #2a2f3a;
+}
+
+.dark-mode .import-bloc {
+    background: #1f232b;
+}
+
+.dark-mode .import-titre {
+    color: #e5e7eb;
+}
+
+/* ================= MODALE TICKETS (blanche) ================= */
+#modale-tickets .modal-box {
+    background: #ffffff !important;
+}
+
+#modale-tickets .modal-title {
+    color: #111;
+}
+
+/* Hover sur lignes aperçu */
+#liste-imports-ul li:hover {
+    background: rgba(255,204,0,.15) !important;
+}
+
+#liste-imports-ul li:last-child {
+    border-bottom: none !important;
 }

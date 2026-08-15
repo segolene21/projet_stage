@@ -5,7 +5,7 @@
 <a href="{% url 'experiences_membres' %}" class="back-link">← Retour aux expériences des membres</a>
     <div class="outils-header">
         <h1>Liste des Plaintes</h1>
-        {% if user.is_membretechcommand %}
+        {% if user.is_membre_techcommand %}
             <button class="btn-primary" onclick="document.getElementById('modale-plainte').style.display='flex'">
                 + Soumettre une plainte
             </button>
@@ -17,7 +17,7 @@
         <input type="date" id="filtre_date_plaintes" class="search-input date-filter">
     </div>
 
-    {% if user.is_membretechcommand %}
+    {% if user.is_membre_techcommand %}
         <div id="modale-plainte" class="modal-overlay" style="display:none;">
             <div class="modal-box">
                 <h2 class="modal-title">Soumettre une plainte</h2>
@@ -52,7 +52,7 @@
                     <span>Auteur : {% if plainte.anonyme %}Anonyme{% else %}{{ plainte.membre|default:"—" }}{% endif %}</span>
                     <span>Soumis le : {{ plainte.date_ajout|date:"d/m/Y H:i" }}</span>
                 </div>
-                {% if user.is_teamlead or plainte.membre == user.membretechcommand %}
+                {% if user.is_teamlead or plainte.membre == user %}
                     <div class="action-buttons-inline">
                         <button class="btn-action-icon btn-action-delete" title="Supprimer" aria-label="Supprimer" onclick="supprimerPlainte({{ plainte.id }}, '{% url 'supprimer_plainte' plainte.id %}')">
                             <i class="bi bi-trash"></i>

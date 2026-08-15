@@ -16,6 +16,8 @@ class Permission(models.Model):
         CONSULTER_FEEDBACK = 'consulter_feedback', 'Consulter les feedbacks/plaintes/recommandations'
         SUPPRIMER_FEEDBACK_TOUS = 'supprimer_feedback_tous', 'Supprimer n\'importe quelle contribution'
         SUPPRIMER_FEEDBACK_PROPRE = 'supprimer_feedback_propre', 'Supprimer ses propres contributions'
+        GERER_TICKETS = 'gerer_tickets', 'Importer, modifier, ajouter feedback, supprimer un ticket'
+        CONSULTER_TICKETS = 'consulter_tickets', 'Consulter et télécharger les tickets'
 
     code = models.CharField(max_length=50, unique=True, choices=Code.choices)
     description = models.CharField(max_length=255, blank=True)
@@ -176,8 +178,20 @@ class Shift(models.Model):
         return f"{self.date} — {self.get_plage_display()}"
 
 
+class ImportLot(models.Model):
+    titre = models.CharField(max_length=150)
+    cree_le = models.DateTimeField(auto_now_add=True)
+    cree_par = models.ForeignKey(
+        "Utilisateurs", on_delete=models.SET_NULL, null=True, blank=True, related_name="imports_tickets"
+    )
+
+    def __str__(self):
+        return self.titre
+
+
 class Ticket(models.Model):
-    ticket_id = models.CharField(max_length=50, unique=True, verbose_name="ID")
+    import_lot = models.ForeignKey(ImportLot, on_delete=models.CASCADE, related_name="tickets")
+    ticket_id = models.CharField(max_length=50, verbose_name="ID")
     state = models.CharField(max_length=50, verbose_name="State")
     requester = models.CharField(max_length=150, verbose_name="Requester")
     details = models.TextField(verbose_name="Details")
@@ -185,5 +199,9 @@ class Ticket(models.Model):
     cree_le = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
     modifie_le = models.DateTimeField(auto_now=True, verbose_name="Modifié le")
 
+    class Meta:
+        unique_together = ("import_lot", "ticket_id")
+
     def __str__(self):
         return self.ticket_id
+    
