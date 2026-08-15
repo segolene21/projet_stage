@@ -566,42 +566,90 @@ def _generer_pdf(tickets, response):
     doc.build([tableau])
 
 
+
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from.models import ImportLot
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+
 @login_required
-def export_lot(request, lot_id):
-    format_export = request.GET.get('format', 'xlsx')
-
-    try:
-        lot = ImportLot.objects.get(id=lot_id)
-    except ImportLot.DoesNotExist:
-        return JsonResponse({"erreur": "Import introuvable"}, status=404)
-
-    tickets = lot.tickets.all()
-    nom_base = lot.titre.replace(" ", "_")
-
-    if format_export == 'pdf':
-        response = HttpResponse(content_type='application/pdf')
-        response["Content-Disposition"] = f'attachment; filename="{nom_base}.pdf"'
-        _generer_pdf(tickets, response)
-        return response
-
-    wb = Workbook()
+def exporter_lot_excel(request, lot_id):
+    lot = get_object_or_404(ImportLot, id=lot_id)
+    wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Tickets"
-    ws.append(["ID", "State", "Requester", "Details", "Feedback", "Créé le", "Modifié le"])
 
-    for t in tickets:
-        ws.append([
-            t.ticket_id, t.state, t.requester, t.details, t.feedback or "",
-            timezone.localtime(t.cree_le).strftime("%d/%m/%Y %H:%M") if t.cree_le else "",
-            timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M") if t.modifie_le else "",
-        ])
+    # Style en-tête - J'AI GARDÉ TES COULEURS
+    header_font = Font(bold=True, color="FFCC00", size=11)
+    header_fill = PatternFill("solid", fgColor="1A1A1A")
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True) # <- wrap_text=True
+    border = Border(
+        left=Side(style='thin', color='DDDDDD'),
+        right=Side(style='thin', color='DDDDDD'),
+        top=Side(style='thin', color='DDDDDD'),
+        bottom=Side(style='thin', color='DDDDDD')
+    )
 
-    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = f'attachment; filename="{nom_base}.xlsx"'
+    # En-têtes
+    entetes = ['ID Ticket', 'State', 'Requester', 'Details', 'Feedback', 'Modifié le']
+    for col, entete in enumerate(entetes, 1):
+        cell = ws.cell(row=1, column=col, value=entete)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_align
+        cell.border = border
+    ws.row_dimensions[1].height = 25 # Hauteur entete
+
+    # Style lignes - J'AI GARDÉ TES COULEURS
+    fill_pair = [
+        PatternFill("solid", fgColor="FFFFFF"), # Blanc
+        PatternFill("solid", fgColor="FFF8D6"), # Beige clair
+    ]
+    data_align = Alignment(vertical="top", wrap_text=True) # <- wrap_text=True + top
+
+    # Données
+    tickets = lot.tickets.all()
+    for row, ticket in enumerate(tickets, 2):
+        valeurs = [
+            ticket.ticket_id,
+            ticket.state,
+            ticket.requester,
+            ticket.details, # <- ici les \n seront respectés
+            ticket.feedback,
+            ticket.modifie_le.strftime('%d/%m/%Y %H:%M') if ticket.modifie_le else '',
+        ]
+        for col, val in enumerate(valeurs, 1):
+            cell = ws.cell(row=row, column=col, value=val)
+            cell.fill = fill_pair[row % 2]
+            cell.alignment = data_align
+            cell.border = border
+
+    # LARGEUR COLONNES FIXE comme le tableau bleu - plus de auto
+    ws.column_dimensions['A'].width = 18 # ID Ticket
+    ws.column_dimensions['B'].width = 16 # State
+    ws.column_dimensions['C'].width = 22 # Requester
+    ws.column_dimensions['D'].width = 55 # Details <- LARGE
+    ws.column_dimensions['E'].width = 40 # Feedback
+    ws.column_dimensions['F'].width = 20 # Modifié le
+
+    # HAUTEUR LIGNE AUTO pour les \n
+    for r in range(2, ws.max_row + 1):
+        ws.row_dimensions[r].height = None # None = auto
+
+    # Figer la première ligne
+    ws.freeze_panes = "A2"
+
+    # Réponse HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="tickets_{lot.id}.xlsx"'
     wb.save(response)
     return response
-
-
 @csrf_exempt
 def ticket_detail(request, ticket_pk):
     """Modifier/supprimer un ticket précis via sa clé primaire Django."""
