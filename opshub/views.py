@@ -475,13 +475,18 @@ def import_tickets_excel(request):
     lot = ImportLot.objects.create(titre=titre, cree_par=request.user)
 
     count = 0
+    dernier_ticket = None
     for row in ws.iter_rows(min_row=2, values_only=True):
         ticket_id, state, requester, details = row[:4]
+
         if not ticket_id:
+            if dernier_ticket and details:
+                dernier_ticket.details = (dernier_ticket.details + "\n" + str(details)).strip()
+                dernier_ticket.save(update_fields=["details"])
             continue
 
         ticket_id_str = str(ticket_id)
-        Ticket.objects.create(
+        dernier_ticket = Ticket.objects.create(
             import_lot=lot,
             ticket_id=ticket_id_str,
             state=state or "",
@@ -496,7 +501,7 @@ def import_tickets_excel(request):
 
 @login_required
 def liste_imports(request):
-    """Liste des lots d'import, avec un aperçu (5 premiers tickets) pour chacun."""
+    """Liste des lots d'import, avec un aperçu (3premiers tickets) pour chacun."""
     lots = ImportLot.objects.all().order_by('-cree_le')
     resultat = []
 
@@ -572,16 +577,34 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from.models import ImportLot
+from .models import ImportLot
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+
+# imports nécessaires pour le PDF (à mettre en haut du fichier avec les autres imports)
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
 
 @login_required
 def exporter_lot_excel(request, lot_id):
     lot = get_object_or_404(ImportLot, id=lot_id)
+    tickets = lot.tickets.all()
+    format = request.GET.get('format', 'xlsx')  # <-- on lit le format demandé
+
+    # --- Branche PDF ---
+    if format == 'pdf':
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="tickets_{lot.id}.pdf"'
+        _generer_pdf(tickets, response)
+        return response
+
+    # --- Sinon, on continue avec l'Excel comme avant ---
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Tickets"
+    ...
 
     # Style en-tête - J'AI GARDÉ TES COULEURS
     header_font = Font(bold=True, color="FFCC00", size=11)
@@ -620,7 +643,7 @@ def exporter_lot_excel(request, lot_id):
             ticket.requester,
             ticket.details, # <- ici les \n seront respectés
             ticket.feedback,
-            ticket.modifie_le.strftime('%d/%m/%Y %H:%M') if ticket.modifie_le else '',
+            timezone.localtime(ticket.modifie_le).strftime('%d/%m/%Y %H:%M') if ticket.modifie_le else '',
         ]
         for col, val in enumerate(valeurs, 1):
             cell = ws.cell(row=row, column=col, value=val)
@@ -650,6 +673,7 @@ def exporter_lot_excel(request, lot_id):
     response['Content-Disposition'] = f'attachment; filename="tickets_{lot.id}.xlsx"'
     wb.save(response)
     return response
+    
 @csrf_exempt
 def ticket_detail(request, ticket_pk):
     """Modifier/supprimer un ticket précis via sa clé primaire Django."""
