@@ -11,7 +11,21 @@
         {% endif %}
     </div>
 
-    <input type="text" id="champ_recherche_mots_cles" class="search-input" placeholder="Rechercher un mot-clé...">
+   <form method="get" class="filtres-mots-cles">
+    <input type="text" name="q" value="{{ requete }}" placeholder="Rechercher un mot-clé...">
+
+    <select name="equipe">
+        <option value="">Toutes les équipes</option>
+        {% for equipe in equipes %}
+            <option value="{{ equipe.id }}" {% if equipe_id_selectionne == equipe.id|stringformat:"s" %}selected{% endif %}>
+                {{ equipe.nom }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Filtrer</button>
+    <a href="{% url 'liste_mots_cles' %}">Réinitialiser</a>
+</form>
 
     <table id="table-mots-cles">
         <thead>

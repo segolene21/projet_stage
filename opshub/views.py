@@ -169,13 +169,26 @@ def supprimer_service(request, service_id):
 
 @permission_requise(Permission.Code.CONSULTER_MOTS_CLES, is_json=False)
 def liste_mots_cles(request):
+    requete = request.GET.get('q', '')
+    equipe_id = request.GET.get('equipe', '')
+
     mots_cles = MotsClesAssignation.objects.all()
+
+    if requete:
+        mots_cles = mots_cles.filter(intitule__icontains=requete)
+
+    if equipe_id:
+        mots_cles = mots_cles.filter(equipe_id=equipe_id)
+
     equipes = Equipe.objects.all()
     membres = Utilisateurs.objects.filter(role__nom=Role.Nom.MEMBRE_TECHCOMMAND)
+
     return render(request, 'liste_mots_cles.html', {
         'mots_cles': mots_cles,
         'equipes': equipes,
         'membres': membres,
+        'requete': requete,
+        'equipe_id_selectionne': equipe_id,
     })
 
 
@@ -242,16 +255,35 @@ def supprimer_mot_cle(request, mot_cle_id):
 
 @permission_requise(Permission.Code.GERER_UTILISATEURS, is_json=False)
 def liste_utilisateurs(request):
-    administrateurs = Utilisateurs.objects.filter(role__nom=Role.Nom.ADMINISTRATEUR)
-    teamleads = Utilisateurs.objects.filter(role__nom=Role.Nom.TEAMLEAD)
-    membres = Utilisateurs.objects.filter(role__nom=Role.Nom.MEMBRE_TECHCOMMAND)
+    requete = request.GET.get('q', '')
+    statut = request.GET.get('statut', '')  # 'actif', 'inactif', ou vide
+
+    base_qs = Utilisateurs.objects.all()
+
+    if requete:
+        base_qs = base_qs.filter(
+            Q(username__icontains=requete) |
+            Q(first_name__icontains=requete) |
+            Q(last_name__icontains=requete) |
+            Q(email__icontains=requete)
+        )
+
+    if statut == 'actif':
+        base_qs = base_qs.filter(statut=True)
+    elif statut == 'inactif':
+        base_qs = base_qs.filter(statut=False)
+
+    administrateurs = base_qs.filter(role__nom=Role.Nom.ADMINISTRATEUR)
+    teamleads = base_qs.filter(role__nom=Role.Nom.TEAMLEAD)
+    membres = base_qs.filter(role__nom=Role.Nom.MEMBRE_TECHCOMMAND)
 
     return render(request, 'liste-utilisateurs.html', {
         'administrateurs': administrateurs,
         'teamleads': teamleads,
         'membres': membres,
+        'requete': requete,
+        'statut_selectionne': statut,
     })
-
 
 @permission_requise(Permission.Code.GERER_UTILISATEURS)
 def ajouter_utilisateur(request):

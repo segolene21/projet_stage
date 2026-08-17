@@ -58,7 +58,18 @@
             </form>
         </div>
     </div>
+<form method="get" class="filtres-utilisateurs">
+    <input type="text" name="q" value="{{ requete }}" placeholder="Rechercher un utilisateur (nom, username, email)...">
 
+    <select name="statut">
+        <option value="">Statut (tous)</option>
+        <option value="actif" {% if statut_selectionne == "actif" %}selected{% endif %}>Actif</option>
+        <option value="inactif" {% if statut_selectionne == "inactif" %}selected{% endif %}>Inactif</option>
+    </select>
+
+    <button type="submit">Filtrer</button>
+    <a href="{% url 'liste_utilisateurs' %}">Réinitialiser</a>
+</form>
     <div class="users-section">
         <h2>Administrateurs</h2>
         <table>
