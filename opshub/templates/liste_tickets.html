@@ -71,7 +71,7 @@
            <button class="btn-delete" onclick="supprimerLotActuel()">Supprimer</button>
            <button id="btn-modifier-global" class="btn-edit" onclick="activerModeEditionGlobal()">Modifier</button>
     <button id="btn-enregistrer-global" class="btn-edit" onclick="enregistrerModificationsGlobales()" style="display:none;">Enregistrer</button>
-    <button id="btn-annuler-global" onclick="annulerModificationsGlobales()" style="display:none;">Annuler</button>
+    <button class="btn-secondary" id="btn-annuler-global" onclick="annulerModificationsGlobales()" style="display:none;">Annuler</button>
 
         </div>
         <table id="tableau-tickets">
@@ -90,5 +90,5 @@
         </table>
 
         
-
+<script src="{% static 'js/tickets.js' %}"></script>
 {% endblock %}

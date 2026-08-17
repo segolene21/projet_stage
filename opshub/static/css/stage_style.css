@@ -1551,3 +1551,69 @@ footer{
 #liste-imports-ul li:last-child {
     border-bottom: none !important;
 }
+.filtres-outils,
+.filtres-services {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.filtres-outils input[type="text"],
+.filtres-services input[type="text"],
+.filtres-outils select,
+.filtres-services select {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid #fafdfe;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.filtres-outils input[type="text"]:focus,
+.filtres-services input[type="text"]:focus,
+.filtres-outils select:focus,
+.filtres-services select:focus {
+    border-color: #FFCC00;
+}
+
+.filtres-outils input[type="text"],
+.filtres-services input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filtres-outils button[type="submit"],
+.filtres-services button[type="submit"] {
+    background-color: #FFCC00;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.filtres-outils button[type="submit"]:hover,
+.filtres-services button[type="submit"]:hover {
+    background-color: #e6b800;
+}
+
+.filtres-outils a,
+.filtres-services a {
+    color: #FFCC00;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 4px;
+}
+
+.filtres-outils a:hover,
+.filtres-services a:hover {
+    text-decoration: underline;
+}

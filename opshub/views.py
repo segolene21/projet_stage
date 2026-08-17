@@ -22,14 +22,40 @@ from .decorators import permission_requise
 # ==========================================
 
 @permission_requise(Permission.Code.CONSULTER_OUTILS, is_json=False)
+@permission_requise(Permission.Code.CONSULTER_OUTILS, is_json=False)
 def liste_outils(request):
     requete = request.GET.get('q', '')
-    outils = OutilMonitoring.objects.filter(nom__icontains=requete) if requete else OutilMonitoring.objects.all()
+    team_id = request.GET.get('team', '')
+    authentification = request.GET.get('authentification', '')
+    statut = request.GET.get('statut', '')
+
+    outils = OutilMonitoring.objects.all()
+
+    if requete:
+        outils = outils.filter(nom__icontains=requete)
+
+    if team_id:
+        outils = outils.filter(outil_team_id=team_id)
+
+    if authentification == 'oui':
+        outils = outils.filter(necessite_authentification=True)
+    elif authentification == 'non':
+        outils = outils.filter(necessite_authentification=False)
+
+    if statut == 'actif':
+        outils = outils.filter(statut=True)
+    elif statut == 'inactif':
+        outils = outils.filter(statut=False)
+
     outils_teams = OutilTeam.objects.all()
+
     return render(request, 'liste_outils.html', {
         'outils': outils,
         'outils_teams': outils_teams,
         'requete': requete,
+        'team_id_selectionne': team_id,
+        'authentification_selectionnee': authentification,
+        'statut_selectionne': statut,
     })
 
 
@@ -545,7 +571,7 @@ def tickets_du_lot(request, lot_id):
     except ImportLot.DoesNotExist:
         return JsonResponse({"erreur": "Import introuvable"}, status=404)
 
-    qs = lot.tickets.all()
+    qs = lot.tickets.all().order_by('id')
     if q:
         qs = qs.filter(
             Q(ticket_id__icontains=q) | Q(state__icontains=q) |
@@ -561,7 +587,6 @@ def tickets_du_lot(request, lot_id):
         })
 
     return JsonResponse({"titre": lot.titre, "tickets": tickets})
-
 
 def _generer_pdf(tickets, response):
     doc = SimpleDocTemplate(response, pagesize=landscape(A4))

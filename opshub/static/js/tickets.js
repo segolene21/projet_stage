@@ -415,7 +415,6 @@ function afficherTicketsEnLecture() {
         corps.appendChild(tr);
     });
 }
-
 function activerModeEditionGlobal() {
     const corps = document.getElementById('corps-tableau-tickets');
     const champsEditables = ['ticket_id', 'state', 'requester', 'details', 'feedback'];
@@ -426,6 +425,11 @@ function activerModeEditionGlobal() {
             if (!td) return;
             const valeur = td.textContent;
 
+            if (champ === 'details') {
+                td.style.maxWidth = '500px';
+                td.style.width = '500px';
+            }
+
             const input = champ === 'details'
                 ? document.createElement('textarea')
                 : document.createElement('input');
@@ -433,6 +437,23 @@ function activerModeEditionGlobal() {
             input.value = valeur;
             input.style.width = '100%';
             input.dataset.champ = champ;
+
+            if (champ === 'details') {
+                input.style.resize = 'none';
+                input.style.overflow = 'hidden';
+                input.style.fontFamily = 'inherit';
+                input.style.fontSize = 'inherit';
+                input.style.padding = '6px';
+                input.style.boxSizing = 'border-box';
+                input.style.lineHeight = '1.4';
+
+                const ajusterHauteur = () => {
+                    input.style.height = 'auto';
+                    input.style.height = input.scrollHeight + 'px';
+                };
+                input.addEventListener('input', ajusterHauteur);
+                requestAnimationFrame(ajusterHauteur);
+            }
 
             td.textContent = '';
             td.appendChild(input);
@@ -443,7 +464,6 @@ function activerModeEditionGlobal() {
     document.getElementById('btn-enregistrer-global').style.display = '';
     document.getElementById('btn-annuler-global').style.display = '';
 }
-
 function annulerModificationsGlobales() {
     afficherTicketsEnLecture();
     document.getElementById('btn-modifier-global').style.display = '';
