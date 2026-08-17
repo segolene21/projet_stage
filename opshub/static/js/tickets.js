@@ -184,48 +184,65 @@ function fermerModaleTickets() {
     document.getElementById('modale-tickets').style.display = 'none';
     lotActuelId = null;
 }
-
 async function chargerTicketsDuLot(recherche = '') {
     const corps = document.getElementById('corps-tableau-tickets');
     if (!corps || !lotActuelId) return;
 
+    const state = document.getElementById('filtre-state')?.value || '';
+    const dateDebut = document.getElementById('filtre-date-debut')?.value || '';
+    const dateFin = document.getElementById('filtre-date-fin')?.value || '';
+
+    const params = new URLSearchParams();
+    if (recherche) params.set('q', recherche);
+    if (state) params.set('state', state);
+    if (dateDebut) params.set('date_debut', dateDebut);
+    if (dateFin) params.set('date_fin', dateFin);
+
     try {
-        const url = recherche
-            ? `/api/imports/${lotActuelId}/tickets/?q=${encodeURIComponent(recherche)}`
-            : `/api/imports/${lotActuelId}/tickets/`;
-        const res = await fetch(url);
+        const url = `/api/imports/${lotActuelId}/tickets/?${params.toString()}`;
+        const res = await fetch(url, { cache: 'no-store' });
         if (res.status === 403) {
             corps.innerHTML = '<tr><td colspan="7">Accès interdit</td></tr>';
             return;
         }
         const data = await res.json();
-        const tickets = data.tickets || [];
+        ticketsActuels = data.tickets || [];
 
-        if (tickets.length === 0) {
-            corps.innerHTML = '<tr><td colspan="7">Aucun ticket</td></tr>';
+        remplirFiltreState(data.states_disponibles || [], state);
+
+        if (ticketsActuels.length === 0) {
+            corps.innerHTML = '<tr><td colspan="7">Aucun ticket trouvé</td></tr>';
             return;
         }
 
-        corps.innerHTML = '';
-        tickets.forEach(t => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="cellule-editable" data-champ="ticket_id" data-pk="${t.id}">${echapperHtml(t.ticket_id)}</td>
-                <td class="cellule-editable" data-champ="state" data-pk="${t.id}">${echapperHtml(t.state)}</td>
-                <td class="cellule-editable" data-champ="requester" data-pk="${t.id}">${echapperHtml(t.requester)}</td>
-                <td class="cellule-editable" data-champ="details" data-pk="${t.id}" style="max-width:300px;">${echapperHtml(t.details)}</td>
-                <td class="cellule-editable" data-champ="feedback" data-pk="${t.id}">${echapperHtml(t.feedback)}</td>
-                <td>${echapperHtml(t.modifie_le)}</td>
-                <td><button class="btn-delete" onclick="supprimerTicket(${t.id})">Supprimer</button></td>
-            `;
-            corps.appendChild(tr);
-        });
-
-        activerEditionInline();
+        afficherTicketsEnLecture();
     } catch (erreur) {
         console.error('Erreur de chargement des tickets :', erreur);
         corps.innerHTML = '<tr><td colspan="7">Erreur de chargement</td></tr>';
     }
+}
+
+function remplirFiltreState(states, valeurSelectionnee) {
+    const select = document.getElementById('filtre-state');
+    if (!select) return;
+
+    const valeurActuelle = select.value;
+    select.innerHTML = '<option value="">Tous les states</option>';
+    states.forEach(s => {
+        const option = document.createElement('option');
+        option.value = s;
+        option.textContent = s;
+        select.appendChild(option);
+    });
+    select.value = valeurSelectionnee || valeurActuelle;
+}
+
+function reinitialiserFiltres() {
+    document.getElementById('recherche-ticket-modale').value = '';
+    document.getElementById('filtre-state').value = '';
+    document.getElementById('filtre-date-debut').value = '';
+    document.getElementById('filtre-date-fin').value = '';
+    chargerTicketsDuLot();
 }
 
 let timerRechercheModale = null;
@@ -323,3 +340,157 @@ function telechargerLotActuel(format) {
 document.addEventListener('DOMContentLoaded', () => {
     chargerListeImports();
 });
+
+async function supprimerLot(lotId) {
+    if (!confirm('Supprimer tout cet import (tous ses tickets) ?')) return;
+
+    try {
+        const res = await fetch(`/api/imports/${lotId}/`, { method: 'DELETE', cache: 'no-store' });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.erreur || 'Échec de la suppression');
+            return;
+        }
+
+        if (lotActuelId === lotId) {
+            fermerModaleTickets();
+        }
+
+        await chargerListeImports();
+    } catch (erreur) {
+        alert('Erreur : ' + erreur.message);
+        console.error(erreur);
+    }
+}
+
+async function chargerTicketsDuLot(recherche = '') {
+    const corps = document.getElementById('corps-tableau-tickets');
+    if (!corps || !lotActuelId) return;
+
+    try {
+        const url = recherche
+            ? `/api/imports/${lotActuelId}/tickets/?q=${encodeURIComponent(recherche)}`
+            : `/api/imports/${lotActuelId}/tickets/`;
+        const res = await fetch(url);
+        if (res.status === 403) {
+            corps.innerHTML = '<tr><td colspan="7">Accès interdit</td></tr>';
+            return;
+        }
+        const data = await res.json();
+        ticketsActuels = data.tickets || [];
+
+        if (ticketsActuels.length === 0) {
+            corps.innerHTML = '<tr><td colspan="7">Aucun ticket</td></tr>';
+            return;
+        }
+
+        afficherTicketsEnLecture();
+    } catch (erreur) {
+        console.error('Erreur de chargement des tickets :', erreur);
+        corps.innerHTML = '<tr><td colspan="7">Erreur de chargement</td></tr>';
+    }
+}
+
+function afficherTicketsEnLecture() {
+    const corps = document.getElementById('corps-tableau-tickets');
+    corps.innerHTML = '';
+
+    ticketsActuels.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.dataset.pk = t.id;
+
+        tr.innerHTML = `
+            <td data-champ="ticket_id">${echapperHtml(t.ticket_id)}</td>
+            <td data-champ="state">${echapperHtml(t.state)}</td>
+            <td data-champ="requester">${echapperHtml(t.requester)}</td>
+            <td data-champ="details" style="max-width:300px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(t.details)}</td>
+            <td data-champ="feedback">${echapperHtml(t.feedback)}</td>
+            <td>${echapperHtml(t.modifie_le)}</td>
+            <td><button class="btn-delete" data-action="supprimer">Supprimer</button></td>
+        `;
+        tr.querySelector('[data-action="supprimer"]').addEventListener('click', () => supprimerTicket(t.id));
+        corps.appendChild(tr);
+    });
+}
+
+function activerModeEditionGlobal() {
+    const corps = document.getElementById('corps-tableau-tickets');
+    const champsEditables = ['ticket_id', 'state', 'requester', 'details', 'feedback'];
+
+    corps.querySelectorAll('tr').forEach(tr => {
+        champsEditables.forEach(champ => {
+            const td = tr.querySelector(`[data-champ="${champ}"]`);
+            if (!td) return;
+            const valeur = td.textContent;
+
+            const input = champ === 'details'
+                ? document.createElement('textarea')
+                : document.createElement('input');
+            if (champ !== 'details') input.type = 'text';
+            input.value = valeur;
+            input.style.width = '100%';
+            input.dataset.champ = champ;
+
+            td.textContent = '';
+            td.appendChild(input);
+        });
+    });
+
+    document.getElementById('btn-modifier-global').style.display = 'none';
+    document.getElementById('btn-enregistrer-global').style.display = '';
+    document.getElementById('btn-annuler-global').style.display = '';
+}
+
+function annulerModificationsGlobales() {
+    afficherTicketsEnLecture();
+    document.getElementById('btn-modifier-global').style.display = '';
+    document.getElementById('btn-enregistrer-global').style.display = 'none';
+    document.getElementById('btn-annuler-global').style.display = 'none';
+}
+
+async function enregistrerModificationsGlobales() {
+    const corps = document.getElementById('corps-tableau-tickets');
+    const lignes = corps.querySelectorAll('tr');
+    const requetes = [];
+
+    lignes.forEach(tr => {
+        const pk = tr.dataset.pk;
+        const donnees = {};
+        tr.querySelectorAll('[data-champ]').forEach(td => {
+            const input = td.querySelector('input, textarea');
+            if (input) donnees[input.dataset.champ] = input.value;
+        });
+
+        requetes.push(
+            fetch(`/api/tickets/${pk}/`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(donnees),
+            }).then(res => res.json().then(data => ({ ok: res.ok, pk, data })))
+        );
+    });
+
+    try {
+        const resultats = await Promise.all(requetes);
+        const echecs = resultats.filter(r => !r.ok);
+
+        if (echecs.length > 0) {
+            alert(`${echecs.length} ligne(s) n'ont pas pu être enregistrées : ${echecs.map(e => e.data.erreur).join(', ')}`);
+        }
+
+        document.getElementById('btn-modifier-global').style.display = '';
+        document.getElementById('btn-enregistrer-global').style.display = 'none';
+        document.getElementById('btn-annuler-global').style.display = 'none';
+
+        await chargerTicketsDuLot();
+        await chargerListeImports();
+    } catch (erreur) {
+        alert('Erreur : ' + erreur.message);
+        console.error(erreur);
+    }
+}
+
+function supprimerLotActuel() {
+    if (!lotActuelId) return;
+    supprimerLot(lotActuelId);
+}

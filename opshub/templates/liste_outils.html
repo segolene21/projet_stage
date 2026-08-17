@@ -15,7 +15,33 @@
     </div>
 
     <input type="text" id="champ_recherche_outils" class="search-input" placeholder="Rechercher un outil...">
+<form method="get" class="filtres-outils">
+    <input type="text" name="q" value="{{ requete }}" placeholder="Rechercher un outil...">
 
+    <select name="team">
+        <option value="">Toutes les équipes</option>
+        {% for team in outils_teams %}
+            <option value="{{ team.id }}" {% if team_id_selectionne == team.id|stringformat:"s" %}selected{% endif %}>
+                {{ team.nom }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <select name="authentification">
+        <option value="">Authentification (tous)</option>
+        <option value="oui" {% if authentification_selectionnee == "oui" %}selected{% endif %}>Requiert authentification</option>
+        <option value="non" {% if authentification_selectionnee == "non" %}selected{% endif %}>Sans authentification</option>
+    </select>
+
+    <select name="statut">
+        <option value="">Statut (tous)</option>
+        <option value="actif" {% if statut_selectionne == "actif" %}selected{% endif %}>Actif</option>
+        <option value="inactif" {% if statut_selectionne == "inactif" %}selected{% endif %}>Inactif</option>
+    </select>
+
+    <button type="submit">Filtrer</button>
+    <a href="{% url 'liste_outils' %}">Réinitialiser</a>
+</form>
     {% if user.is_teamlead %}
         <!-- MODALE AJOUT OUTIL -->
         <div id="modale-ajout" class="modal-overlay" style="display:none;">

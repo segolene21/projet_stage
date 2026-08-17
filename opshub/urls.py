@@ -47,4 +47,5 @@ urlpatterns = [
     path("api/imports/<int:lot_id>/tickets/", views.tickets_du_lot, name="tickets_du_lot"),
     path("api/imports/<int:lot_id>/export/", views.export_lot, name="export_lot"),
     path("api/tickets/<int:ticket_pk>/", views.ticket_detail, name="ticket_detail"),
+    path("api/imports/<int:lot_id>/", views.supprimer_lot, name="supprimer_lot"),
 ]

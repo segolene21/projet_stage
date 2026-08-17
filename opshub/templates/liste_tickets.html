@@ -41,9 +41,23 @@
         <div class="modale-actions-top">
             <button onclick="telechargerLotActuel('xlsx')">Télécharger en Excel</button>
             <button onclick="telechargerLotActuel('pdf')">Télécharger en PDF</button>
+           <button class="btn-delete" onclick="supprimerLotActuel()">Supprimer</button>
+           <button id="btn-modifier-global" class="btn-edit" onclick="activerModeEditionGlobal()">Modifier</button>
+    <button id="btn-enregistrer-global" class="btn-edit" onclick="enregistrerModificationsGlobales()" style="display:none;">Enregistrer</button>
+    <button id="btn-annuler-global" onclick="annulerModificationsGlobales()" style="display:none;">Annuler</button>
+
         </div>
         <input type="text" id="recherche-ticket-modale" placeholder="Rechercher dans cet import..." oninput="rechercherDansModale()" />
         <table id="tableau-tickets">
+            <div class="filtres-tickets">
+    <input type="text" id="recherche-ticket-modale" placeholder="Rechercher dans cet import..." oninput="rechercherDansModale()" />
+    <select id="filtre-state" onchange="rechercherDansModale()">
+        <option value="">Tous les states</option>
+    </select>
+    <label>Du <input type="date" id="filtre-date-debut" onchange="rechercherDansModale()"></label>
+    <label>Au <input type="date" id="filtre-date-fin" onchange="rechercherDansModale()"></label>
+    <button onclick="reinitialiserFiltres()">Réinitialiser</button>
+</div>
             <thead>
                 <tr>
                     <th>ID</th><th>State</th><th>Requester</th><th>Details</th>

@@ -10,8 +10,21 @@
             </button>
         {% endif %}
     </div>
+<form method="get" class="filtres-services">
+    <input type="text" name="q" value="{{ requete }}" placeholder="Rechercher un service...">
 
-    <input type="text" id="champ_recherche_services" class="search-input" placeholder="Rechercher un service...">
+    <select name="outil">
+        <option value="">Tous les outils</option>
+        {% for outil in tous_les_outils %}
+            <option value="{{ outil.id }}" {% if outil_id_selectionne == outil.id|stringformat:"s" %}selected{% endif %}>
+                {{ outil.nom }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Filtrer</button>
+    <a href="{% url 'liste_services' %}">Réinitialiser</a>
+</form>
 
     {% if user.is_teamlead %}
         <div id="modale-ajout-service" class="modal-overlay" style="display:none;">

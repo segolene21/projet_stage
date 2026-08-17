@@ -100,12 +100,25 @@ def detail_outil_team(request, team_id):
 @permission_requise(Permission.Code.CONSULTER_SERVICES, is_json=False)
 def liste_services(request):
     requete = request.GET.get('q', '')
-    services = Service.objects.filter(nom__icontains=requete) if requete else Service.objects.all()
+    outil_id = request.GET.get('outil', '')
+
+    services = Service.objects.all()
+
+    if requete:
+        services = services.filter(nom__icontains=requete)
+
+    if outil_id:
+        services = services.filter(outils_monitoring__id=outil_id)
+
+    services = services.distinct()
+
     tous_les_outils = OutilMonitoring.objects.all()
+
     return render(request, 'liste_services.html', {
         'services': services,
         'tous_les_outils': tous_les_outils,
         'requete': requete,
+        'outil_id_selectionne': outil_id,
     })
 
 
@@ -501,7 +514,7 @@ def liste_imports(request):
     resultat = []
 
     for lot in lots:
-        tickets = lot.tickets.all()[:5]
+        tickets = lot.tickets.all()[:3]
         resultat.append({
             "id": lot.id,
             "titre": lot.titre,
@@ -627,3 +640,61 @@ def ticket_detail(request, ticket_pk):
             return JsonResponse({"message": "Ticket modifié"})
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+@csrf_exempt
+def supprimer_lot(request, lot_id):
+    if request.method != 'DELETE':
+        return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
+
+    if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_TICKETS):
+        return JsonResponse({"erreur": "Accès interdit"}, status=403)
+
+    try:
+        lot = ImportLot.objects.get(id=lot_id)
+    except ImportLot.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    lot.delete()
+    return JsonResponse({"message": "Import supprimé"})
+
+@login_required
+def tickets_du_lot(request, lot_id):
+    q = request.GET.get('q', '').strip()
+    state = request.GET.get('state', '').strip()
+    date_debut = request.GET.get('date_debut', '').strip()
+    date_fin = request.GET.get('date_fin', '').strip()
+
+    try:
+        lot = ImportLot.objects.get(id=lot_id)
+    except ImportLot.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    qs = lot.tickets.all()
+
+    if q:
+        qs = qs.filter(
+            Q(ticket_id__icontains=q) | Q(state__icontains=q) |
+            Q(requester__icontains=q) | Q(details__icontains=q) | Q(feedback__icontains=q)
+        )
+
+    if state:
+        qs = qs.filter(state=state)
+
+    if date_debut:
+        qs = qs.filter(modifie_le__date__gte=date_debut)
+
+    if date_fin:
+        qs = qs.filter(modifie_le__date__lte=date_fin)
+
+    tickets = []
+    for t in qs:
+        tickets.append({
+            "id": t.id, "ticket_id": t.ticket_id, "state": t.state, "requester": t.requester,
+            "details": t.details, "feedback": t.feedback,
+            "modifie_le": timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M"),
+        })
+
+    # Liste des states distincts présents dans ce lot, pour peupler le filtre dropdown
+    states_disponibles = list(lot.tickets.values_list('state', flat=True).distinct())
+
+    return JsonResponse({"titre": lot.titre, "tickets": tickets, "states_disponibles": states_disponibles})
