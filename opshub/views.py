@@ -309,9 +309,9 @@ def liste_utilisateurs(request):
         )
 
     if statut == 'actif':
-        base_qs = base_qs.filter(statut=True)
+        base_qs = base_qs.filter(is_active=True)
     elif statut == 'inactif':
-        base_qs = base_qs.filter(statut=False)
+        base_qs = base_qs.filter(is_active=False)
 
     administrateurs = base_qs.filter(role__nom=Role.Nom.ADMINISTRATEUR)
     teamleads = base_qs.filter(role__nom=Role.Nom.TEAMLEAD)
