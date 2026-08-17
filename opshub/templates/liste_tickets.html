@@ -1,62 +1,84 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tickets — OpsHub{% endblock %}
+
 {% block content %}
-<h1>Liste des tickets</h1>
 
-<div class="barre-actions">
+<div class="outils-header">
+    <h1>Gestion des tickets</h1>
     {% if user.is_teamlead %}
-    <button onclick="document.getElementById('modale-import').style.display='block'">Importer un ticket</button>
-      {% endif %}
-    <input type="text" id="recherche-import" placeholder="Rechercher un import par titre..." oninput="rechercherImports()" />
+    <button class="btn-primary" onclick="document.getElementById('modale-import').style.display='flex'">
+        + Importer un ticket
+    </button>
+    {% endif %}
 </div>
 
-<div id="liste-imports">
-    <!-- rempli dynamiquement : un bloc tableau par import -->
+<input type="text" id="recherche-import" class="search-input"
+    placeholder="Rechercher un import par titre..."
+    oninput="rechercherImports()" style="margin-bottom:16px;"/>
+
+<div id="liste-imports" style="margin-top:20px;">
+    <!-- rempli dynamiquement -->
 </div>
 
-<!-- Modale Import -->
-<div id="modale-import" class="modale" style="display:none;">
-    <div class="modale-contenu">
-        <h2>Importer des tickets</h2>
-        <label>Titre de l'import</label>
-        <input type="text" id="titre-import" placeholder="Ex: Tickets semaine 33" />
-        <input type="file" id="fichier-ticket" accept=".xlsx" onchange="previsualiserTicket(this)" />
-        <div id="apercu-ticket" style="display:none;">
-            <h3>Aperçu — ajoutez un feedback si besoin</h3>
-            <div id="tableau-ticket"></div>
+<!-- ===== MODALE IMPORT ===== -->
+<div id="modale-import" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:650px; width:90%;">
+        <h2 class="modal-title">Importer des tickets</h2>
+
+        <div class="form-group">
+            <label>Titre de l'import</label>
+            <input type="text" id="titre-import" placeholder="Ex : Tickets semaine 33" />
         </div>
-        <div class="modale-actions">
-            <button id="btn-confirmer" onclick="confirmerImport()">Confirmer l'import</button>
-            <button onclick="fermerModaleImport()">Annuler</button>
+
+        <div class="form-group">
+            <label>Fichier Excel (ServiceNow)</label>
+            <input type="file" id="fichier-ticket" accept=".xlsx"
+                style="width:100%; padding:10px; border:2px dashed #FFCC00; border-radius:8px; background:#FFF8D6; font-size:13px; cursor:pointer;"
+                onchange="previsualiserTicket(this)" />
+        </div>
+
+        <div id="apercu-ticket" style="display:none;">
+            <div class="form-group">
+                <label>Aperçu — ajoutez un feedback si besoin</label>
+                <div id="tableau-ticket"
+                    style="border:1px solid #eee; border-radius:8px; overflow:auto; max-height:220px;">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-secondary" onclick="fermerModaleImport()">Annuler</button>
+            <button class="btn-primary" id="btn-confirmer" onclick="confirmerImport()">
+                Confirmer l'import
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Modale Tableau complet d'un import -->
-<div id="modale-tickets" class="modale" style="display:none;">
-    <div class="modale-contenu modale-large">
-        <div class="modale-header">
-            <h2 id="titre-modale-tickets">Tickets</h2>
-            <button onclick="fermerModaleTickets()">Fermer</button>
+<!-- ===== MODALE TABLEAU COMPLET ===== -->
+<div id="modale-tickets" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:90vw; width:90%; max-height:90vh; overflow-y:auto;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 class="modal-title" id="titre-modale-tickets" style="margin:0;">Tickets</h2>
+            <button class="btn-secondary" onclick="fermerModaleTickets()">Fermer</button>
         </div>
-        <div class="modale-actions-top">
-            <button onclick="telechargerLotActuel('xlsx')">Télécharger en Excel</button>
-            <button onclick="telechargerLotActuel('pdf')">Télécharger en PDF</button>
+        <div class="modale-actions-top"style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="telechargerLotActuel('xlsx')">Télécharger Excel</button>
+            <button class="btn-secondary" onclick="telechargerLotActuel('pdf')">Télécharger PDF</button>
            <button class="btn-delete" onclick="supprimerLotActuel()">Supprimer</button>
            <button id="btn-modifier-global" class="btn-edit" onclick="activerModeEditionGlobal()">Modifier</button>
     <button id="btn-enregistrer-global" class="btn-edit" onclick="enregistrerModificationsGlobales()" style="display:none;">Enregistrer</button>
     <button id="btn-annuler-global" onclick="annulerModificationsGlobales()" style="display:none;">Annuler</button>
 
         </div>
-        <input type="text" id="recherche-ticket-modale" placeholder="Rechercher dans cet import..." oninput="rechercherDansModale()" />
         <table id="tableau-tickets">
             <div class="filtres-tickets">
     <input type="text" id="recherche-ticket-modale" placeholder="Rechercher dans cet import..." oninput="rechercherDansModale()" />
-    <select id="filtre-state" onchange="rechercherDansModale()">
-        <option value="">Tous les states</option>
-    </select>
-    <label>Du <input type="date" id="filtre-date-debut" onchange="rechercherDansModale()"></label>
-    <label>Au <input type="date" id="filtre-date-fin" onchange="rechercherDansModale()"></label>
-    <button onclick="reinitialiserFiltres()">Réinitialiser</button>
+    
+
 </div>
             <thead>
                 <tr>
@@ -66,6 +88,7 @@
             </thead>
             <tbody id="corps-tableau-tickets"></tbody>
         </table>
-    </div>
-</div>
+
+        
+
 {% endblock %}

@@ -13,8 +13,6 @@
             {% endif %}
         </div>
     </div>
-
-    <input type="text" id="champ_recherche_outils" class="search-input" placeholder="Rechercher un outil...">
 <form method="get" class="filtres-outils">
     <input type="text" name="q" value="{{ requete }}" placeholder="Rechercher un outil...">
 
@@ -138,7 +136,7 @@
     {% endif %}
 
     <div style="margin-top:20px;">
-        <h2 style="font-size:16px; font-weight:700; color:#111; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">Outils de monitoring</h2>
+        <h2 style="font-size:16px; font-weight:700; color:#FFCC00; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">Outils de monitoring</h2>
         <ul id="liste-outils">
             {% for outil in outils %}
                 <li id="outil-{{ outil.id }}">

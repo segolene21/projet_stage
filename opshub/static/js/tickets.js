@@ -105,6 +105,8 @@ async function confirmerImport() {
 
 // --- Liste des imports (extraits en tableau) ---
 
+// --- Liste des imports (extraits en tableau) ---
+
 async function chargerListeImports(recherche = '') {
     const zone = document.getElementById('liste-imports');
     if (!zone) return;
@@ -122,44 +124,61 @@ async function chargerListeImports(recherche = '') {
         }
 
         if (imports.length === 0) {
-            zone.innerHTML = '<p>Aucun import pour l\'instant</p>';
+            zone.innerHTML = '<p class="empty-state">Aucun import pour l\'instant</p>';
             return;
         }
 
         zone.innerHTML = '';
-        imports.forEach(imp => {
-            const bloc = document.createElement('div');
-            bloc.className = 'bloc-import';
-            bloc.innerHTML = `
-                <div class="bloc-import-header">
-                    <h3>${echapperHtml(imp.titre)} <span style="font-size:11px; color:#888;">(${imp.nombre_tickets} tickets — ${imp.cree_le})</span></h3>
-                    <div>
-                        <button onclick="ouvrirModaleTickets(${imp.id}, '${echapperHtml(imp.titre)}')">Voir</button>
-                        <button onclick="telechargerLot(${imp.id}, 'xlsx')">Télécharger</button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr><th>ID</th><th>State</th><th>Requester</th><th>Details</th><th>Feedback</th></tr>
-                    </thead>
-                    <tbody>
-                        ${imp.apercu.map(t => `
-                            <tr>
-                                <td>${echapperHtml(t.ticket_id)}</td>
-                                <td>${echapperHtml(t.state)}</td>
-                                <td>${echapperHtml(t.requester)}</td>
-                                <td style="max-width:300px; white-space:normal; word-wrap:break-word;">${echapperHtml(t.details)}</td>
-                                <td>${echapperHtml(t.feedback)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+        const liste = document.createElement('ul');
+        liste.id = 'liste-imports-ul';
+        liste.style.cssText = 'list-style:none; background:rgb(246,240,204); border-radius:12px; padding:0; margin:0;';
+
+        imports.forEach((imp, index) => {
+            const li = document.createElement('li');
+            li.style.cssText = `
+                border-bottom: 1px solid rgba(0,0,0,.08);
+                background: ${index % 2 === 0 ? 'transparent' : 'rgba(255,204,0,.08)'};
             `;
-            zone.appendChild(bloc);
+
+            // Lignes aperçu (3 max)
+            const apercuRows = (imp.apercu || []).slice(0, 3).map(t => `
+                <tr style="opacity:0.7;">
+                    <td style="padding:5px 14px 5px 40px; font-size:12px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px;">${echapperHtml(t.ticket_id)}</td>
+                    <td style="padding:5px 8px; font-size:12px; color:#555; white-space:nowrap;">${echapperHtml(t.state)}</td>
+                    <td style="padding:5px 8px; font-size:12px; color:#555; white-space:nowrap;">${echapperHtml(t.requester)}</td>
+                    <td style="padding:5px 8px; font-size:12px; color:#555; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${echapperHtml(t.details)}</td>
+                    <td style="padding:5px 8px; font-size:12px; color:#555;">${echapperHtml(t.feedback)}</td>
+                </tr>
+            `).join('');
+
+            const ombre = (imp.apercu || []).length > 3
+                ? `<div style="height:28px; background:linear-gradient(to bottom, rgba(246,240,204,0), rgba(246,240,204,0.95)); margin:-4px 0 0; border-radius:0 0 8px 8px;"></div>`
+                : '';
+
+            li.innerHTML = `
+                <div style="display:flex; align-items:center; gap:16px; padding:10px 14px;">
+                    <span style="font-weight:700; font-size:15px; color:#111; flex:1;">${echapperHtml(imp.titre)}</span>
+                    <span style="font-size:11px; color:#888; white-space:nowrap;">${imp.nombre_tickets} ticket${imp.nombre_tickets > 1 ? 's' : ''} — ${imp.cree_le}</span>
+                    <button class="btn-primary" style="padding:6px 14px; font-size:13px; white-space:nowrap;"
+                        onclick="ouvrirModaleTickets(${imp.id}, '${echapperHtml(imp.titre)}')">
+                        Voir
+                    </button>
+                </div>
+                ${apercuRows ? `
+                <div style="overflow:hidden;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tbody>${apercuRows}</tbody>
+                    </table>
+                    ${ombre}
+                </div>` : ''}
+            `;
+            liste.appendChild(li);
         });
+
+        zone.appendChild(liste);
     } catch (erreur) {
         console.error('Erreur de chargement des imports :', erreur);
-        zone.innerHTML = '<p>Erreur de chargement</p>';
+        zone.innerHTML = '<p class="empty-state">Erreur de chargement</p>';
     }
 }
 
@@ -184,65 +203,49 @@ function fermerModaleTickets() {
     document.getElementById('modale-tickets').style.display = 'none';
     lotActuelId = null;
 }
+
 async function chargerTicketsDuLot(recherche = '') {
     const corps = document.getElementById('corps-tableau-tickets');
     if (!corps || !lotActuelId) return;
 
-    const state = document.getElementById('filtre-state')?.value || '';
-    const dateDebut = document.getElementById('filtre-date-debut')?.value || '';
-    const dateFin = document.getElementById('filtre-date-fin')?.value || '';
-
-    const params = new URLSearchParams();
-    if (recherche) params.set('q', recherche);
-    if (state) params.set('state', state);
-    if (dateDebut) params.set('date_debut', dateDebut);
-    if (dateFin) params.set('date_fin', dateFin);
-
     try {
-        const url = `/api/imports/${lotActuelId}/tickets/?${params.toString()}`;
-        const res = await fetch(url, { cache: 'no-store' });
+        const url = recherche
+            ? `/api/imports/${lotActuelId}/tickets/?q=${encodeURIComponent(recherche)}`
+            : `/api/imports/${lotActuelId}/tickets/`;
+        const res = await fetch(url);
         if (res.status === 403) {
             corps.innerHTML = '<tr><td colspan="7">Accès interdit</td></tr>';
             return;
         }
         const data = await res.json();
-        ticketsActuels = data.tickets || [];
+        const tickets = data.tickets || [];
 
-        remplirFiltreState(data.states_disponibles || [], state);
-
-        if (ticketsActuels.length === 0) {
-            corps.innerHTML = '<tr><td colspan="7">Aucun ticket trouvé</td></tr>';
+        if (tickets.length === 0) {
+            corps.innerHTML = '<tr><td colspan="7">Aucun ticket</td></tr>';
             return;
         }
 
-        afficherTicketsEnLecture();
+        corps.innerHTML = '';
+        tickets.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="cellule-editable" data-champ="ticket_id" data-pk="${t.id}">${echapperHtml(t.ticket_id)}</td>
+                <td class="cellule-editable" data-champ="state" data-pk="${t.id}">${echapperHtml(t.state)}</td>
+                <td class="cellule-editable" data-champ="requester" data-pk="${t.id}">${echapperHtml(t.requester)}</td>
+                <td class="cellule-editable" data-champ="details" data-pk="${t.id}" style="max-width:300px;">${echapperHtml(t.details)}</td>
+                <td class="cellule-editable" data-champ="feedback" data-pk="${t.id}">${echapperHtml(t.feedback)}</td>
+                <td>${echapperHtml(t.modifie_le)}</td>
+                <td><button class="btn-delete" onclick="supprimerTicket(${t.id})">Supprimer</button></td>
+            `;
+            corps.appendChild(tr);
+        });
+    
+
+        activerEditionInline();
     } catch (erreur) {
         console.error('Erreur de chargement des tickets :', erreur);
         corps.innerHTML = '<tr><td colspan="7">Erreur de chargement</td></tr>';
     }
-}
-
-function remplirFiltreState(states, valeurSelectionnee) {
-    const select = document.getElementById('filtre-state');
-    if (!select) return;
-
-    const valeurActuelle = select.value;
-    select.innerHTML = '<option value="">Tous les states</option>';
-    states.forEach(s => {
-        const option = document.createElement('option');
-        option.value = s;
-        option.textContent = s;
-        select.appendChild(option);
-    });
-    select.value = valeurSelectionnee || valeurActuelle;
-}
-
-function reinitialiserFiltres() {
-    document.getElementById('recherche-ticket-modale').value = '';
-    document.getElementById('filtre-state').value = '';
-    document.getElementById('filtre-date-debut').value = '';
-    document.getElementById('filtre-date-fin').value = '';
-    chargerTicketsDuLot();
 }
 
 let timerRechercheModale = null;
