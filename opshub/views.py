@@ -6,6 +6,18 @@ from django.utils import timezone
 from django.contrib import messages
 from openpyxl import load_workbook, Workbook
 
+
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from .models import ImportLot
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from .models import (
     Utilisateurs, Role, Permission, OutilMonitoring, Service, OutilTeam,
     Feedback, Recommandation, Plainte, Shift, MotsClesAssignation, Equipe, Ticket
@@ -26,6 +38,7 @@ def liste_outils(request):
     requete = request.GET.get('q', '')
     outils = OutilMonitoring.objects.filter(nom__icontains=requete) if requete else OutilMonitoring.objects.all()
     outils_teams = OutilTeam.objects.all()
+    outils = outils.distinct().order_by('id')
     return render(request, 'liste_outils.html', {
         'outils': outils,
         'outils_teams': outils_teams,
@@ -113,6 +126,7 @@ def liste_services(request):
     services = services.distinct()
 
     tous_les_outils = OutilMonitoring.objects.all()
+    services = services.distinct().order_by('id')
 
     return render(request, 'liste_services.html', {
         'services': services,
@@ -183,6 +197,7 @@ def liste_mots_cles(request):
     equipes = Equipe.objects.all()
     membres = Utilisateurs.objects.filter(role__nom=Role.Nom.MEMBRE_TECHCOMMAND)
 
+    mots_cles = mots_cles.order_by('id')       
     return render(request, 'liste_mots_cles.html', {
         'mots_cles': mots_cles,
         'equipes': equipes,
@@ -543,15 +558,27 @@ def import_tickets_excel(request):
 
     return JsonResponse({"message": f"{count} tickets importés", "lot_id": lot.id, "titre": lot.titre})
 
-
 @login_required
 def liste_imports(request):
-    """Liste des lots d'import, avec un aperçu (3premiers tickets) pour chacun."""
-    lots = ImportLot.objects.all().order_by('-cree_le')
-    resultat = []
+    periode_type = request.GET.get('periode_type', '')  # 'semaine', 'mois', 'annee', ou vide
+    annee = request.GET.get('annee', '')
+    mois = request.GET.get('mois', '')
+    semaine = request.GET.get('semaine', '')
 
+    lots = ImportLot.objects.all()
+
+    if periode_type == 'annee' and annee:
+        lots = lots.filter(cree_le__year=annee)
+    elif periode_type == 'mois' and annee and mois:
+        lots = lots.filter(cree_le__year=annee, cree_le__month=mois)
+    elif periode_type == 'semaine' and annee and semaine:
+        lots = lots.filter(cree_le__iso_year=annee, cree_le__week=semaine)
+
+    lots = lots.order_by('-cree_le')
+
+    resultat = []
     for lot in lots:
-        tickets = lot.tickets.all()[:3]
+        tickets = lot.tickets.all()[:5]
         resultat.append({
             "id": lot.id,
             "titre": lot.titre,
@@ -566,7 +593,6 @@ def liste_imports(request):
         })
 
     return JsonResponse(resultat, safe=False)
-
 
 @login_required
 def tickets_du_lot(request, lot_id):
@@ -625,8 +651,6 @@ from django.shortcuts import get_object_or_404
 from .models import ImportLot
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-
-# imports nécessaires pour le PDF (à mettre en haut du fichier avec les autres imports)
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -645,13 +669,12 @@ def exporter_lot_excel(request, lot_id):
         _generer_pdf(tickets, response)
         return response
 
-    # --- Sinon, on continue avec l'Excel comme avant ---
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Tickets"
     ...
 
-    # Style en-tête - J'AI GARDÉ TES COULEURS
     header_font = Font(bold=True, color="FFCC00", size=11)
     header_fill = PatternFill("solid", fgColor="1A1A1A")
     header_align = Alignment(horizontal="center", vertical="center", wrap_text=True) # <- wrap_text=True
@@ -672,7 +695,6 @@ def exporter_lot_excel(request, lot_id):
         cell.border = border
     ws.row_dimensions[1].height = 25 # Hauteur entete
 
-    # Style lignes - J'AI GARDÉ TES COULEURS
     fill_pair = [
         PatternFill("solid", fgColor="FFFFFF"), # Blanc
         PatternFill("solid", fgColor="FFF8D6"), # Beige clair
@@ -686,7 +708,7 @@ def exporter_lot_excel(request, lot_id):
             ticket.ticket_id,
             ticket.state,
             ticket.requester,
-            ticket.details, # <- ici les \n seront respectés
+            ticket.details, 
             ticket.feedback,
             timezone.localtime(ticket.modifie_le).strftime('%d/%m/%Y %H:%M') if ticket.modifie_le else '',
         ]
@@ -773,7 +795,7 @@ def tickets_du_lot(request, lot_id):
     except ImportLot.DoesNotExist:
         return JsonResponse({"erreur": "Import introuvable"}, status=404)
 
-    qs = lot.tickets.all()
+    qs = lot.tickets.all().order_by('id')
 
     if q:
         qs = qs.filter(
@@ -798,7 +820,4 @@ def tickets_du_lot(request, lot_id):
             "modifie_le": timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M"),
         })
 
-    # Liste des states distincts présents dans ce lot, pour peupler le filtre dropdown
-    states_disponibles = list(lot.tickets.values_list('state', flat=True).distinct())
-
-    return JsonResponse({"titre": lot.titre, "tickets": tickets, "states_disponibles": states_disponibles})
+   

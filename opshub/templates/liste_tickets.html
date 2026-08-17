@@ -17,6 +17,33 @@
 <input type="text" id="recherche-import" class="search-input"
     placeholder="Rechercher un import par titre..."
     oninput="rechercherImports()" style="margin-bottom:16px;"/>
+    <div class="filtres-imports">
+    <select id="filtre-periode-type" onchange="changerTypeFiltre()">
+        <option value="">Toutes les périodes</option>
+        <option value="annee">Par année</option>
+        <option value="mois">Par mois</option>
+        <option value="semaine">Par semaine</option>
+    </select>
+
+    <select id="filtre-annee" style="display:none;" onchange="rechercherImports()"></select>
+    <select id="filtre-mois" style="display:none;" onchange="rechercherImports()">
+        <option value="1">Janvier</option>
+        <option value="2">Février</option>
+        <option value="3">Mars</option>
+        <option value="4">Avril</option>
+        <option value="5">Mai</option>
+        <option value="6">Juin</option>
+        <option value="7">Juillet</option>
+        <option value="8">Août</option>
+        <option value="9">Septembre</option>
+        <option value="10">Octobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Décembre</option>
+    </select>
+    <input type="number" id="filtre-semaine" style="display:none;" min="1" max="53" placeholder="N° semaine (1-53)" onchange="rechercherImports()">
+
+    <button onclick="reinitialiserFiltresImports()">Réinitialiser</button>
+</div>
 
 <div id="liste-imports" style="margin-top:20px;">
     <!-- rempli dynamiquement -->
