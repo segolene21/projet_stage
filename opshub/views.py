@@ -594,32 +594,6 @@ def liste_imports(request):
 
     return JsonResponse(resultat, safe=False)
 
-@login_required
-def tickets_du_lot(request, lot_id):
-    q = request.GET.get('q', '').strip()
-
-    try:
-        lot = ImportLot.objects.get(id=lot_id)
-    except ImportLot.DoesNotExist:
-        return JsonResponse({"erreur": "Import introuvable"}, status=404)
-
-    qs = lot.tickets.all()
-    if q:
-        qs = qs.filter(
-            Q(ticket_id__icontains=q) | Q(state__icontains=q) |
-            Q(requester__icontains=q) | Q(details__icontains=q) | Q(feedback__icontains=q)
-        )
-
-    tickets = []
-    for t in qs:
-        tickets.append({
-            "id": t.id, "ticket_id": t.ticket_id, "state": t.state, "requester": t.requester,
-            "details": t.details, "feedback": t.feedback,
-            "modifie_le": timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M"),
-        })
-
-    return JsonResponse({"titre": lot.titre, "tickets": tickets})
-
 
 def _generer_pdf(tickets, response):
     doc = SimpleDocTemplate(response, pagesize=landscape(A4))
@@ -820,4 +794,5 @@ def tickets_du_lot(request, lot_id):
             "modifie_le": timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M"),
         })
 
+    return JsonResponse({"titre": lot.titre, "tickets": tickets})
    
