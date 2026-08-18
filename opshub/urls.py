@@ -48,4 +48,6 @@ urlpatterns = [
     path("api/imports/<int:lot_id>/export/", views.exporter_lot_excel, name="exporter_lot_excel"),
     path("api/tickets/<int:ticket_pk>/", views.ticket_detail, name="ticket_detail"),
     path("api/imports/<int:lot_id>/", views.supprimer_lot, name="supprimer_lot"),
+    path("api/parametres/theme/", views.changer_theme, name="changer_theme"),
 ]
+

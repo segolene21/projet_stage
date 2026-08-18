@@ -820,4 +820,26 @@ def tickets_du_lot(request, lot_id):
         })
 
     return JsonResponse({"titre": lot.titre, "tickets": tickets})
+
    
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+@login_required
+def changer_theme(request):
+    if request.method != "POST":
+        return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
+
+    data = json.loads(request.body)
+    theme_sombre = bool(data.get("theme_sombre"))
+
+    request.user.theme_sombre = theme_sombre
+    request.user.save(update_fields=["theme_sombre"])
+
+    return JsonResponse({"succes": True})

@@ -66,7 +66,7 @@ async function confirmerImport() {
     const inputFichier = document.getElementById('fichier-ticket');
     const fichier = inputFichier.files[0];
     if (!fichier) {
-        alert('Veuillez choisir un fichier Excel.');
+        afficherToast('Veuillez choisir un fichier Excel.', 'erreur');
         return;
     }
 
@@ -89,7 +89,7 @@ async function confirmerImport() {
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.erreur || 'Échec de l\'import');
+            afficherToast(data.erreur || 'Échec de l\'import', 'erreur');
             return;
         }
 
@@ -97,13 +97,12 @@ async function confirmerImport() {
         await chargerListeImports();
         // Ouvre directement la modale du lot fraîchement importé
         await ouvrirModaleTickets(data.lot_id, data.titre);
+        afficherToast('Import réussi', 'succes');
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
-
-// --- Liste des imports (extraits en tableau) ---
 
 // --- Liste des imports (extraits en tableau) ---
 
@@ -140,7 +139,6 @@ async function chargerListeImports(recherche = '') {
                 background: ${index % 2 === 0 ? 'transparent' : 'rgba(255,204,0,.08)'};
             `;
 
-            // Lignes aperçu (3 max)
             const apercuRows = (imp.apercu || []).slice(0, 3).map(t => `
                 <tr style="opacity:0.7;">
                     <td style="padding:5px 14px 5px 40px; font-size:12px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px;">${echapperHtml(t.ticket_id)}</td>
@@ -204,50 +202,6 @@ function fermerModaleTickets() {
     lotActuelId = null;
 }
 
-async function chargerTicketsDuLot(recherche = '') {
-    const corps = document.getElementById('corps-tableau-tickets');
-    if (!corps || !lotActuelId) return;
-
-    try {
-        const url = recherche
-            ? `/api/imports/${lotActuelId}/tickets/?q=${encodeURIComponent(recherche)}`
-            : `/api/imports/${lotActuelId}/tickets/`;
-        const res = await fetch(url);
-        if (res.status === 403) {
-            corps.innerHTML = '<tr><td colspan="7">Accès interdit</td></tr>';
-            return;
-        }
-        const data = await res.json();
-        const tickets = data.tickets || [];
-
-        if (tickets.length === 0) {
-            corps.innerHTML = '<tr><td colspan="7">Aucun ticket</td></tr>';
-            return;
-        }
-
-        corps.innerHTML = '';
-        tickets.forEach(t => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="cellule-editable" data-champ="ticket_id" data-pk="${t.id}">${echapperHtml(t.ticket_id)}</td>
-                <td class="cellule-editable" data-champ="state" data-pk="${t.id}">${echapperHtml(t.state)}</td>
-                <td class="cellule-editable" data-champ="requester" data-pk="${t.id}">${echapperHtml(t.requester)}</td>
-                <td class="cellule-editable" data-champ="details" data-pk="${t.id}" style="max-width:300px;">${echapperHtml(t.details)}</td>
-                <td class="cellule-editable" data-champ="feedback" data-pk="${t.id}">${echapperHtml(t.feedback)}</td>
-                <td>${echapperHtml(t.modifie_le)}</td>
-                <td><button class="btn-delete" onclick="supprimerTicket(${t.id})">Supprimer</button></td>
-            `;
-            corps.appendChild(tr);
-        });
-    
-
-        activerEditionInline();
-    } catch (erreur) {
-        console.error('Erreur de chargement des tickets :', erreur);
-        corps.innerHTML = '<tr><td colspan="7">Erreur de chargement</td></tr>';
-    }
-}
-
 let timerRechercheModale = null;
 function rechercherDansModale() {
     clearTimeout(timerRechercheModale);
@@ -288,14 +242,14 @@ function activerEditionInline() {
                     });
                     const data = await res.json();
                     if (!res.ok) {
-                        alert(data.erreur || 'Échec de la modification');
+                        afficherToast(data.erreur || 'Échec de la modification', 'erreur');
                         cellule.textContent = valeurActuelle;
                         return;
                     }
                     cellule.textContent = nouvelleValeur;
                     await chargerListeImports();
                 } catch (erreur) {
-                    alert('Erreur : ' + erreur.message);
+                    afficherToast('Erreur : ' + erreur.message, 'erreur');
                     cellule.textContent = valeurActuelle;
                 }
             };
@@ -310,19 +264,20 @@ function activerEditionInline() {
 }
 
 async function supprimerTicket(pk) {
-    if (!confirm('Supprimer ce ticket ?')) return;
+    if (!(await confirmerAction('Supprimer ce ticket ?'))) return;
 
     try {
         const res = await fetch(`/api/tickets/${pk}/`, { method: 'DELETE' });
         const data = await res.json();
         if (!res.ok) {
-            alert(data.erreur || 'Échec de la suppression');
+            afficherToast(data.erreur || 'Échec de la suppression', 'erreur');
             return;
         }
         await chargerTicketsDuLot();
         await chargerListeImports();
+        afficherToast('Ticket supprimé', 'succes');
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
@@ -345,13 +300,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function supprimerLot(lotId) {
-    if (!confirm('Supprimer tout cet import (tous ses tickets) ?')) return;
+    if (!(await confirmerAction('Supprimer tout cet import (tous ses tickets) ?'))) return;
 
     try {
         const res = await fetch(`/api/imports/${lotId}/`, { method: 'DELETE', cache: 'no-store' });
         const data = await res.json();
         if (!res.ok) {
-            alert(data.erreur || 'Échec de la suppression');
+            afficherToast(data.erreur || 'Échec de la suppression', 'erreur');
             return;
         }
 
@@ -360,8 +315,9 @@ async function supprimerLot(lotId) {
         }
 
         await chargerListeImports();
+        afficherToast('Import supprimé', 'succes');
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
@@ -415,6 +371,7 @@ function afficherTicketsEnLecture() {
         corps.appendChild(tr);
     });
 }
+
 function activerModeEditionGlobal() {
     const corps = document.getElementById('corps-tableau-tickets');
     const champsEditables = ['ticket_id', 'state', 'requester', 'details', 'feedback'];
@@ -464,6 +421,7 @@ function activerModeEditionGlobal() {
     document.getElementById('btn-enregistrer-global').style.display = '';
     document.getElementById('btn-annuler-global').style.display = '';
 }
+
 function annulerModificationsGlobales() {
     afficherTicketsEnLecture();
     document.getElementById('btn-modifier-global').style.display = '';
@@ -498,7 +456,9 @@ async function enregistrerModificationsGlobales() {
         const echecs = resultats.filter(r => !r.ok);
 
         if (echecs.length > 0) {
-            alert(`${echecs.length} ligne(s) n'ont pas pu être enregistrées : ${echecs.map(e => e.data.erreur).join(', ')}`);
+            afficherToast(`${echecs.length} ligne(s) n'ont pas pu être enregistrées : ${echecs.map(e => e.data.erreur).join(', ')}`, 'erreur');
+        } else {
+            afficherToast('Modifications enregistrées', 'succes');
         }
 
         document.getElementById('btn-modifier-global').style.display = '';
@@ -508,7 +468,7 @@ async function enregistrerModificationsGlobales() {
         await chargerTicketsDuLot();
         await chargerListeImports();
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }

@@ -59,6 +59,7 @@ class Utilisateurs(AbstractUser):
     adresse = models.CharField(max_length=255, blank=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name="utilisateurs")
     statut = models.BooleanField(default=True)
+    theme_sombre = models.BooleanField(default=False)
 
     def a_la_permission(self, code_permission):
         """Vérifie si l'utilisateur possède une permission donnée."""

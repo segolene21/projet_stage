@@ -16,6 +16,8 @@ if (formFeedback) {
         .then(response => response.json())
         .then(data => {
             if (data.succes) {
+                sessionStorage.setItem('toast_message', 'Feedback ajouté');
+                sessionStorage.setItem('toast_type', 'succes');
                 location.reload();
             } else {
                 document.getElementById('message-erreur-feedback').textContent = JSON.stringify(data.erreurs);
@@ -24,8 +26,8 @@ if (formFeedback) {
     });
 }
 
-function supprimerFeedback(feedbackId, url) {
-    if (!confirm('Supprimer ce feedback ?')) return;
+async function supprimerFeedback(feedbackId, url) {
+    if (!(await confirmerAction('Supprimer ce feedback ?'))) return;
 
     fetch(url, {
         method: 'POST',
@@ -35,8 +37,9 @@ function supprimerFeedback(feedbackId, url) {
     .then(data => {
         if (data.succes) {
             document.getElementById('feedback-' + feedbackId).remove();
+            afficherToast('Feedback supprimé', 'succes');
         } else {
-            alert(data.erreur);
+            afficherToast(data.erreur, 'erreur');
         }
     });
 }
@@ -60,6 +63,8 @@ if (formRecommandation) {
         .then(response => response.json())
         .then(data => {
             if (data.succes) {
+                sessionStorage.setItem('toast_message', 'Recommandation ajoutée');
+                sessionStorage.setItem('toast_type', 'succes');
                 location.reload();
             } else {
                 document.getElementById('message-erreur-recommandation').textContent = JSON.stringify(data.erreurs);
@@ -68,8 +73,8 @@ if (formRecommandation) {
     });
 }
 
-function supprimerRecommandation(recommandationId, url) {
-    if (!confirm('Supprimer cette recommandation ?')) return;
+async function supprimerRecommandation(recommandationId, url) {
+    if (!(await confirmerAction('Supprimer cette recommandation ?'))) return;
 
     fetch(url, {
         method: 'POST',
@@ -79,8 +84,9 @@ function supprimerRecommandation(recommandationId, url) {
     .then(data => {
         if (data.succes) {
             document.getElementById('recommandation-' + recommandationId).remove();
+            afficherToast('Recommandation supprimée', 'succes');
         } else {
-            alert(data.erreur);
+            afficherToast(data.erreur, 'erreur');
         }
     });
 }
@@ -104,6 +110,8 @@ if (formPlainte) {
         .then(response => response.json())
         .then(data => {
             if (data.succes) {
+                sessionStorage.setItem('toast_message', 'Plainte ajoutée');
+                sessionStorage.setItem('toast_type', 'succes');
                 location.reload();
             } else {
                 document.getElementById('message-erreur-plainte').textContent = JSON.stringify(data.erreurs);
@@ -112,8 +120,8 @@ if (formPlainte) {
     });
 }
 
-function supprimerPlainte(plainteId, url) {
-    if (!confirm('Supprimer cette plainte ?')) return;
+async function supprimerPlainte(plainteId, url) {
+    if (!(await confirmerAction('Supprimer cette plainte ?'))) return;
 
     fetch(url, {
         method: 'POST',
@@ -123,8 +131,9 @@ function supprimerPlainte(plainteId, url) {
     .then(data => {
         if (data.succes) {
             document.getElementById('plainte-' + plainteId).remove();
+            afficherToast('Plainte supprimée', 'succes');
         } else {
-            alert(data.erreur);
+            afficherToast(data.erreur, 'erreur');
         }
     });
 }
