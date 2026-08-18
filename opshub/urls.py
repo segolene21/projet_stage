@@ -49,3 +49,14 @@ urlpatterns = [
     path("api/tickets/<int:ticket_pk>/", views.ticket_detail, name="ticket_detail"),
     path("api/imports/<int:lot_id>/", views.supprimer_lot, name="supprimer_lot"),
 ]
+
+urlpatterns += [
+   path("incidents/", views.page_incidents, name="liste_incidents"),
+    path("api/incidents-imports/", views.liste_imports_incidents, name="liste_imports_incidents"),
+    path("api/incidents-imports/import/", views.import_incidents_excel, name="import_incidents_excel"),
+    path("api/incidents-imports/<int:lot_id>/incidents/", views.incidents_du_lot, name="incidents_du_lot"),
+    path("api/incidents-imports/<int:lot_id>/export/", views.export_lot_incidents, name="export_lot_incidents"),
+    path("api/incidents-imports/<int:lot_id>/", views.supprimer_lot_incidents, name="supprimer_lot_incidents"),
+    path("api/incidents/<int:incident_pk>/", views.incident_detail, name="incident_detail"),
+    path("api/incidents/<int:incident_pk>/rca/", views.uploader_rca, name="uploader_rca"),
+    ]

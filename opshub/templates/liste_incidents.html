@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Liste des incidents</h1>
+
+<div class="barre-actions">
+    <button onclick="document.getElementById('modale-import-incidents').style.display='block'">Importer des incidents</button>
+    <input type="text" id="recherche-import-incidents" placeholder="Rechercher un import par titre..." oninput="rechercherImportsIncidents()" />
+</div>
+
+<div id="liste-imports-incidents">
+    <!-- rempli dynamiquement -->
+</div>
+
+<!-- Modale Import -->
+<div id="modale-import-incidents" class="modale" style="display:none;">
+    <div class="modale-contenu">
+        <h2>Importer des incidents</h2>
+        <label>Titre de l'import</label>
+        <input type="text" id="titre-import-incidents" placeholder="Ex: Incidents semaine 33" />
+        <input type="file" id="fichier-incidents" accept=".xlsx" onchange="previsualiserIncidents(this)" />
+        <div id="apercu-incidents" style="display:none;">
+            <h3>Aperçu</h3>
+            <div id="tableau-apercu-incidents"></div>
+        </div>
+        <div class="modale-actions">
+            <button onclick="confirmerImportIncidents()">Confirmer l'import</button>
+            <button onclick="fermerModaleImportIncidents()">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Tableau complet -->
+<div id="modale-incidents" class="modale" style="display:none;">
+    <div class="modale-contenu modale-large">
+        <div class="modale-header">
+            <h2 id="titre-modale-incidents">Incidents</h2>
+            <button onclick="fermerModaleIncidents()">Fermer</button>
+        </div>
+        <div class="modale-actions-top">
+            <button onclick="telechargerLotIncidentsActuel('xlsx')">Télécharger en Excel</button>
+            <button onclick="telechargerLotIncidentsActuel('pdf')">Télécharger en PDF</button>
+            <button class="btn-delete" onclick="supprimerLotIncidentsActuel()">Supprimer l'import</button>
+            <button id="btn-modifier-global-incidents" class="btn-edit" onclick="activerModeEditionGlobalIncidents()">Modifier</button>
+            <button id="btn-enregistrer-global-incidents" class="btn-edit" onclick="enregistrerModificationsGlobalesIncidents()" style="display:none;">Enregistrer</button>
+            <button id="btn-annuler-global-incidents" onclick="annulerModificationsGlobalesIncidents()" style="display:none;">Annuler</button>
+        </div>
+        <div class="filtres-incidents">
+            <input type="text" id="recherche-incident-modale" placeholder="Rechercher..." oninput="rechercherDansModaleIncidents()" />
+            <select id="filtre-rca" onchange="rechercherDansModaleIncidents()">
+                <option value="">Tous les incidents</option>
+                <option value="sans">Sans RCA</option>
+                <option value="avec">Avec RCA</option>
+            </select>
+            <span id="compteur-rca" style="font-size:12px; color:#888;"></span>
+        </div>
+        <table id="tableau-incidents">
+            <table id="tableau-incidents">
+    <thead>
+        <tr>
+            <th>ID</th><th>Description</th><th>Reported Date</th><th>Severity</th>
+            <th>Impact</th><th>Affected Service</th><th>Root Cause</th><th>Action</th>
+            <th>Duration</th><th>RCA Status</th><th>Owner Email</th><th>Statut</th>
+            <th>RCA</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="corps-tableau-incidents"></tbody>
+</table>
+            <tbody id="corps-tableau-incidents"></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -732,13 +732,13 @@ def ticket_detail(request, ticket_pk):
             return JsonResponse({"message": "Ticket supprimé"})
 
         if request.method == 'PUT':
-            data = json.loads(request.body)
-            for champ in ('ticket_id', 'state', 'requester', 'details', 'feedback'):
-                if champ in data:
-                    setattr(ticket, champ, data[champ])
-            ticket.save()
-            return JsonResponse({"message": "Ticket modifié"})
-
+          data = json.loads(request.body)
+    for champ in ('incident_id', 'description', 'severite', 'impact', 'affected_service',
+              'root_cause', 'action_resolution', 'statut_rca', 'owner_email'):
+          if champ in data:
+              setattr(incident, champ, data[champ])
+    incident.save()
+    return JsonResponse({"message": "Incident modifié"})
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 @csrf_exempt
@@ -795,4 +795,331 @@ def tickets_du_lot(request, lot_id):
         })
 
     return JsonResponse({"titre": lot.titre, "tickets": tickets})
-   
+
+
+import json
+from datetime import datetime
+from openpyxl import load_workbook, Workbook
+from django.http import HttpResponse, JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Q
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
+from .models import Incident, ImportIncidents, Permission
+
+
+@login_required
+def page_incidents(request):
+    return render(request, 'liste_incidents.html')
+
+
+import datetime as dt_module
+
+def _parser_date(valeur):
+    if not valeur:
+        return None
+    if isinstance(valeur, dt_module.datetime):
+        return timezone.make_aware(valeur) if timezone.is_naive(valeur) else valeur
+    try:
+        parsed = dt_module.datetime.strptime(str(valeur).strip(), "%d/%m/%Y %H:%M")
+        return timezone.make_aware(parsed)
+    except ValueError:
+        return None
+
+
+def _parser_duree(valeur):
+    """Excel renvoie souvent les durées comme un objet time ou timedelta."""
+    if not valeur:
+        return None
+    if isinstance(valeur, dt_module.timedelta):
+        return valeur
+    if isinstance(valeur, dt_module.time):
+        return dt_module.timedelta(hours=valeur.hour, minutes=valeur.minute, seconds=valeur.second)
+    try:
+        h, m, s = str(valeur).strip().split(':')
+        return dt_module.timedelta(hours=int(h), minutes=int(m), seconds=int(s))
+    except (ValueError, AttributeError):
+        return None
+
+
+def _parser_statut_rca(valeur):
+    if not valeur:
+        return ''
+    v = str(valeur).strip().upper()
+    if 'NOT' in v:
+        return Incident.StatutRCA.NOT_PROVIDED
+    if 'PROVIDED' in v:
+        return Incident.StatutRCA.PROVIDED
+    return ''
+
+
+@csrf_exempt
+def import_incidents_excel(request):
+    if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
+        return JsonResponse({"erreur": "Accès interdit"}, status=403)
+
+    if request.method != "POST":
+        return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
+
+    fichier = request.FILES.get("fichier")
+    if not fichier:
+        return JsonResponse({"erreur": "Aucun fichier reçu"}, status=400)
+
+    titre = request.POST.get("titre", "").strip() or f"Import du {timezone.localtime().strftime('%d/%m/%Y %H:%M')}"
+
+    wb = load_workbook(fichier, data_only=True)
+    ws = wb.active
+
+    lot = ImportIncidents.objects.create(titre=titre, cree_par=request.user)
+
+    count = 0
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        valeurs = list(row) + [None] * 12
+        (incident_id, description, reported, severite, _rca_vide, _colonne_vide, impact,
+         affected_service, root_cause, action_resolution, duration, rca_statut) = valeurs[:12]
+
+        if not incident_id:
+            continue
+
+        Incident.objects.create(
+            import_lot=lot,
+            incident_id=str(incident_id),
+            description=description or "",
+            date_signalement=_parser_date(reported),
+            severite=str(severite) if severite else "",
+            impact=impact or "",
+            affected_service=affected_service or "",
+            root_cause=root_cause or "",
+            action_resolution=action_resolution or "",
+            duree=_parser_duree(duration),
+            statut_rca=_parser_statut_rca(rca_statut),
+        )
+        count += 1
+
+    return JsonResponse({"message": f"{count} incidents importés", "lot_id": lot.id, "titre": lot.titre})
+
+
+
+@login_required
+def liste_imports_incidents(request):
+    lots = ImportIncidents.objects.all().order_by('-cree_le')
+    resultat = []
+
+    for lot in lots:
+        incidents = lot.incidents.all().order_by('id')[:5]
+        resultat.append({
+            "id": lot.id,
+            "titre": lot.titre,
+            "cree_le": timezone.localtime(lot.cree_le).strftime("%d/%m/%Y %H:%M"),
+            "nombre_incidents": lot.incidents.count(),
+            "apercu": [
+                {
+                    "incident_id": i.incident_id, "description": i.description,
+                    "severite": i.severite, "owner_email": i.owner_email or "",
+                    "statut_rca": i.statut_rca, "rca_present": i.rca_present,
+                } for i in incidents
+            ],
+        })
+
+    return JsonResponse(resultat, safe=False)
+
+
+@login_required
+def incidents_du_lot(request, lot_id):
+    q = request.GET.get('q', '').strip()
+    rca_statut = request.GET.get('rca', '').strip()
+
+    try:
+        lot = ImportIncidents.objects.get(id=lot_id)
+    except ImportIncidents.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    qs = lot.incidents.all().order_by('id')
+
+    if q:
+        qs = qs.filter(
+            Q(incident_id__icontains=q) | Q(description__icontains=q) |
+            Q(severite__icontains=q) | Q(impact__icontains=q) | Q(owner_email__icontains=q) |
+            Q(affected_service__icontains=q) | Q(root_cause__icontains=q) | Q(action_resolution__icontains=q)
+        )
+
+    if rca_statut == 'avec':
+        qs = qs.exclude(rca_fichier='')
+    elif rca_statut == 'sans':
+        qs = qs.filter(Q(rca_fichier='') | Q(rca_fichier__isnull=True))
+
+    incidents = []
+    for i in qs:
+        incidents.append({
+            "id": i.id,
+            "incident_id": i.incident_id,
+            "description": i.description,
+            "date_signalement": timezone.localtime(i.date_signalement).strftime("%d/%m/%Y %H:%M") if i.date_signalement else "",
+            "severite": i.severite,
+            "impact": i.impact,
+            "affected_service": i.affected_service,
+            "root_cause": i.root_cause,
+            "action_resolution": i.action_resolution,
+            "duree": str(i.duree) if i.duree else "",
+            "statut_rca": i.statut_rca,
+            "owner_email": i.owner_email or "",
+            "statut_rca": i.statut_rca,
+            "rca_present": i.rca_present,
+            "rca_url": i.rca_fichier.url if i.rca_fichier else "",
+            "modifie_le": timezone.localtime(i.modifie_le).strftime("%d/%m/%Y %H:%M"),
+        })
+
+    total = lot.incidents.count()
+    sans_rca = lot.incidents.filter(Q(rca_fichier='') | Q(rca_fichier__isnull=True)).count()
+
+    return JsonResponse({"titre": lot.titre, "incidents": incidents, "total": total, "sans_rca": sans_rca})
+
+def _generer_pdf_incidents(incidents, response):
+    styles = getSampleStyleSheet()
+    style_cellule = styles["Normal"]
+    style_cellule.fontSize = 6
+
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+    donnees = [["ID", "Description", "Reported", "Severity", "Impact", "Affected Service",
+                "Root Cause", "Action", "Duration", "RCA Status", "Owner", "Statut", "RCA"]]
+
+    for i in incidents:
+        donnees.append([
+            i.incident_id,
+            Paragraph(i.description or "", style_cellule),
+            timezone.localtime(i.date_signalement).strftime("%d/%m/%Y %H:%M") if i.date_signalement else "",
+            i.severite,
+            Paragraph(i.impact or "", style_cellule),
+            Paragraph(i.affected_service or "", style_cellule),
+            Paragraph(i.root_cause or "", style_cellule),
+            Paragraph(i.action_resolution or "", style_cellule),
+            str(i.duree) if i.duree else "",
+            i.statut_rca,
+            i.owner_email or "",
+            i.get_statut_rca_display(),
+            "Oui" if i.rca_present else "Non",
+        ])
+
+    tableau = Table(donnees, repeatRows=1)
+    tableau.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1a1a1a")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor("#FFCC00")),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    doc.build([tableau])
+
+
+@login_required
+def export_lot_incidents(request, lot_id):
+    format_export = request.GET.get('format', 'xlsx')
+
+    try:
+        lot = ImportIncidents.objects.get(id=lot_id)
+    except ImportIncidents.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    incidents = lot.incidents.all().order_by('id')
+    nom_base = lot.titre.replace(" ", "_")
+
+    if format_export == 'pdf':
+        response = HttpResponse(content_type='application/pdf')
+        response["Content-Disposition"] = f'attachment; filename="{nom_base}.pdf"'
+        _generer_pdf_incidents(incidents, response)
+        return response
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Incidents"
+    ws.append(["ID", "Description", "Reported Date", "Severity", "Impact", "Affected Service",
+               "Root Cause", "Action for Resolution", "Duration", "RCA Status", "Owner Email",
+               "Statut", "RCA attaché"])
+
+    for i in incidents:
+        ws.append([
+            i.incident_id, i.description,
+            timezone.localtime(i.date_signalement).strftime("%d/%m/%Y %H:%M") if i.date_signalement else "",
+            i.severite, i.impact, i.affected_service, i.root_cause, i.action_resolution,
+            str(i.duree) if i.duree else "", i.statut_rca, i.owner_email or "",
+            i.get_statut_display(), "Oui" if i.rca_present else "Non",
+        ])
+
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="{nom_base}.xlsx"'
+    wb.save(response)
+    return response
+
+
+@csrf_exempt
+def supprimer_lot_incidents(request, lot_id):
+    if request.method != 'DELETE':
+        return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
+    if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
+        return JsonResponse({"erreur": "Accès interdit"}, status=403)
+
+    try:
+        lot = ImportIncidents.objects.get(id=lot_id)
+    except ImportIncidents.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    lot.delete()
+    return JsonResponse({"message": "Import supprimé"})
+
+
+@csrf_exempt
+def incident_detail(request, incident_pk):
+    if request.method in ('DELETE', 'PUT'):
+        if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
+            return JsonResponse({"erreur": "Accès interdit"}, status=403)
+
+        try:
+            incident = Incident.objects.get(pk=incident_pk)
+        except Incident.DoesNotExist:
+            return JsonResponse({"erreur": "Incident introuvable"}, status=404)
+
+        if request.method == 'DELETE':
+            incident.delete()
+            return JsonResponse({"message": "Incident supprimé"})
+
+        if request.method == 'PUT':
+            data = json.loads(request.body)
+            for champ in ('incident_id', 'description', 'severite', 'impact', 'owner_email', 'statut'):
+                if champ in data:
+                    setattr(incident, champ, data[champ])
+            incident.save()
+            return JsonResponse({"message": "Incident modifié"})
+
+    return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
+
+
+@csrf_exempt
+def uploader_rca(request, incident_pk):
+    if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
+        return JsonResponse({"erreur": "Accès interdit"}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
+
+    try:
+        incident = Incident.objects.get(pk=incident_pk)
+    except Incident.DoesNotExist:
+        return JsonResponse({"erreur": "Incident introuvable"}, status=404)
+
+    fichier = request.FILES.get('rca')
+    if not fichier:
+        return JsonResponse({"erreur": "Aucun fichier reçu"}, status=400)
+
+    if not fichier.name.lower().endswith('.pdf'):
+        return JsonResponse({"erreur": "Le RCA doit être un fichier PDF"}, status=400)
+    incident.rca_fichier = fichier
+    incident.statut_rca = Incident.StatutRCA.PROVIDED
+    incident.save()
+
+    return JsonResponse({"message": "RCA attaché avec succès", "rca_url": incident.rca_fichier.url})

@@ -58,6 +58,29 @@ def creer_roles_et_permissions(sender, **kwargs):
         Permission.Code.CONSULTER_TICKETS,
     ]))
 
+    # 5. Rôle Senior Manager
+    r_senior_manager, _ = Role.objects.get_or_create(
+        nom=Role.Nom.SENIOR_MANAGER,
+        defaults={'description': 'Senior Manager'}
+    )
+    r_senior_manager.permissions.set(Permission.objects.filter(code__in=[
+        Permission.Code.GERER_INCIDENTS,
+        Permission.Code.CONSULTER_INCIDENTS,
+        Permission.Code.CONSULTER_OUTILS,
+        Permission.Code.CONSULTER_SERVICES,
+        Permission.Code.CONSULTER_MOTS_CLES,
+        Permission.Code.CONSULTER_TICKETS,
+        Permission.Code.CONSULTER_FEEDBACK,
+    ]))
+
+    # 6. Rôle Manager
+    r_manager, _ = Role.objects.get_or_create(
+        nom=Role.Nom.MANAGER,
+        defaults={'description': 'Manager'}
+    )
+    r_manager.permissions.set(Permission.objects.all())
+    
+
 
 class OpshubConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'

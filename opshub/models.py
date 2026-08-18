@@ -18,6 +18,8 @@ class Permission(models.Model):
         SUPPRIMER_FEEDBACK_PROPRE = 'supprimer_feedback_propre', 'Supprimer ses propres contributions'
         GERER_TICKETS = 'gerer_tickets', 'Importer, modifier, ajouter feedback, supprimer un ticket'
         CONSULTER_TICKETS = 'consulter_tickets', 'Consulter et télécharger les tickets'
+        GERER_INCIDENTS = 'gerer_incidents', 'Importer, modifier, ajouter RCA, supprimer un incident'
+        CONSULTER_INCIDENTS = 'consulter_incidents', 'Consulter et télécharger les incidents' 
 
     code = models.CharField(max_length=50, unique=True, choices=Code.choices)
     description = models.CharField(max_length=255, blank=True)
@@ -31,6 +33,8 @@ class Role(models.Model):
         ADMINISTRATEUR = 'administrateur', 'Administrateur'
         TEAMLEAD = 'teamlead', 'Team-lead'
         MEMBRE_TECHCOMMAND = 'membre_techcommand', 'Membre Techcommand'
+        SENIOR_MANAGER = 'senior_manager', 'Senior Manager'
+        MANAGER = 'manager', 'Manager'
 
     nom = models.CharField(max_length=50, unique=True, choices=Nom.choices)
     description = models.TextField(blank=True)
@@ -83,6 +87,14 @@ class Utilisateurs(AbstractUser):
     @property
     def is_membre_techcommand(self):
         return self.is_superuser or self.a_la_permission(Permission.Code.SOUMETTRE_FEEDBACK)
+
+    @property
+    def is_senior_manager(self):
+        return self.is_superuser or self.a_la_permission(Permission.Code.GERER_INCIDENTS)
+
+    @property
+    def is_manager(self):
+        return self.is_superuser or self.a_le_role(Role.Nom.MANAGER)
 
 
 class Equipe(models.Model):
@@ -204,4 +216,48 @@ class Ticket(models.Model):
 
     def __str__(self):
         return self.ticket_id
-    
+
+class ImportIncidents(models.Model):
+    titre = models.CharField(max_length=150)
+    cree_le = models.DateTimeField(auto_now_add=True)
+    cree_par = models.ForeignKey(
+        "Utilisateurs", on_delete=models.SET_NULL, null=True, blank=True, related_name="imports_incidents"
+    )
+
+    def __str__(self):
+        return self.titre
+
+class Incident(models.Model):
+    class StatutRCA(models.TextChoices):
+        PROVIDED = 'provided', 'Provided'
+        NOT_PROVIDED = 'not_provided', 'Not Provided'
+
+    import_lot = models.ForeignKey(ImportIncidents, on_delete=models.CASCADE, related_name="incidents")
+    incident_id = models.CharField(max_length=100, verbose_name="ID")
+    description = models.TextField(verbose_name="Issue Description")
+    date_signalement = models.DateTimeField(null=True, blank=True, verbose_name="Reported Date")
+    severite = models.CharField(max_length=10, blank=True, verbose_name="Severity")
+    impact = models.TextField(blank=True, verbose_name="Impact")
+    affected_service = models.TextField(blank=True, verbose_name="Affected Service")
+    root_cause = models.TextField(blank=True, verbose_name="Root Cause")
+    action_resolution = models.TextField(blank=True, verbose_name="Action for Resolution")
+    duree = models.DurationField(null=True, blank=True, verbose_name="Duration")
+    statut_rca = models.CharField(max_length=20, choices=StatutRCA.choices, blank=True, verbose_name="RCA Status")
+
+    owner_email = models.EmailField(blank=True, null=True, verbose_name="Email du owner")
+    rca_fichier = models.FileField(upload_to='rca/', blank=True, null=True, verbose_name="RCA (PDF)")
+
+    dernier_rappel_envoye = models.DateTimeField(null=True, blank=True)
+
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("import_lot", "incident_id")
+
+    def __str__(self):
+        return self.incident_id
+
+    @property
+    def rca_present(self):
+        return bool(self.rca_fichier)
