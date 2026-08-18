@@ -10,17 +10,7 @@
     <link rel="stylesheet" href="{% static 'css/stage_style.css' %}">
     {% block extra_css %}{% endblock %}
     
-    <script>
-      if (localStorage.getItem('theme') === 'dark') {
-    document.addEventListener('DOMContentLoaded', function() {
-        document.body.classList.add('dark-mode');
-    });
-}
-</script>
-    <style>
-        .dark-mode { background-color: #1a1a1a; color: #eee; }
-        .dark-mode a { color: #8ab4f8; }
-    </style>
+    
 </head>
 <body class="dash-body{% if user.is_authenticated and user.theme_sombre %} dark-mode{% endif %}">
 <button id="burgerBtn" class="burger-btn" aria-label="Menu">
