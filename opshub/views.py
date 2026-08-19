@@ -293,10 +293,11 @@ def supprimer_mot_cle(request, mot_cle_id):
 # GESTION DES UTILISATEURS
 # ==========================================
 
+@login_required
 @permission_requise(Permission.Code.GERER_UTILISATEURS, is_json=False)
 def liste_utilisateurs(request):
     requete = request.GET.get('q', '')
-    statut = request.GET.get('statut', '')  # 'actif', 'inactif', ou vide
+    statut = request.GET.get('statut', '')
 
     base_qs = Utilisateurs.objects.all()
 
@@ -313,18 +314,17 @@ def liste_utilisateurs(request):
     elif statut == 'inactif':
         base_qs = base_qs.filter(is_active=False)
 
-    administrateurs = base_qs.filter(role__nom=Role.Nom.ADMINISTRATEUR)
-    teamleads = base_qs.filter(role__nom=Role.Nom.TEAMLEAD)
-    membres = base_qs.filter(role__nom=Role.Nom.MEMBRE_TECHCOMMAND)
+    roles = Role.objects.all()
+    utilisateurs_par_role = {
+        role: base_qs.filter(role=role) for role in roles
+    }
 
     return render(request, 'liste-utilisateurs.html', {
-        'administrateurs': administrateurs,
-        'teamleads': teamleads,
-        'membres': membres,
+        'utilisateurs_par_role': utilisateurs_par_role,
+        'roles': roles,
         'requete': requete,
         'statut_selectionne': statut,
     })
-
 @permission_requise(Permission.Code.GERER_UTILISATEURS)
 def ajouter_utilisateur(request):
     if request.method == 'POST':
