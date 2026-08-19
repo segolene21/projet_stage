@@ -859,7 +859,7 @@ footer{
 .dark-mode .form-group textarea,
 .dark-mode .form-group select{
     background:#2a2f3a;
-    color:#e5e7eb;
+    color:white;
     border-color:#3a3f4a;
 }
 
