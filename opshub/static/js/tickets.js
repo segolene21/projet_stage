@@ -105,13 +105,12 @@ async function confirmerImport() {
 }
 
 // --- Liste des imports (extraits en tableau) ---
-
 async function chargerListeImports(recherche = '') {
     const zone = document.getElementById('liste-imports');
     if (!zone) return;
 
     try {
-        const res = await fetch('/api/imports/');
+        const res = await fetch('/api/imports/', { cache: 'no-store' });
         if (res.status === 403) {
             zone.innerHTML = '<p>Accès interdit</p>';
             return;
@@ -123,70 +122,68 @@ async function chargerListeImports(recherche = '') {
         }
 
         if (imports.length === 0) {
-            zone.innerHTML = '<p class="empty-state">Aucun import pour l\'instant</p>';
+            zone.innerHTML = '<p>Aucun import pour l\'instant</p>';
             return;
         }
 
         zone.innerHTML = '';
-        const liste = document.createElement('ul');
-        liste.id = 'liste-imports-ul';
-        liste.style.cssText = 'list-style:none; background:rgb(246,240,204); border-radius:12px; padding:0; margin:0;';
+        imports.forEach(imp => {
+            const ligne = document.createElement('div');
+            ligne.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;';
 
-        imports.forEach((imp, index) => {
-            const li = document.createElement('li');
-            li.style.cssText = `
-                border-bottom: 1px solid rgba(0,0,0,.08);
-                background: ${index % 2 === 0 ? 'transparent' : 'rgba(255,204,0,.08)'};
-            `;
+            const titreZone = document.createElement('div');
+            titreZone.innerHTML = `<strong>${echapperHtml(imp.titre)}</strong> <span style="font-size:11px; color:#888;">(${imp.nombre_tickets} tickets — ${imp.cree_le})</span>`;
+            titreZone.style.cursor = 'help';
 
-            const apercuRows = (imp.apercu || []).slice(0, 3).map(t => `
-                <tr style="opacity:0.7;">
-                    <td style="padding:5px 14px 5px 40px; font-size:12px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px;">${echapperHtml(t.ticket_id)}</td>
-                    <td style="padding:5px 8px; font-size:12px; color:#555; white-space:nowrap;">${echapperHtml(t.state)}</td>
-                    <td style="padding:5px 8px; font-size:12px; color:#555; white-space:nowrap;">${echapperHtml(t.requester)}</td>
-                    <td style="padding:5px 8px; font-size:12px; color:#555; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${echapperHtml(t.details)}</td>
-                    <td style="padding:5px 8px; font-size:12px; color:#555;">${echapperHtml(t.feedback)}</td>
-                </tr>
-            `).join('');
+            titreZone.addEventListener('mouseenter', (e) => afficherTooltipTickets(e, imp.apercu));
+            titreZone.addEventListener('mousemove', (e) => positionnerTooltip(e));
+            titreZone.addEventListener('mouseleave', cacherTooltip);
 
-            const ombre = (imp.apercu || []).length > 3
-                ? `<div style="height:28px; background:linear-gradient(to bottom, rgba(246,240,204,0), rgba(246,240,204,0.95)); margin:-4px 0 0; border-radius:0 0 8px 8px;"></div>`
-                : '';
+            const actions = document.createElement('div');
+            const btnVoir = document.createElement('button');
+            btnVoir.textContent = 'Voir';
+            btnVoir.addEventListener('click', () => ouvrirModaleTickets(imp.id, imp.titre));
 
-            li.innerHTML = `
-                <div style="display:flex; align-items:center; gap:16px; padding:10px 14px;">
-                    <span style="font-weight:700; font-size:15px; color:#111; flex:1;">${echapperHtml(imp.titre)}</span>
-                    <span style="font-size:11px; color:#888; white-space:nowrap;">${imp.nombre_tickets} ticket${imp.nombre_tickets > 1 ? 's' : ''} — ${imp.cree_le}</span>
-                    <button class="btn-primary" style="padding:6px 14px; font-size:13px; white-space:nowrap;"
-                        onclick="ouvrirModaleTickets(${imp.id}, '${echapperHtml(imp.titre)}')">
-                        Voir
-                    </button>
-                </div>
-                ${apercuRows ? `
-                <div style="overflow:hidden;">
-                    <table style="width:100%; border-collapse:collapse;">
-                        <tbody>${apercuRows}</tbody>
-                    </table>
-                    ${ombre}
-                </div>` : ''}
-            `;
-            liste.appendChild(li);
+            const btnTelecharger = document.createElement('button');
+            btnTelecharger.textContent = 'Télécharger';
+            btnTelecharger.addEventListener('click', () => telechargerLot(imp.id, 'xlsx'));
+
+            const btnSupprimer = document.createElement('button');
+            btnSupprimer.textContent = 'Supprimer';
+            btnSupprimer.className = 'btn-delete';
+            btnSupprimer.addEventListener('click', () => supprimerLot(imp.id));
+
+            actions.append(btnVoir, btnTelecharger, btnSupprimer);
+            ligne.append(titreZone, actions);
+            zone.appendChild(ligne);
         });
-
-        zone.appendChild(liste);
     } catch (erreur) {
         console.error('Erreur de chargement des imports :', erreur);
-        zone.innerHTML = '<p class="empty-state">Erreur de chargement</p>';
+        zone.innerHTML = '<p>Erreur de chargement</p>';
     }
 }
 
-let timerRechercheImports = null;
-function rechercherImports() {
-    clearTimeout(timerRechercheImports);
-    const valeur = document.getElementById('recherche-import').value;
-    timerRechercheImports = setTimeout(() => chargerListeImports(valeur), 300);
-}
+function afficherTooltipTickets(evenement, apercu) {
+    const tooltip = creerTooltipApercu();
 
+    let html = '<table style="border-collapse:collapse; width:100%;">';
+    html += '<tr><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">ID</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">State</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Requester</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Details</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Feedback</th></tr>';
+
+    apercu.forEach(t => {
+        html += `<tr>
+            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(t.ticket_id)}</td>
+            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(t.state)}</td>
+            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(t.requester)}</td>
+            <td style="padding:4px; border-bottom:1px solid #eee; max-width:250px;">${echapperHtml(t.details)}</td>
+            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(t.feedback)}</td>
+        </tr>`;
+    });
+    html += '</table>';
+
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+    positionnerTooltip(evenement);
+}
 // --- Modale : tableau complet d'un import, édition inline ---
 
 async function ouvrirModaleTickets(lotId, titre) {
