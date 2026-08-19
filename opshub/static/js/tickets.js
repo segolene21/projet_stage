@@ -104,7 +104,107 @@ async function confirmerImport() {
     }
 }
 
+// --- Tooltip d'aperçu (ancré à la ligne survolée) ---
+let tooltipApercu = null;
+
+function creerTooltipApercu() {
+    if (tooltipApercu) return tooltipApercu;
+    tooltipApercu = document.createElement('div');
+    tooltipApercu.id = 'tooltip-apercu-import';
+    tooltipApercu.style.cssText = `
+    position: fixed;
+    display: none;
+    background: rgb(250, 246, 224);
+    border-radius: 12px;
+    padding: 0;
+    z-index: 1000;
+    width: 480px;
+    max-height: 320px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    border: 1px solid rgba(0,0,0,0.08);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+`;
+    document.body.appendChild(tooltipApercu);
+    return tooltipApercu;
+}
+
+function positionnerTooltipSurElement(element) {
+    if (!tooltipApercu) return;
+    const rect = element.getBoundingClientRect();
+    const marge = 10;
+
+    requestAnimationFrame(() => {
+        const largeurTooltip = tooltipApercu.offsetWidth;
+
+        let left = rect.left;
+        left = Math.min(left, window.innerWidth - largeurTooltip - marge);
+        left = Math.max(left, marge);
+
+        const top = rect.bottom + marge;
+
+        tooltipApercu.style.left = `${left}px`;
+        tooltipApercu.style.top = `${top}px`;
+        tooltipApercu.style.opacity = '1';
+        tooltipApercu.style.transform = 'translateY(0)';
+    });
+}
+
+function cacherTooltip() {
+    if (!tooltipApercu) return;
+    tooltipApercu.style.opacity = '0';
+    tooltipApercu.style.transform = 'translateY(-8px)';
+    setTimeout(() => {
+        if (tooltipApercu.style.opacity === '0') {
+            tooltipApercu.style.display = 'none';
+        }
+    }, 180);
+}
+
+function afficherTooltipTickets(element, apercu) {
+    const tooltip = creerTooltipApercu();
+
+    let lignesHtml = apercu.map(t => `
+        <div style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:4px;">
+                <span style="color:#FFCC00; font-weight:700; font-size:12px;">${echapperHtml(t.ticket_id)}</span>
+                <span style="color:#aaa; font-size:11px;">${echapperHtml(t.requester)}</span>
+            </div>
+            <div style="color:#eee; font-size:12px; line-height:1.4; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                ${echapperHtml(t.details) || '<span style="color:#666;">Aucun détail</span>'}
+            </div>
+        </div>
+    `).join('');
+
+    tooltip.innerHTML = `
+    <div style="padding:12px 14px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--primary);">
+        <span style="color:#111; font-weight:700; font-size:13px;">Aperçu de l'import</span>
+    </div>
+    <div style="overflow-y:auto;">
+        ${apercu.map(t => `
+            <div style="padding:10px 14px; border-bottom:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:4px;">
+                    <span style="color:#111; font-weight:700; font-size:12px;">${echapperHtml(t.ticket_id)}</span>
+                    <span style="color:var(--muted); font-size:11px;">${echapperHtml(t.requester)}</span>
+                </div>
+                <div style="color:#333; font-size:12px; line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                    ${echapperHtml(t.details) || '<span style="color:#999;">Aucun détail</span>'}
+                </div>
+            </div>
+        `).join('')}
+    </div>
+`;
+    tooltip.style.display = 'flex';
+    positionnerTooltipSurElement(element);
+}
+
 // --- Liste des imports (extraits en tableau) ---
+
 async function chargerListeImports(recherche = '') {
     const zone = document.getElementById('liste-imports');
     if (!zone) return;
@@ -112,7 +212,7 @@ async function chargerListeImports(recherche = '') {
     try {
         const res = await fetch('/api/imports/', { cache: 'no-store' });
         if (res.status === 403) {
-            zone.innerHTML = '<p>Accès interdit</p>';
+            zone.innerHTML = '<p class="empty-state">Accès interdit</p>';
             return;
         }
         let imports = await res.json();
@@ -122,74 +222,70 @@ async function chargerListeImports(recherche = '') {
         }
 
         if (imports.length === 0) {
-            zone.innerHTML = '<p>Aucun import pour l\'instant</p>';
+            zone.innerHTML = '<p class="empty-state">Aucun import pour l\'instant</p>';
             return;
         }
 
         zone.innerHTML = '';
-        imports.forEach(imp => {
-            const ligne = document.createElement('div');
-            ligne.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;';
+        const liste = document.createElement('ul');
+        liste.id = 'liste-imports-ul';
+        liste.style.cssText = 'list-style:none; background:rgb(246,240,204); border-radius:12px; padding:0; margin:0;';
+
+        imports.forEach((imp, index) => {
+            const li = document.createElement('li');
+            li.style.cssText = `
+                display:flex; align-items:center; justify-content:space-between; gap:16px;
+                padding:10px 14px;
+                border-bottom: 1px solid rgba(0,0,0,.08);
+                background: ${index % 2 === 0 ? 'transparent' : 'rgba(255,204,0,.08)'};
+            `;
 
             const titreZone = document.createElement('div');
-            titreZone.innerHTML = `<strong>${echapperHtml(imp.titre)}</strong> <span style="font-size:11px; color:#888;">(${imp.nombre_tickets} tickets — ${imp.cree_le})</span>`;
             titreZone.style.cursor = 'help';
+            titreZone.innerHTML = `<strong style="font-size:15px; color:#111;">${echapperHtml(imp.titre)}</strong> <span style="font-size:11px; color:#888;">(${imp.nombre_tickets} tickets — ${imp.cree_le})</span>`;
 
-            titreZone.addEventListener('mouseenter', (e) => afficherTooltipTickets(e, imp.apercu));
-            titreZone.addEventListener('mousemove', (e) => positionnerTooltip(e));
+            titreZone.addEventListener('mouseenter', () => afficherTooltipTickets(titreZone, imp.apercu));
             titreZone.addEventListener('mouseleave', cacherTooltip);
 
             const actions = document.createElement('div');
+            actions.style.cssText = 'display:flex; gap:8px; flex-shrink:0;';
+
             const btnVoir = document.createElement('button');
             btnVoir.textContent = 'Voir';
+            btnVoir.className = 'btn-primary';
+            btnVoir.style.cssText = 'padding:6px 14px; font-size:13px;';
             btnVoir.addEventListener('click', () => ouvrirModaleTickets(imp.id, imp.titre));
 
             const btnTelecharger = document.createElement('button');
             btnTelecharger.textContent = 'Télécharger';
+            btnTelecharger.className = 'btn-secondary';
+            btnTelecharger.style.cssText = 'padding:6px 14px; font-size:13px;';
             btnTelecharger.addEventListener('click', () => telechargerLot(imp.id, 'xlsx'));
 
             const btnSupprimer = document.createElement('button');
             btnSupprimer.textContent = 'Supprimer';
             btnSupprimer.className = 'btn-delete';
+            btnSupprimer.style.cssText = 'padding:6px 14px; font-size:13px;';
             btnSupprimer.addEventListener('click', () => supprimerLot(imp.id));
 
             actions.append(btnVoir, btnTelecharger, btnSupprimer);
-            ligne.append(titreZone, actions);
-            zone.appendChild(ligne);
+            li.append(titreZone, actions);
+            liste.appendChild(li);
         });
+
+        zone.appendChild(liste);
     } catch (erreur) {
         console.error('Erreur de chargement des imports :', erreur);
-        zone.innerHTML = '<p>Erreur de chargement</p>';
+        zone.innerHTML = '<p class="empty-state">Erreur de chargement</p>';
     }
 }
 
-function afficherTooltipTickets(evenement, apercu) {
-    const tooltip = creerTooltipApercu();
-
-    let html = '<table style="border-collapse:collapse; width:100%;">';
-    html += '<tr><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">ID</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">State</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Requester</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Details</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Feedback</th></tr>';
-
-    apercu.forEach(t => {
-        html += `<tr>
-            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(t.ticket_id)}</td>
-            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(t.state)}</td>
-            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(t.requester)}</td>
-            <td style="padding:4px; border-bottom:1px solid #eee; max-width:250px;">${echapperHtml(t.details)}</td>
-            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(t.feedback)}</td>
-        </tr>`;
-    });
-    html += '</table>';
-
-    tooltip.innerHTML = html;
-    tooltip.style.display = 'block';
-    positionnerTooltip(evenement);
-}
 // --- Modale : tableau complet d'un import, édition inline ---
 
 async function ouvrirModaleTickets(lotId, titre) {
     lotActuelId = lotId;
     document.getElementById('titre-modale-tickets').textContent = titre || 'Tickets';
-    document.getElementById('modale-tickets').style.display = 'block';
+    document.getElementById('modale-tickets').style.display = 'flex';
     document.getElementById('recherche-ticket-modale').value = '';
     await chargerTicketsDuLot();
 }

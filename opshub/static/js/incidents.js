@@ -63,7 +63,7 @@ async function confirmerImportIncidents() {
     const inputFichier = document.getElementById('fichier-incidents');
     const fichier = inputFichier.files[0];
     if (!fichier) {
-        alert('Veuillez choisir un fichier Excel.');
+        afficherToast('Veuillez choisir un fichier Excel.', 'erreur');
         return;
     }
 
@@ -78,15 +78,16 @@ async function confirmerImportIncidents() {
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.erreur || 'Échec de l\'import');
+            afficherToast(data.erreur || 'Échec de l\'import', 'erreur');
             return;
         }
 
         fermerModaleImportIncidents();
         await chargerListeImportsIncidents();
         await ouvrirModaleIncidents(data.lot_id, data.titre);
+        afficherToast('Import réussi', 'succes');
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
@@ -102,67 +103,89 @@ function creerTooltipApercu() {
     tooltipApercu.style.cssText = `
         position: fixed;
         display: none;
-        background: white;
-        border: 1px solid #ccc;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        border-radius: 6px;
-        padding: 10px;
+        background: rgb(250, 246, 224);
+        border-radius: 12px;
+        padding: 0;
         z-index: 1000;
-        max-width: 700px;
-        max-height: 400px;
-        overflow: auto;
-        font-size: 12px;
+        width: 480px;
+        max-height: 320px;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+        border: 1px solid rgba(0,0,0,0.08);
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: opacity 0.18s ease, transform 0.18s ease;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
     `;
     document.body.appendChild(tooltipApercu);
     return tooltipApercu;
 }
-
-function afficherTooltip(evenement, apercu) {
+function afficherTooltip(element, apercu) {
     const tooltip = creerTooltipApercu();
 
-    let html = '<table style="border-collapse:collapse; width:100%;">';
-    html += '<tr><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">ID</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Description</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Severity</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Owner</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">RCA</th></tr>';
+    let lignesHtml = apercu.map(i => `
+        <div style="padding:10px 14px; border-bottom:1px solid rgba(0,0,0,0.08);">
+            <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:4px;">
+                <span style="color:#111; font-weight:700; font-size:12px;">${echapperHtml(i.incident_id)}</span>
+                <span style="color:#666; font-size:11px;">${echapperHtml(i.owner_email)}</span>
+            </div>
+            <div style="color:#333; font-size:12px; line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; margin-bottom:4px;">
+                ${echapperHtml(i.description) || '<span style="color:#999;">Aucune description</span>'}
+            </div>
+            <div style="display:flex; gap:8px; font-size:11px; color:#666;">
+                <span>Sévérité : ${echapperHtml(i.severite)}</span>
+                <span>•</span>
+                <span>RCA : ${i.rca_present ? 'Oui' : 'Non'}</span>
+            </div>
+        </div>
+    `).join('');
 
-    apercu.forEach(i => {
-        html += `<tr>
-            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(i.incident_id)}</td>
-            <td style="padding:4px; border-bottom:1px solid #eee; max-width:250px;">${echapperHtml(i.description)}</td>
-            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(i.severite)}</td>
-            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(i.owner_email)}</td>
-            <td style="padding:4px; border-bottom:1px solid #eee;">${i.rca_present ? 'Oui' : 'Non'}</td>
-        </tr>`;
-    });
-    html += '</table>';
+    tooltip.innerHTML = `
+        <div style="padding:12px 14px; border-bottom:1px solid rgba(0,0,0,0.08); flex-shrink:0; background:var(--primary);">
+            <span style="color:#111; font-weight:700; font-size:13px;">Aperçu de l'import</span>
+        </div>
+        <div style="overflow-y:auto;">
+            ${lignesHtml}
+        </div>
+    `;
 
-    tooltip.innerHTML = html;
-    tooltip.style.display = 'block';
-
-    positionnerTooltip(evenement);
+    tooltip.style.display = 'flex';
+    positionnerTooltip(element);
 }
 
-function positionnerTooltip(evenement) {
+function positionnerTooltip(element) {
     if (!tooltipApercu) return;
-    const marge = 12;
-    let x = evenement.clientX + marge;
-    let y = evenement.clientY + marge;
+    const rect = element.getBoundingClientRect();
+    const marge = 10;
 
-    const largeurTooltip = tooltipApercu.offsetWidth;
-    const hauteurTooltip = tooltipApercu.offsetHeight;
+    requestAnimationFrame(() => {
+        const largeurTooltip = tooltipApercu.offsetWidth;
 
-    if (x + largeurTooltip > window.innerWidth) {
-        x = evenement.clientX - largeurTooltip - marge;
-    }
-    if (y + hauteurTooltip > window.innerHeight) {
-        y = evenement.clientY - hauteurTooltip - marge;
-    }
+        let left = rect.left;
+        left = Math.min(left, window.innerWidth - largeurTooltip - marge);
+        left = Math.max(left, marge);
 
-    tooltipApercu.style.left = `${x}px`;
-    tooltipApercu.style.top = `${y}px`;
+        const top = rect.bottom + marge;
+
+        tooltipApercu.style.left = `${left}px`;
+        tooltipApercu.style.top = `${top}px`;
+        tooltipApercu.style.opacity = '1';
+        tooltipApercu.style.transform = 'translateY(0)';
+    });
 }
-
 function cacherTooltip() {
-    if (tooltipApercu) tooltipApercu.style.display = 'none';
+    if (!tooltipApercu) return;
+    tooltipApercu.style.opacity = '0';
+    tooltipApercu.style.transform = 'translateY(-8px)';
+    setTimeout(() => {
+        if (tooltipApercu.style.opacity === '0') {
+            tooltipApercu.style.display = 'none';
+        }
+    }, 180);
 }
+
 async function chargerListeImportsIncidents(recherche = '') {
     const zone = document.getElementById('liste-imports-incidents');
     if (!zone) return;
@@ -181,7 +204,7 @@ async function chargerListeImportsIncidents(recherche = '') {
     try {
         const res = await fetch(`/api/incidents-imports/?${params.toString()}`, { cache: 'no-store' });
         if (res.status === 403) {
-            zone.innerHTML = '<p>Accès interdit</p>';
+            zone.innerHTML = '<p class="empty-state">Accès interdit</p>';
             return;
         }
         let imports = await res.json();
@@ -191,64 +214,80 @@ async function chargerListeImportsIncidents(recherche = '') {
         }
 
         if (imports.length === 0) {
-            zone.innerHTML = '<p>Aucun import pour l\'instant</p>';
+            zone.innerHTML = '<p class="empty-state">Aucun import pour l\'instant</p>';
             return;
         }
 
         zone.innerHTML = '';
-        imports.forEach(imp => {
-            const ligne = document.createElement('div');
-            ligne.className = 'ligne-import';
-            ligne.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; cursor:default;';
+        const liste = document.createElement('ul');
+        liste.style.cssText = 'list-style:none; background:rgb(246,240,204); border-radius:12px; padding:0; margin:0;';
+
+        imports.forEach((imp, index) => {
+            const li = document.createElement('li');
+            li.style.cssText = `
+                display:flex; align-items:center; justify-content:space-between; gap:16px;
+                padding:10px 14px;
+                border-bottom: 1px solid rgba(0,0,0,.08);
+                background: ${index % 2 === 0 ? 'transparent' : 'rgba(255,204,0,.08)'};
+            `;
 
             const titreZone = document.createElement('div');
-            titreZone.innerHTML = `<strong>${echapperHtml(imp.titre)}</strong> <span style="font-size:11px; color:#888;">(${imp.nombre_incidents} incidents — ${imp.cree_le})</span>`;
             titreZone.style.cursor = 'help';
+            titreZone.innerHTML = `<strong style="font-size:15px; color:#111;">${echapperHtml(imp.titre)}</strong> <span style="font-size:11px; color:#888;">(${imp.nombre_incidents} incidents — ${imp.cree_le})</span>`;
 
-            titreZone.addEventListener('mouseenter', (e) => afficherTooltip(e, imp.apercu));
-            titreZone.addEventListener('mousemove', (e) => positionnerTooltip(e));
-            titreZone.addEventListener('mouseleave', cacherTooltip);
+           titreZone.addEventListener('mouseenter', () => afficherTooltip(titreZone, imp.apercu));
+titreZone.addEventListener('mouseleave', cacherTooltip);
 
             const actions = document.createElement('div');
+            actions.style.cssText = 'display:flex; gap:8px; flex-shrink:0;';
+
             const btnVoir = document.createElement('button');
             btnVoir.textContent = 'Voir';
+            btnVoir.className = 'btn-primary';
+            btnVoir.style.cssText = 'padding:6px 14px; font-size:13px;';
             btnVoir.addEventListener('click', () => ouvrirModaleIncidents(imp.id, imp.titre));
 
             const btnTelecharger = document.createElement('button');
             btnTelecharger.textContent = 'Télécharger';
+            btnTelecharger.className = 'btn-secondary';
+            btnTelecharger.style.cssText = 'padding:6px 14px; font-size:13px;';
             btnTelecharger.addEventListener('click', () => telechargerLotIncidents(imp.id, 'xlsx'));
 
             const btnSupprimer = document.createElement('button');
             btnSupprimer.textContent = 'Supprimer';
             btnSupprimer.className = 'btn-delete';
+            btnSupprimer.style.cssText = 'padding:6px 14px; font-size:13px;';
             btnSupprimer.addEventListener('click', () => supprimerLotIncidents(imp.id));
 
             actions.append(btnVoir, btnTelecharger, btnSupprimer);
-            ligne.append(titreZone, actions);
-            zone.appendChild(ligne);
+            li.append(titreZone, actions);
+            liste.appendChild(li);
         });
+
+        zone.appendChild(liste);
     } catch (erreur) {
         console.error('Erreur de chargement des imports :', erreur);
-        zone.innerHTML = '<p>Erreur de chargement</p>';
+        zone.innerHTML = '<p class="empty-state">Erreur de chargement</p>';
     }
 }
 
 async function supprimerLotIncidents(lotId) {
-    if (!confirm('Supprimer tout cet import (tous ses incidents) ?')) return;
+    if (!(await confirmerAction('Supprimer tout cet import (tous ses incidents) ?'))) return;
 
     try {
         const res = await fetch(`/api/incidents-imports/${lotId}/`, { method: 'DELETE', cache: 'no-store' });
         const data = await res.json();
         if (!res.ok) {
-            alert(data.erreur || 'Échec de la suppression');
+            afficherToast(data.erreur || 'Échec de la suppression', 'erreur');
             return;
         }
         if (lotIncidentsActuelId === lotId) {
             fermerModaleIncidents();
         }
         await chargerListeImportsIncidents();
+        afficherToast('Import supprimé', 'succes');
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
@@ -263,7 +302,7 @@ function supprimerLotIncidentsActuel() {
 async function ouvrirModaleIncidents(lotId, titre) {
     lotIncidentsActuelId = lotId;
     document.getElementById('titre-modale-incidents').textContent = titre || 'Incidents';
-    document.getElementById('modale-incidents').style.display = 'block';
+    document.getElementById('modale-incidents').style.display = 'flex';
     document.getElementById('recherche-incident-modale').value = '';
     document.getElementById('filtre-rca').value = '';
     await chargerIncidentsDuLot();
@@ -287,7 +326,7 @@ async function chargerIncidentsDuLot(recherche = '') {
         const url = `/api/incidents-imports/${lotIncidentsActuelId}/incidents/?${params.toString()}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (res.status === 403) {
-            corps.innerHTML = '<tr><td colspan="9">Accès interdit</td></tr>';
+            corps.innerHTML = '<tr><td colspan="13">Accès interdit</td></tr>';
             return;
         }
         const data = await res.json();
@@ -297,14 +336,14 @@ async function chargerIncidentsDuLot(recherche = '') {
         if (compteur) compteur.textContent = `${data.sans_rca} sans RCA sur ${data.total} incidents`;
 
         if (incidentsActuels.length === 0) {
-            corps.innerHTML = '<tr><td colspan="9">Aucun incident trouvé</td></tr>';
+            corps.innerHTML = '<tr><td colspan="13">Aucun incident trouvé</td></tr>';
             return;
         }
 
         afficherIncidentsEnLecture();
     } catch (erreur) {
         console.error('Erreur de chargement des incidents :', erreur);
-        corps.innerHTML = '<tr><td colspan="9">Erreur de chargement</td></tr>';
+        corps.innerHTML = '<tr><td colspan="13">Erreur de chargement</td></tr>';
     }
 }
 
@@ -314,12 +353,13 @@ function rechercherDansModaleIncidents() {
     const valeur = document.getElementById('recherche-incident-modale').value;
     timerRechercheModaleIncidents = setTimeout(() => chargerIncidentsDuLot(valeur), 300);
 }
-const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email',];
+
+const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email'];
 
 async function uploaderRca(incidentPk, fichier) {
     if (!fichier) return;
     if (!fichier.name.toLowerCase().endsWith('.pdf')) {
-        alert('Le RCA doit être un fichier PDF.');
+        afficherToast('Le RCA doit être un fichier PDF.', 'erreur');
         return;
     }
 
@@ -330,31 +370,33 @@ async function uploaderRca(incidentPk, fichier) {
         const res = await fetch(`/api/incidents/${incidentPk}/rca/`, { method: 'POST', body: formData });
         const data = await res.json();
         if (!res.ok) {
-            alert(data.erreur || 'Échec de l\'upload du RCA');
+            afficherToast(data.erreur || 'Échec de l\'upload du RCA', 'erreur');
             return;
         }
         await chargerIncidentsDuLot();
         await chargerListeImportsIncidents();
+        afficherToast('RCA ajouté', 'succes');
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
 
 async function supprimerIncident(pk) {
-    if (!confirm('Supprimer cet incident ?')) return;
+    if (!(await confirmerAction('Supprimer cet incident ?'))) return;
 
     try {
         const res = await fetch(`/api/incidents/${pk}/`, { method: 'DELETE', cache: 'no-store' });
         const data = await res.json();
         if (!res.ok) {
-            alert(data.erreur || 'Échec de la suppression');
+            afficherToast(data.erreur || 'Échec de la suppression', 'erreur');
             return;
         }
         await chargerIncidentsDuLot();
         await chargerListeImportsIncidents();
+        afficherToast('Incident supprimé', 'succes');
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
@@ -371,6 +413,14 @@ function activerModeEditionGlobalIncidents() {
             if (!td) return;
             const valeur = td.textContent;
 
+               if (champ === 'description') {
+    td.style.maxWidth = '350px';
+    td.style.width = '350px';
+}
+if (champ === 'impact') {
+    td.style.maxWidth = '300px';
+    td.style.width = '300px';
+}
             let input;
             if (champ === 'statut') {
                 input = document.createElement('select');
@@ -383,14 +433,32 @@ function activerModeEditionGlobalIncidents() {
                 });
             } else if (champ === 'description' || champ === 'impact') {
                 input = document.createElement('textarea');
-                input.value = valeur;
             } else {
                 input = document.createElement('input');
                 input.type = 'text';
-                input.value = valeur;
             }
+
+            if (champ !== 'description' && champ !== 'impact' && champ !== 'statut') input.value = valeur;
+            if (champ === 'description' || champ === 'impact') input.value = valeur;
             input.style.width = '100%';
             input.dataset.champ = champ;
+
+            if (champ === 'description' || champ === 'impact') {
+                input.style.resize = 'none';
+                input.style.overflow = 'hidden';
+                input.style.fontFamily = 'inherit';
+                input.style.fontSize = 'inherit';
+                input.style.padding = '6px';
+                input.style.boxSizing = 'border-box';
+                input.style.lineHeight = '1.4';
+
+                const ajusterHauteur = () => {
+                    input.style.height = 'auto';
+                    input.style.height = input.scrollHeight + 'px';
+                };
+                input.addEventListener('input', ajusterHauteur);
+                requestAnimationFrame(ajusterHauteur);
+            }
 
             td.textContent = '';
             td.appendChild(input);
@@ -436,7 +504,9 @@ async function enregistrerModificationsGlobalesIncidents() {
         const echecs = resultats.filter(r => !r.ok);
 
         if (echecs.length > 0) {
-            alert(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`);
+            afficherToast(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`, 'erreur');
+        } else {
+            afficherToast('Modifications enregistrées', 'succes');
         }
 
         document.getElementById('btn-modifier-global-incidents').style.display = '';
@@ -446,7 +516,7 @@ async function enregistrerModificationsGlobalesIncidents() {
         await chargerIncidentsDuLot();
         await chargerListeImportsIncidents();
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
@@ -490,7 +560,7 @@ function afficherIncidentsEnLecture() {
             <td data-champ="owner_email">${echapperHtml(i.owner_email)}</td>
             <td data-role="rca-cell">
                 ${i.rca_present
-                    ? `<a href="${i.rca_url}" target="_blank">Voir PDF</a>`
+                    ? `<a href="${i.rca_url}" target="_blank" class="detail-link">Voir PDF</a>`
                     : `<input type="file" accept=".pdf" data-action="upload-rca" />`
                 }
             </td>
@@ -504,6 +574,7 @@ function afficherIncidentsEnLecture() {
         corps.appendChild(tr);
     });
 }
+
 function changerTypeFiltreIncidents() {
     const type = document.getElementById('filtre-periode-type-incidents').value;
     const selectAnnee = document.getElementById('filtre-annee-incidents');
