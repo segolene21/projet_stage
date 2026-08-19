@@ -44,6 +44,8 @@ if (formMotCle) {
         .then(response => response.json())
         .then(data => {
             if (data.succes) {
+                sessionStorage.setItem('toast_message', 'Mot-clé ajouté');
+                sessionStorage.setItem('toast_type', 'succes');
                 location.reload();
             } else {
                 document.getElementById('message-erreur-mc').textContent = JSON.stringify(data.erreurs);
@@ -67,15 +69,16 @@ function modifierMotCle(motCleId, url) {
             document.getElementById('intitule-' + motCleId).textContent = data.intitule;
             document.getElementById('equipe-' + motCleId).textContent = data.equipe;
             document.getElementById('modale-modifier-mc-' + motCleId).style.display = 'none';
+            afficherToast('Mot-clé modifié', 'succes');
         } else {
-            alert(JSON.stringify(data.erreurs));
+            afficherToast(JSON.stringify(data.erreurs), 'erreur');
         }
     });
 }
 
 
-function supprimerMotCle(motCleId, url) {
-    if (!confirm('Supprimer ce mot-clé ?')) return;
+async function supprimerMotCle(motCleId, url) {
+    if (!(await confirmerAction('Supprimer ce mot-clé ?'))) return;
 
     fetch(url, {
         method: 'POST',
@@ -85,13 +88,14 @@ function supprimerMotCle(motCleId, url) {
     .then(data => {
         if (data.succes) {
             document.getElementById('mot-cle-' + motCleId).remove();
+            afficherToast('Mot-clé supprimé', 'succes');
         } else {
-            alert(data.erreur || 'Impossible de supprimer le mot-clé.');
+            afficherToast(data.erreur || 'Impossible de supprimer le mot-clé.', 'erreur');
         }
     })
     .catch(error => {
         console.error('Erreur suppression mot-clé :', error);
-        alert('Erreur réseau lors de la suppression du mot-clé.');
+        afficherToast('Erreur réseau lors de la suppression du mot-clé.', 'erreur');
     });
 }
 
@@ -110,8 +114,6 @@ if (champRechercheMotsCles) {
     });
 }
 
-
-// --- ÉQUIPE (créée depuis n'importe quel select cible) ---
 
 // --- ÉQUIPE (créée depuis n'importe quel select cible) ---
 
@@ -164,6 +166,7 @@ if (formEquipe) {
 
                 formEquipe.reset();
                 fermerModaleEquipe();
+                afficherToast('Équipe créée', 'succes');
             } else {
                 document.getElementById('message-erreur-equipe').textContent = JSON.stringify(data.erreurs);
             }

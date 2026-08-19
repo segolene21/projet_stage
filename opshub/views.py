@@ -34,15 +34,40 @@ from .decorators import permission_requise
 # ==========================================
 
 @permission_requise(Permission.Code.CONSULTER_OUTILS, is_json=False)
+@permission_requise(Permission.Code.CONSULTER_OUTILS, is_json=False)
 def liste_outils(request):
     requete = request.GET.get('q', '')
-    outils = OutilMonitoring.objects.filter(nom__icontains=requete) if requete else OutilMonitoring.objects.all()
+    team_id = request.GET.get('team', '')
+    authentification = request.GET.get('authentification', '')
+    statut = request.GET.get('statut', '')
+
+    outils = OutilMonitoring.objects.all()
+
+    if requete:
+        outils = outils.filter(nom__icontains=requete)
+
+    if team_id:
+        outils = outils.filter(outil_team_id=team_id)
+
+    if authentification == 'oui':
+        outils = outils.filter(necessite_authentification=True)
+    elif authentification == 'non':
+        outils = outils.filter(necessite_authentification=False)
+
+    if statut == 'actif':
+        outils = outils.filter(statut=True)
+    elif statut == 'inactif':
+        outils = outils.filter(statut=False)
+
     outils_teams = OutilTeam.objects.all()
     outils = outils.distinct().order_by('id')
     return render(request, 'liste_outils.html', {
         'outils': outils,
         'outils_teams': outils_teams,
         'requete': requete,
+        'team_id_selectionne': team_id,
+        'authentification_selectionnee': authentification,
+        'statut_selectionne': statut,
     })
 
 
@@ -594,27 +619,41 @@ def liste_imports(request):
 
     return JsonResponse(resultat, safe=False)
 
-
 def _generer_pdf(tickets, response):
-    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+    styles = getSampleStyleSheet()
+    style_cellule = styles["Normal"]
+    style_cellule.fontSize = 7
+    style_cellule.leading = 8
+
+    doc = SimpleDocTemplate(
+        response, pagesize=landscape(A4),
+        leftMargin=1*cm, rightMargin=1*cm, topMargin=1*cm, bottomMargin=1*cm
+    )
+
     donnees = [["ID", "State", "Requester", "Details", "Feedback", "Modifié le"]]
 
     for t in tickets:
         donnees.append([
-            t.ticket_id, t.state, t.requester, (t.details or "")[:80], (t.feedback or "")[:60],
+            Paragraph(t.ticket_id or "", style_cellule),
+            t.state,
+            Paragraph(t.requester or "", style_cellule),
+            Paragraph(t.details or "", style_cellule),
+            Paragraph(t.feedback or "", style_cellule),
             timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M") if t.modifie_le else "",
         ])
 
-    tableau = Table(donnees, repeatRows=1)
+    largeurs = [2.5*cm, 2.5*cm, 4*cm, 8*cm, 6*cm, 3*cm]
+
+    tableau = Table(donnees, colWidths=largeurs, repeatRows=1)
     tableau.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1a1a1a")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor("#FFCC00")),
         ('FONTSIZE', (0, 0), (-1, -1), 7),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     doc.build([tableau])
-
 
 
 import openpyxl
@@ -733,12 +772,11 @@ def ticket_detail(request, ticket_pk):
 
         if request.method == 'PUT':
           data = json.loads(request.body)
-    for champ in ('incident_id', 'description', 'severite', 'impact', 'affected_service',
-              'root_cause', 'action_resolution', 'statut_rca', 'owner_email'):
-          if champ in data:
-              setattr(incident, champ, data[champ])
-    incident.save()
-    return JsonResponse({"message": "Incident modifié"})
+          for champ in ('ticket_id', 'state', 'requester', 'details', 'feedback', 'modifie_le'):
+              if champ in data:
+                  setattr(ticket, champ, data[champ])
+          ticket.save()
+          return JsonResponse({"message": "Ticket modifié"})
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 @csrf_exempt
@@ -909,9 +947,23 @@ def import_incidents_excel(request):
 
 @login_required
 def liste_imports_incidents(request):
-    lots = ImportIncidents.objects.all().order_by('-cree_le')
-    resultat = []
+    periode_type = request.GET.get('periode_type', '')
+    annee = request.GET.get('annee', '')
+    mois = request.GET.get('mois', '')
+    semaine = request.GET.get('semaine', '')
 
+    lots = ImportIncidents.objects.all()
+
+    if periode_type == 'annee' and annee:
+        lots = lots.filter(cree_le__year=annee)
+    elif periode_type == 'mois' and annee and mois:
+        lots = lots.filter(cree_le__year=annee, cree_le__month=mois)
+    elif periode_type == 'semaine' and annee and semaine:
+        lots = lots.filter(cree_le__iso_year=annee, cree_le__week=semaine)
+
+    lots = lots.order_by('-cree_le')
+
+    resultat = []
     for lot in lots:
         incidents = lot.incidents.all().order_by('id')[:5]
         resultat.append({
@@ -923,7 +975,7 @@ def liste_imports_incidents(request):
                 {
                     "incident_id": i.incident_id, "description": i.description,
                     "severite": i.severite, "owner_email": i.owner_email or "",
-                    "statut_rca": i.statut_rca, "rca_present": i.rca_present,
+                    "rca_present": i.rca_present,
                 } for i in incidents
             ],
         })
@@ -970,7 +1022,6 @@ def incidents_du_lot(request, lot_id):
             "duree": str(i.duree) if i.duree else "",
             "statut_rca": i.statut_rca,
             "owner_email": i.owner_email or "",
-            "statut_rca": i.statut_rca,
             "rca_present": i.rca_present,
             "rca_url": i.rca_fichier.url if i.rca_fichier else "",
             "modifie_le": timezone.localtime(i.modifie_le).strftime("%d/%m/%Y %H:%M"),
@@ -981,39 +1032,50 @@ def incidents_du_lot(request, lot_id):
 
     return JsonResponse({"titre": lot.titre, "incidents": incidents, "total": total, "sans_rca": sans_rca})
 
+from reportlab.lib.units import cm
+
 def _generer_pdf_incidents(incidents, response):
     styles = getSampleStyleSheet()
     style_cellule = styles["Normal"]
     style_cellule.fontSize = 6
+    style_cellule.leading = 7
 
-    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
-    donnees = [["ID", "Description", "Reported", "Severity", "Impact", "Affected Service",
-                "Root Cause", "Action", "Duration", "RCA Status", "Owner", "Statut", "RCA"]]
+    doc = SimpleDocTemplate(
+        response, pagesize=landscape(A4),
+        leftMargin=1*cm, rightMargin=1*cm, topMargin=1*cm, bottomMargin=1*cm
+    )
+
+    donnees = [["ID", "Description", "Reported", "Sev.", "Impact", "Affected Service",
+                "Root Cause", "Action", "Duration", "RCA Status", "Owner", "RCA"]]
 
     for i in incidents:
         donnees.append([
-            i.incident_id,
+            Paragraph(i.incident_id or "", style_cellule),
             Paragraph(i.description or "", style_cellule),
-            timezone.localtime(i.date_signalement).strftime("%d/%m/%Y %H:%M") if i.date_signalement else "",
+            timezone.localtime(i.date_signalement).strftime("%d/%m/%y %H:%M") if i.date_signalement else "",
             i.severite,
             Paragraph(i.impact or "", style_cellule),
             Paragraph(i.affected_service or "", style_cellule),
             Paragraph(i.root_cause or "", style_cellule),
             Paragraph(i.action_resolution or "", style_cellule),
             str(i.duree) if i.duree else "",
-            i.statut_rca,
-            i.owner_email or "",
             i.get_statut_rca_display(),
+            Paragraph(i.owner_email or "", style_cellule),
             "Oui" if i.rca_present else "Non",
         ])
 
-    tableau = Table(donnees, repeatRows=1)
+    # Largeur totale disponible ≈ 25.7 cm (A4 paysage moins marges de 1cm x2)
+    largeurs = [1.8*cm, 2.9*cm, 2.4*cm, 1.2*cm, 2.8*cm, 3.0*cm, 3.0*cm, 2.7*cm, 1.5*cm, 1.8*cm, 2.6*cm, 1.0*cm]
+   
+    tableau = Table(donnees, colWidths=largeurs, repeatRows=1)
     tableau.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1a1a1a")),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor("#FFCC00")),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
+    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1a1a1a")),
+    ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor("#FFCC00")),
+    ('FONTSIZE', (0, 0), (-1, -1), 6),
+    ('FONTSIZE', (0, 0), (-1, 0), 7),
+    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+]))
     doc.build([tableau])
 
 
@@ -1038,18 +1100,33 @@ def export_lot_incidents(request, lot_id):
     wb = Workbook()
     ws = wb.active
     ws.title = "Incidents"
-    ws.append(["ID", "Description", "Reported Date", "Severity", "Impact", "Affected Service",
-               "Root Cause", "Action for Resolution", "Duration", "RCA Status", "Owner Email",
-               "Statut", "RCA attaché"])
+
+    entetes = ["ID", "Description", "Reported Date", "Severity", "Impact", "Affected Service",
+               "Root Cause", "Action for Resolution", "Duration", "RCA Status", "Owner Email", "RCA attaché"]
+    ws.append(entetes)
 
     for i in incidents:
         ws.append([
             i.incident_id, i.description,
             timezone.localtime(i.date_signalement).strftime("%d/%m/%Y %H:%M") if i.date_signalement else "",
             i.severite, i.impact, i.affected_service, i.root_cause, i.action_resolution,
-            str(i.duree) if i.duree else "", i.statut_rca, i.owner_email or "",
-            i.get_statut_display(), "Oui" if i.rca_present else "Non",
+            str(i.duree) if i.duree else "", i.get_statut_rca_display(), i.owner_email or "",
+            "Oui" if i.rca_present else "Non",
         ])
+
+    # Largeurs de colonnes adaptées au contenu
+    largeurs_colonnes = {
+        'A': 18, 'B': 40, 'C': 18, 'D': 10, 'E': 30, 'F': 30,
+        'G': 35, 'H': 35, 'I': 12, 'J': 14, 'K': 25, 'L': 12,
+    }
+    for lettre, largeur in largeurs_colonnes.items():
+        ws.column_dimensions[lettre].width = largeur
+
+    # Retour à la ligne automatique + alignement en haut pour toutes les cellules
+    from openpyxl.styles import Alignment
+    for ligne in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(entetes)):
+        for cellule in ligne:
+            cellule.alignment = Alignment(wrap_text=True, vertical='top')
 
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f'attachment; filename="{nom_base}.xlsx"'
@@ -1123,3 +1200,18 @@ def uploader_rca(request, incident_pk):
     incident.save()
 
     return JsonResponse({"message": "RCA attaché avec succès", "rca_url": incident.rca_fichier.url})
+   
+
+@csrf_exempt
+@login_required
+def changer_theme(request):
+    if request.method != "POST":
+        return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
+
+    data = json.loads(request.body)
+    theme_sombre = bool(data.get("theme_sombre"))
+
+    request.user.theme_sombre = theme_sombre
+    request.user.save(update_fields=["theme_sombre"])
+
+    return JsonResponse({"succes": True})

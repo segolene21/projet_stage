@@ -1551,3 +1551,205 @@ footer{
 #liste-imports-ul li:last-child {
     border-bottom: none !important;
 }
+/* ================= BARRE DE FILTRES (réutilisable) ================= */
+
+.filtres-recherche{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.filtres-recherche input[type="text"],
+.filtres-recherche input[type="search"]{
+    flex:1;
+    min-width:200px;
+    border:none;
+    background:var(--white);
+    padding:12px 18px;
+    border-radius:14px;
+    box-shadow:0 6px 18px rgba(0,0,0,.06);
+}
+
+.filtres-recherche input[type="text"]:focus,
+.filtres-recherche input[type="search"]:focus{
+    outline:none;
+    box-shadow:0 0 0 4px rgba(255,204,0,.25);
+}
+
+.filtres-recherche select{
+    border:1px solid var(--border);
+    background:var(--white);
+    color:var(--text);
+    padding:10px 14px;
+    border-radius:12px;
+    font-size:14px;
+    cursor:pointer;
+}
+
+.filtres-recherche select:focus{
+    outline:none;
+    box-shadow:0 0 0 3px rgba(255,204,0,.2);
+}
+
+.filtres-recherche button[type="submit"]{
+    background:var(--primary);
+    color:#111;
+    border:none;
+    border-radius:12px;
+    padding:10px 22px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.filtres-recherche button[type="submit"]:hover{
+    background:var(--primary-dark);
+}
+
+.filtres-recherche a{
+    color:var(--primary-dark);
+    font-weight:600;
+    font-size:14px;
+}
+
+.filtres-recherche a:hover{
+    text-decoration:underline;
+}
+
+/* Dark mode */
+.dark-mode .filtres-recherche input[type="text"],
+.dark-mode .filtres-recherche input[type="search"],
+.dark-mode .filtres-recherche select{
+    background:#1f232b;
+    color:#e5e7eb;
+    border-color:#3a3f4a;
+}
+
+.dark-mode .filtres-recherche a{
+    color:var(--primary);
+}
+
+
+
+
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 3000;
+    max-width: 380px;
+    border-left: 4px solid var(--primary);
+    animation: toast-in 0.25s ease;
+}
+
+.toast.toast-erreur {
+    border-left-color: #dc2626;
+}
+
+.toast.toast-succes {
+    border-left-color: #16a34a;
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dark-mode #confirm-modal-message{
+    color:#1c1e20;
+}
+
+.dark-mode .password-change-card label,
+.dark-mode .password-change-card ul,
+.dark-mode .password-change-card li,
+.dark-mode .password-change-card p,
+.dark-mode .password-change-card .helptext{
+    color:#e5e7eb;
+}
+
+.dark-mode .password-change-card input[type="password"],
+.dark-mode .password-change-card input[type="text"]{
+    background:#2a2f3a;
+    color:#e5e7eb;
+    border-color:#f9f9f9;
+}
+
+/* ================= TOGGLE APPARENCE (compact) ================= */
+
+.theme-toggle-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--white);
+    border-radius:14px;
+    padding:10px 16px;
+    box-shadow:var(--shadow);
+    width:fit-content;
+}
+
+.theme-toggle-label{
+    font-size:14px;
+    font-weight:600;
+    color:var(--text);
+    white-space:nowrap;
+}
+
+.switch{
+    position:relative;
+    display:inline-block;
+    width:44px;
+    height:24px;
+    flex-shrink:0;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.switch .slider{
+    position:absolute;
+    cursor:pointer;
+    inset:0;
+    background:#d1d5db;
+    border-radius:24px;
+    transition:0.2s;
+}
+
+.switch .slider::before{
+    content:"";
+    position:absolute;
+    height:18px;
+    width:18px;
+    left:3px;
+    bottom:3px;
+    background:#fff;
+    border-radius:50%;
+    transition:0.2s;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+
+.switch input:checked + .slider{
+    background:var(--primary);
+}
+
+.switch input:checked + .slider::before{
+    transform:translateX(20px);
+}
+
+.dark-mode .theme-toggle-card{
+    background:#1f232b;
+}
+
+.dark-mode .theme-toggle-label{
+    color:#e5e7eb;
+}

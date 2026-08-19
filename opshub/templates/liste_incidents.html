@@ -6,7 +6,33 @@
     <button onclick="document.getElementById('modale-import-incidents').style.display='block'">Importer des incidents</button>
     <input type="text" id="recherche-import-incidents" placeholder="Rechercher un import par titre..." oninput="rechercherImportsIncidents()" />
 </div>
+<div class="filtres-imports-incidents">
+    <select id="filtre-periode-type-incidents" onchange="changerTypeFiltreIncidents()">
+        <option value="">Toutes les périodes</option>
+        <option value="annee">Par année</option>
+        <option value="mois">Par mois</option>
+        <option value="semaine">Par semaine</option>
+    </select>
 
+    <select id="filtre-annee-incidents" style="display:none;" onchange="chargerListeImportsIncidents()"></select>
+    <select id="filtre-mois-incidents" style="display:none;" onchange="chargerListeImportsIncidents()">
+        <option value="1">Janvier</option>
+        <option value="2">Février</option>
+        <option value="3">Mars</option>
+        <option value="4">Avril</option>
+        <option value="5">Mai</option>
+        <option value="6">Juin</option>
+        <option value="7">Juillet</option>
+        <option value="8">Août</option>
+        <option value="9">Septembre</option>
+        <option value="10">Octobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Décembre</option>
+    </select>
+    <input type="number" id="filtre-semaine-incidents" style="display:none;" min="1" max="53" placeholder="N° semaine (1-53)" onchange="chargerListeImportsIncidents()">
+
+    <button onclick="reinitialiserFiltresImportsIncidents()">Réinitialiser</button>
+</div>
 <div id="liste-imports-incidents">
     <!-- rempli dynamiquement -->
 </div>
@@ -59,7 +85,7 @@
         <tr>
             <th>ID</th><th>Description</th><th>Reported Date</th><th>Severity</th>
             <th>Impact</th><th>Affected Service</th><th>Root Cause</th><th>Action</th>
-            <th>Duration</th><th>RCA Status</th><th>Owner Email</th><th>Statut</th>
+            <th>Duration</th><th>RCA Status</th><th>Owner Email</th>
             <th>RCA</th><th>Actions</th>
         </tr>
     </thead>

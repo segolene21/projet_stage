@@ -48,6 +48,7 @@ if (formService) {
                 document.getElementById('liste-services').appendChild(li);
                 document.getElementById('modale-ajout-service').style.display = 'none';
                 formService.reset();
+                afficherToast('Service ajouté', 'succes');
             } else {
                 document.getElementById('message-erreur-service').textContent = JSON.stringify(data.erreurs);
             }
@@ -56,9 +57,8 @@ if (formService) {
 }
 
 
-
-function supprimerService(serviceId, url) {
-    if (!confirm('Supprimer ce service ?')) return;
+async function supprimerService(serviceId, url) {
+    if (!(await confirmerAction('Supprimer ce service ?'))) return;
 
     fetch(url, {
         method: 'POST',
@@ -70,13 +70,14 @@ function supprimerService(serviceId, url) {
     .then(data => {
         if (data.succes) {
             document.getElementById('service-' + serviceId).remove();
+            afficherToast('Service supprimé', 'succes');
         } else {
-            alert(data.erreur || 'Impossible de supprimer le service.');
+            afficherToast(data.erreur || 'Impossible de supprimer le service.', 'erreur');
         }
     })
     .catch(error => {
         console.error('Erreur suppression service :', error);
-        alert('Erreur réseau lors de la suppression du service.');
+        afficherToast('Erreur réseau lors de la suppression du service.', 'erreur');
     });
 }
 
@@ -116,16 +117,18 @@ function modifierService(serviceId, url) {
             if (modale) {
                 modale.style.display = 'none';
             }
+            sessionStorage.setItem('toast_message', 'Service modifié');
+            sessionStorage.setItem('toast_type', 'succes');
             setTimeout(function() {
                 window.location.reload();
             }, 300);
         } else {
-            alert(data.erreurs ? JSON.stringify(data.erreurs) : 'Impossible de modifier le service.');
+            afficherToast(data.erreurs ? JSON.stringify(data.erreurs) : 'Impossible de modifier le service.', 'erreur');
         }
     })
     .catch(error => {
         console.error('Erreur fetch :', error);
-        alert('Erreur réseau lors de la modification du service.');
+        afficherToast('Erreur réseau lors de la modification du service.', 'erreur');
     });
 }
 

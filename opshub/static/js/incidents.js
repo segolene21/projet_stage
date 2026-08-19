@@ -93,12 +93,93 @@ async function confirmerImportIncidents() {
 
 // --- Liste des imports ---
 
+let tooltipApercu = null;
+
+function creerTooltipApercu() {
+    if (tooltipApercu) return tooltipApercu;
+    tooltipApercu = document.createElement('div');
+    tooltipApercu.id = 'tooltip-apercu-import';
+    tooltipApercu.style.cssText = `
+        position: fixed;
+        display: none;
+        background: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 6px;
+        padding: 10px;
+        z-index: 1000;
+        max-width: 700px;
+        max-height: 400px;
+        overflow: auto;
+        font-size: 12px;
+    `;
+    document.body.appendChild(tooltipApercu);
+    return tooltipApercu;
+}
+
+function afficherTooltip(evenement, apercu) {
+    const tooltip = creerTooltipApercu();
+
+    let html = '<table style="border-collapse:collapse; width:100%;">';
+    html += '<tr><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">ID</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Description</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Severity</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">Owner</th><th style="text-align:left; padding:4px; border-bottom:1px solid #ccc;">RCA</th></tr>';
+
+    apercu.forEach(i => {
+        html += `<tr>
+            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(i.incident_id)}</td>
+            <td style="padding:4px; border-bottom:1px solid #eee; max-width:250px;">${echapperHtml(i.description)}</td>
+            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(i.severite)}</td>
+            <td style="padding:4px; border-bottom:1px solid #eee;">${echapperHtml(i.owner_email)}</td>
+            <td style="padding:4px; border-bottom:1px solid #eee;">${i.rca_present ? 'Oui' : 'Non'}</td>
+        </tr>`;
+    });
+    html += '</table>';
+
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+
+    positionnerTooltip(evenement);
+}
+
+function positionnerTooltip(evenement) {
+    if (!tooltipApercu) return;
+    const marge = 12;
+    let x = evenement.clientX + marge;
+    let y = evenement.clientY + marge;
+
+    const largeurTooltip = tooltipApercu.offsetWidth;
+    const hauteurTooltip = tooltipApercu.offsetHeight;
+
+    if (x + largeurTooltip > window.innerWidth) {
+        x = evenement.clientX - largeurTooltip - marge;
+    }
+    if (y + hauteurTooltip > window.innerHeight) {
+        y = evenement.clientY - hauteurTooltip - marge;
+    }
+
+    tooltipApercu.style.left = `${x}px`;
+    tooltipApercu.style.top = `${y}px`;
+}
+
+function cacherTooltip() {
+    if (tooltipApercu) tooltipApercu.style.display = 'none';
+}
 async function chargerListeImportsIncidents(recherche = '') {
     const zone = document.getElementById('liste-imports-incidents');
     if (!zone) return;
 
+    const periodeType = document.getElementById('filtre-periode-type-incidents')?.value || '';
+    const annee = document.getElementById('filtre-annee-incidents')?.value || '';
+    const mois = document.getElementById('filtre-mois-incidents')?.value || '';
+    const semaine = document.getElementById('filtre-semaine-incidents')?.value || '';
+
+    const params = new URLSearchParams();
+    if (periodeType) params.set('periode_type', periodeType);
+    if (annee) params.set('annee', annee);
+    if (mois) params.set('mois', mois);
+    if (semaine) params.set('semaine', semaine);
+
     try {
-        const res = await fetch('/api/incidents-imports/', { cache: 'no-store' });
+        const res = await fetch(`/api/incidents-imports/?${params.toString()}`, { cache: 'no-store' });
         if (res.status === 403) {
             zone.innerHTML = '<p>Accès interdit</p>';
             return;
@@ -116,14 +197,17 @@ async function chargerListeImportsIncidents(recherche = '') {
 
         zone.innerHTML = '';
         imports.forEach(imp => {
-            const bloc = document.createElement('div');
-            bloc.className = 'bloc-import';
+            const ligne = document.createElement('div');
+            ligne.className = 'ligne-import';
+            ligne.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; cursor:default;';
 
-            const header = document.createElement('div');
-            header.className = 'bloc-import-header';
+            const titreZone = document.createElement('div');
+            titreZone.innerHTML = `<strong>${echapperHtml(imp.titre)}</strong> <span style="font-size:11px; color:#888;">(${imp.nombre_incidents} incidents — ${imp.cree_le})</span>`;
+            titreZone.style.cursor = 'help';
 
-            const titre = document.createElement('h3');
-            titre.innerHTML = `${echapperHtml(imp.titre)} <span style="font-size:11px; color:#888;">(${imp.nombre_incidents} incidents — ${imp.cree_le})</span>`;
+            titreZone.addEventListener('mouseenter', (e) => afficherTooltip(e, imp.apercu));
+            titreZone.addEventListener('mousemove', (e) => positionnerTooltip(e));
+            titreZone.addEventListener('mouseleave', cacherTooltip);
 
             const actions = document.createElement('div');
             const btnVoir = document.createElement('button');
@@ -140,41 +224,13 @@ async function chargerListeImportsIncidents(recherche = '') {
             btnSupprimer.addEventListener('click', () => supprimerLotIncidents(imp.id));
 
             actions.append(btnVoir, btnTelecharger, btnSupprimer);
-            header.append(titre, actions);
-
-            const table = document.createElement('table');
-            const thead = document.createElement('thead');
-            thead.innerHTML = '<tr><th>ID</th><th>Description</th><th>Severity</th><th>Owner</th><th>Statut</th><th>RCA</th></tr>';
-            const tbody = document.createElement('tbody');
-
-            imp.apercu.forEach(i => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${echapperHtml(i.incident_id)}</td>
-                    <td style="max-width:300px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.description)}</td>
-                    <td>${echapperHtml(i.severite)}</td>
-                    <td>${echapperHtml(i.owner_email)}</td>
-                    <td>${echapperHtml(i.statut)}</td>
-                    <td>${i.rca_present ? 'Oui' : 'Non'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            table.append(thead, tbody);
-            bloc.append(header, table);
-            zone.appendChild(bloc);
+            ligne.append(titreZone, actions);
+            zone.appendChild(ligne);
         });
     } catch (erreur) {
         console.error('Erreur de chargement des imports :', erreur);
         zone.innerHTML = '<p>Erreur de chargement</p>';
     }
-}
-
-let timerRechercheImportsIncidents = null;
-function rechercherImportsIncidents() {
-    clearTimeout(timerRechercheImportsIncidents);
-    const valeur = document.getElementById('recherche-import-incidents').value;
-    timerRechercheImportsIncidents = setTimeout(() => chargerListeImportsIncidents(valeur), 300);
 }
 
 async function supprimerLotIncidents(lotId) {
@@ -447,4 +503,35 @@ function afficherIncidentsEnLecture() {
 
         corps.appendChild(tr);
     });
+}
+function changerTypeFiltreIncidents() {
+    const type = document.getElementById('filtre-periode-type-incidents').value;
+    const selectAnnee = document.getElementById('filtre-annee-incidents');
+    const selectMois = document.getElementById('filtre-mois-incidents');
+    const inputSemaine = document.getElementById('filtre-semaine-incidents');
+
+    selectAnnee.style.display = (type === 'annee' || type === 'mois' || type === 'semaine') ? 'inline-block' : 'none';
+    selectMois.style.display = (type === 'mois') ? 'inline-block' : 'none';
+    inputSemaine.style.display = (type === 'semaine') ? 'inline-block' : 'none';
+
+    if (selectAnnee.options.length === 0) {
+        const anneeActuelle = new Date().getFullYear();
+        for (let a = anneeActuelle; a >= anneeActuelle - 5; a--) {
+            const option = document.createElement('option');
+            option.value = a;
+            option.textContent = a;
+            selectAnnee.appendChild(option);
+        }
+    }
+
+    chargerListeImportsIncidents();
+}
+
+function reinitialiserFiltresImportsIncidents() {
+    document.getElementById('filtre-periode-type-incidents').value = '';
+    document.getElementById('filtre-annee-incidents').style.display = 'none';
+    document.getElementById('filtre-mois-incidents').style.display = 'none';
+    document.getElementById('filtre-semaine-incidents').style.display = 'none';
+    document.getElementById('filtre-semaine-incidents').value = '';
+    chargerListeImportsIncidents();
 }

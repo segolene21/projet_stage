@@ -34,13 +34,12 @@ function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url, eq
     document.getElementById('modale-ajout').style.display = 'flex';
 }
 
-
 // ===============================
 // SUPPRESSION OUTIL
 // ===============================
 
-function supprimerOutil(outilId, url) {
-    if (!confirm("Supprimer cet outil ?")) {
+async function supprimerOutil(outilId, url) {
+    if (!(await confirmerAction("Supprimer cet outil ?"))) {
         return;
     }
 
@@ -57,12 +56,13 @@ function supprimerOutil(outilId, url) {
             if (element) {
                 element.remove();
             }
+            afficherToast("Outil supprimé", "succes");
         } else {
-            alert(data.erreur);
+            afficherToast(data.erreur, "erreur");
         }
     })
     .catch(() => {
-        alert("Erreur réseau.");
+        afficherToast("Erreur réseau.", "erreur");
     });
 }
 
@@ -162,6 +162,7 @@ if (formOutil) {
         e.preventDefault();
 
         const formData = new FormData(this);
+        const estModification = !!document.getElementById('champ-outil-id').value;
 
         fetch(this.dataset.url, {
             method: "POST",
@@ -175,6 +176,8 @@ if (formOutil) {
             if (data.succes) {
                 document.getElementById('modale-ajout').style.display = "none";
                 formOutil.reset();
+                sessionStorage.setItem('toast_message', estModification ? 'Outil modifié' : 'Outil ajouté');
+                sessionStorage.setItem('toast_type', 'succes');
                 window.location.reload();
             } else {
                 document.getElementById('message-erreur').textContent = JSON.stringify(data.erreurs);
@@ -185,7 +188,6 @@ if (formOutil) {
         });
     });
 }
-
 
 // rendre les fonctions accessibles depuis le HTML
 

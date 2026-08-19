@@ -14,10 +14,10 @@
     {% endif %}
 </div>
 
-<input type="text" id="recherche-import" class="search-input"
-    placeholder="Rechercher un import par titre..."
-    oninput="rechercherImports()" style="margin-bottom:16px;"/>
-    <div class="filtres-imports">
+<div class="filtres-recherche">
+    <input type="text" id="recherche-import" class="search-input"
+        placeholder="Rechercher un import par titre..."
+        oninput="rechercherImports()"/>
     <select id="filtre-periode-type" onchange="changerTypeFiltre()">
         <option value="">Toutes les périodes</option>
         <option value="annee">Par année</option>
@@ -42,7 +42,7 @@
     </select>
     <input type="number" id="filtre-semaine" style="display:none;" min="1" max="53" placeholder="N° semaine (1-53)" onchange="rechercherImports()">
 
-    <button onclick="reinitialiserFiltresImports()">Réinitialiser</button>
+    <a href="#" class="btn-filtre-reset" onclick="reinitialiserFiltresImports(); return false;">Réinitialiser</a>
 </div>
 
 <div id="liste-imports" style="margin-top:20px;">
@@ -98,11 +98,11 @@
            <button class="btn-delete" onclick="supprimerLotActuel()">Supprimer</button>
            <button id="btn-modifier-global" class="btn-edit" onclick="activerModeEditionGlobal()">Modifier</button>
     <button id="btn-enregistrer-global" class="btn-edit" onclick="enregistrerModificationsGlobales()" style="display:none;">Enregistrer</button>
-    <button id="btn-annuler-global" onclick="annulerModificationsGlobales()" style="display:none;">Annuler</button>
+    <button class="btn-secondary" id="btn-annuler-global" onclick="annulerModificationsGlobales()" style="display:none;">Annuler</button>
 
         </div>
         <table id="tableau-tickets">
-            <div class="filtres-tickets">
+            <div class="filtres-recherche">
     <input type="text" id="recherche-ticket-modale" placeholder="Rechercher dans cet import..." oninput="rechercherDansModale()" />
     
 
@@ -117,5 +117,5 @@
         </table>
 
         
-
+<script src="{% static 'js/tickets.js' %}"></script>
 {% endblock %}

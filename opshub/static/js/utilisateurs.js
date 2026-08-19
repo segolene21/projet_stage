@@ -1,4 +1,3 @@
-
 const formUtilisateur = document.getElementById('form-utilisateur');
 
 if (formUtilisateur) {
@@ -14,6 +13,8 @@ if (formUtilisateur) {
         .then(response => response.json())
         .then(data => {
             if (data.succes) {
+                sessionStorage.setItem('toast_message', 'Utilisateur enregistré');
+                sessionStorage.setItem('toast_type', 'succes');
                 location.reload();
             } else {
                 document.getElementById('message-erreur-utilisateur').textContent = JSON.stringify(data.erreurs);
@@ -32,15 +33,16 @@ function toggleStatut(userId, url) {
     .then(data => {
         if (data.succes) {
             document.getElementById('statut-' + userId).textContent = data.actif ? 'Actif' : 'Inactif';
+            afficherToast(data.actif ? 'Utilisateur activé' : 'Utilisateur désactivé', 'succes');
         } else {
-            alert(data.erreur);
+            afficherToast(data.erreur, 'erreur');
         }
     });
 }
 
 
-function supprimerUtilisateur(userId, url) {
-    if (!confirm('Supprimer cet utilisateur ?')) return;
+async function supprimerUtilisateur(userId, url) {
+    if (!(await confirmerAction('Supprimer cet utilisateur ?'))) return;
 
     fetch(url, {
         method: 'POST',
@@ -50,8 +52,9 @@ function supprimerUtilisateur(userId, url) {
     .then(data => {
         if (data.succes) {
             document.getElementById('user-' + userId).remove();
+            afficherToast('Utilisateur supprimé', 'succes');
         } else {
-            alert(data.erreur);
+            afficherToast(data.erreur, 'erreur');
         }
     });
 }
