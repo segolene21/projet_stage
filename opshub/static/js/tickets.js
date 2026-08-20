@@ -318,35 +318,58 @@ async function supprimerLot(lotId) {
         console.error(erreur);
     }
 }
-
 async function chargerTicketsDuLot(recherche = '') {
     const corps = document.getElementById('corps-tableau-tickets');
     if (!corps || !lotActuelId) return;
 
+    const assigneA = document.getElementById('filtre-assigned-to')?.value || '';
+    const params = new URLSearchParams();
+    if (recherche) params.set('q', recherche);
+    if (assigneA) params.set('assigned_to', assigneA);
+
     try {
-        const url = recherche
-            ? `/api/imports/${lotActuelId}/tickets/?q=${encodeURIComponent(recherche)}`
-            : `/api/imports/${lotActuelId}/tickets/`;
-        const res = await fetch(url);
+        const url = `/api/imports/${lotActuelId}/tickets/?${params.toString()}`;
+        const res = await fetch(url, { cache: 'no-store' });
         if (res.status === 403) {
-            corps.innerHTML = '<tr><td colspan="7">Accès interdit</td></tr>';
+            corps.innerHTML = '<tr><td colspan="8">Accès interdit</td></tr>';
             return;
         }
         const data = await res.json();
         ticketsActuels = data.tickets || [];
 
+        remplirFiltreAssignation(data.repartition || [], assigneA);
+
         if (ticketsActuels.length === 0) {
-            corps.innerHTML = '<tr><td colspan="7">Aucun ticket</td></tr>';
+            corps.innerHTML = '<tr><td colspan="8">Aucun ticket trouvé</td></tr>';
             return;
         }
 
         afficherTicketsEnLecture();
     } catch (erreur) {
         console.error('Erreur de chargement des tickets :', erreur);
-        corps.innerHTML = '<tr><td colspan="7">Erreur de chargement</td></tr>';
+        corps.innerHTML = '<tr><td colspan="8">Erreur de chargement</td></tr>';
     }
 }
 
+function remplirFiltreAssignation(repartition, valeurSelectionnee) {
+    const select = document.getElementById('filtre-assigned-to');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Tous les assignés</option>';
+    repartition.forEach(r => {
+        const option = document.createElement('option');
+        option.value = r.assigned_to;
+        option.textContent = `${r.assigned_to} (${r.total})`;
+        select.appendChild(option);
+    });
+    select.value = valeurSelectionnee;
+
+    const compteur = document.getElementById('compteur-assignation');
+    if (compteur) {
+        const total = repartition.reduce((somme, r) => somme + r.total, 0);
+        compteur.textContent = `${repartition.length} personnes assignées, ${total} tickets au total`;
+    }
+}
 function afficherTicketsEnLecture() {
     const corps = document.getElementById('corps-tableau-tickets');
     corps.innerHTML = '';
@@ -428,46 +451,78 @@ function annulerModificationsGlobales() {
 }
 
 async function enregistrerModificationsGlobales() {
+    const btn = document.getElementById('btn-enregistrer-global');
     const corps = document.getElementById('corps-tableau-tickets');
     const lignes = corps.querySelectorAll('tr');
+    const champsEditables = ['ticket_id', 'state', 'requester', 'assigned_to', 'details', 'feedback'];
+
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement...';
+
     const requetes = [];
 
     lignes.forEach(tr => {
         const pk = tr.dataset.pk;
+        const ticketOriginal = ticketsActuels.find(t => String(t.id) === String(pk));
+        if (!ticketOriginal) return;
+
         const donnees = {};
-        tr.querySelectorAll('[data-champ]').forEach(td => {
-            const input = td.querySelector('input, textarea');
-            if (input) donnees[input.dataset.champ] = input.value;
+        let aChange = false;
+
+        champsEditables.forEach(champ => {
+            const td = tr.querySelector(`[data-champ="${champ}"]`);
+            const input = td?.querySelector('input, textarea');
+            if (!input) return;
+
+            const nouvelleValeur = input.value;
+            if (nouvelleValeur !== (ticketOriginal[champ] || '')) {
+                donnees[champ] = nouvelleValeur;
+                aChange = true;
+            }
         });
 
-        requetes.push(
-            fetch(`/api/tickets/${pk}/`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(donnees),
-            }).then(res => res.json().then(data => ({ ok: res.ok, pk, data })))
-        );
+        // N'envoie une requête que si quelque chose a réellement changé sur cette ligne
+        if (aChange) {
+            requetes.push(
+                fetch(`/api/tickets/${pk}/`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(donnees),
+                }).then(res => res.json().then(data => ({ ok: res.ok, pk, data })))
+            );
+        }
     });
+
+    if (requetes.length === 0) {
+        // Rien n'a changé, pas besoin de recharger
+        document.getElementById('btn-modifier-global').style.display = '';
+        btn.style.display = 'none';
+        document.getElementById('btn-annuler-global').style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = 'Enregistrer';
+        return;
+    }
 
     try {
         const resultats = await Promise.all(requetes);
         const echecs = resultats.filter(r => !r.ok);
 
         if (echecs.length > 0) {
-            afficherToast(`${echecs.length} ligne(s) n'ont pas pu être enregistrées : ${echecs.map(e => e.data.erreur).join(', ')}`, 'erreur');
-        } else {
-            afficherToast('Modifications enregistrées', 'succes');
+            alert(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`);
         }
 
         document.getElementById('btn-modifier-global').style.display = '';
-        document.getElementById('btn-enregistrer-global').style.display = 'none';
+        btn.style.display = 'none';
         document.getElementById('btn-annuler-global').style.display = 'none';
 
         await chargerTicketsDuLot();
         await chargerListeImports();
     } catch (erreur) {
-        afficherToast('Erreur : ' + erreur.message, 'erreur');
+        alert('Erreur : ' + erreur.message);
         console.error(erreur);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enregistrer';
     }
 }
 

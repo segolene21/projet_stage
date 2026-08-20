@@ -789,6 +789,7 @@ def supprimer_lot(request, lot_id):
 @login_required
 def tickets_du_lot(request, lot_id):
     q = request.GET.get('q', '').strip()
+    assigne_a = request.GET.get('assigned_to', '').strip()
 
     try:
         lot = ImportLot.objects.get(id=lot_id)
@@ -804,6 +805,9 @@ def tickets_du_lot(request, lot_id):
             Q(feedback__icontains=q) | Q(assigned_to__icontains=q)
         )
 
+    if assigne_a:
+        qs = qs.filter(assigned_to=assigne_a)
+
     tickets = []
     for t in qs:
         tickets.append({
@@ -812,7 +816,15 @@ def tickets_du_lot(request, lot_id):
             "modifie_le": timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M"),
         })
 
-    return JsonResponse({"titre": lot.titre, "tickets": tickets})
+    # Décompte par personne assignée (pour peupler le filtre + afficher les chiffres)
+    from django.db.models import Count
+    repartition = list(
+        lot.tickets.exclude(assigned_to='').values('assigned_to')
+        .annotate(total=Count('id')).order_by('-total')
+    )
+
+    return JsonResponse({"titre": lot.titre, "tickets": tickets, "repartition": repartition})
+
 
 
 import json
