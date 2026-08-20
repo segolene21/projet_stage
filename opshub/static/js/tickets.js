@@ -359,6 +359,7 @@ function afficherTicketsEnLecture() {
             <td data-champ="ticket_id">${echapperHtml(t.ticket_id)}</td>
             <td data-champ="state">${echapperHtml(t.state)}</td>
             <td data-champ="requester">${echapperHtml(t.requester)}</td>
+            <td data-champ="assigned_to">${echapperHtml(t.assigned_to)}</td>
             <td data-champ="details" style="max-width:300px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(t.details)}</td>
             <td data-champ="feedback">${echapperHtml(t.feedback)}</td>
             <td>${echapperHtml(t.modifie_le)}</td>
@@ -371,7 +372,7 @@ function afficherTicketsEnLecture() {
 
 function activerModeEditionGlobal() {
     const corps = document.getElementById('corps-tableau-tickets');
-    const champsEditables = ['ticket_id', 'state', 'requester', 'details', 'feedback'];
+    const champsEditables = ['ticket_id', 'state', 'requester', 'assigned_to', 'details', 'feedback'];
 
     corps.querySelectorAll('tr').forEach(tr => {
         champsEditables.forEach(champ => {
