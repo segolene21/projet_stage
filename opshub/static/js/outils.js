@@ -79,7 +79,8 @@ if (champRechercheOutils) {
         const outils = document.querySelectorAll('#liste-outils li');
 
         outils.forEach(function(outil) {
-            const nom = outil.textContent.toLowerCase();
+            const lienNom = outil.querySelector('a');
+            const nom = lienNom ? lienNom.textContent.toLowerCase() : outil.textContent.toLowerCase();
             outil.style.display = nom.includes(texte) ? "" : "none";
         });
     });

@@ -92,15 +92,15 @@ async function confirmerImportIncidents() {
     }
 }
 
-// --- Liste des imports ---
+// --- Tooltip d'aperçu (ancré à la ligne survolée) ---
 
-let tooltipApercu = null;
+let tooltipApercuIncidents = null;
 
 function creerTooltipApercu() {
-    if (tooltipApercu) return tooltipApercu;
-    tooltipApercu = document.createElement('div');
-    tooltipApercu.id = 'tooltip-apercu-import';
-    tooltipApercu.style.cssText = `
+    if (tooltipApercuIncidents) return tooltipApercuIncidents;
+    tooltipApercuIncidents = document.createElement('div');
+    tooltipApercuIncidents.id = 'tooltip-apercu-import-incidents';
+    tooltipApercuIncidents.style.cssText = `
         position: fixed;
         display: none;
         background: rgb(250, 246, 224);
@@ -119,9 +119,42 @@ function creerTooltipApercu() {
         display: flex;
         flex-direction: column;
     `;
-    document.body.appendChild(tooltipApercu);
-    return tooltipApercu;
+    document.body.appendChild(tooltipApercuIncidents);
+    return tooltipApercuIncidents;
 }
+
+function positionnerTooltip(element) {
+    if (!tooltipApercuIncidents) return;
+    const rect = element.getBoundingClientRect();
+    const marge = 10;
+
+    requestAnimationFrame(() => {
+        const largeurTooltip = tooltipApercuIncidents.offsetWidth;
+
+        let left = rect.left;
+        left = Math.min(left, window.innerWidth - largeurTooltip - marge);
+        left = Math.max(left, marge);
+
+        const top = rect.bottom + marge;
+
+        tooltipApercuIncidents.style.left = `${left}px`;
+        tooltipApercuIncidents.style.top = `${top}px`;
+        tooltipApercuIncidents.style.opacity = '1';
+        tooltipApercuIncidents.style.transform = 'translateY(0)';
+    });
+}
+
+function cacherTooltip() {
+    if (!tooltipApercuIncidents) return;
+    tooltipApercuIncidents.style.opacity = '0';
+    tooltipApercuIncidents.style.transform = 'translateY(-8px)';
+    setTimeout(() => {
+        if (tooltipApercuIncidents.style.opacity === '0') {
+            tooltipApercuIncidents.style.display = 'none';
+        }
+    }, 180);
+}
+
 function afficherTooltip(element, apercu) {
     const tooltip = creerTooltipApercu();
 
@@ -153,37 +186,6 @@ function afficherTooltip(element, apercu) {
 
     tooltip.style.display = 'flex';
     positionnerTooltip(element);
-}
-
-function positionnerTooltip(element) {
-    if (!tooltipApercu) return;
-    const rect = element.getBoundingClientRect();
-    const marge = 10;
-
-    requestAnimationFrame(() => {
-        const largeurTooltip = tooltipApercu.offsetWidth;
-
-        let left = rect.left;
-        left = Math.min(left, window.innerWidth - largeurTooltip - marge);
-        left = Math.max(left, marge);
-
-        const top = rect.bottom + marge;
-
-        tooltipApercu.style.left = `${left}px`;
-        tooltipApercu.style.top = `${top}px`;
-        tooltipApercu.style.opacity = '1';
-        tooltipApercu.style.transform = 'translateY(0)';
-    });
-}
-function cacherTooltip() {
-    if (!tooltipApercu) return;
-    tooltipApercu.style.opacity = '0';
-    tooltipApercu.style.transform = 'translateY(-8px)';
-    setTimeout(() => {
-        if (tooltipApercu.style.opacity === '0') {
-            tooltipApercu.style.display = 'none';
-        }
-    }, 180);
 }
 
 async function chargerListeImportsIncidents(recherche = '') {
@@ -235,8 +237,8 @@ async function chargerListeImportsIncidents(recherche = '') {
             titreZone.style.cursor = 'help';
             titreZone.innerHTML = `<strong style="font-size:15px; color:#111;">${echapperHtml(imp.titre)}</strong> <span style="font-size:11px; color:#888;">(${imp.nombre_incidents} incidents — ${imp.cree_le})</span>`;
 
-           titreZone.addEventListener('mouseenter', () => afficherTooltip(titreZone, imp.apercu));
-titreZone.addEventListener('mouseleave', cacherTooltip);
+            titreZone.addEventListener('mouseenter', () => afficherTooltip(titreZone, imp.apercu));
+            titreZone.addEventListener('mouseleave', cacherTooltip);
 
             const actions = document.createElement('div');
             actions.style.cssText = 'display:flex; gap:8px; flex-shrink:0;';
@@ -354,8 +356,6 @@ function rechercherDansModaleIncidents() {
     timerRechercheModaleIncidents = setTimeout(() => chargerIncidentsDuLot(valeur), 300);
 }
 
-const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email'];
-
 async function uploaderRca(incidentPk, fichier) {
     if (!fichier) return;
     if (!fichier.name.toLowerCase().endsWith('.pdf')) {
@@ -413,14 +413,15 @@ function activerModeEditionGlobalIncidents() {
             if (!td) return;
             const valeur = td.textContent;
 
-               if (champ === 'description') {
-    td.style.maxWidth = '350px';
-    td.style.width = '350px';
-}
-if (champ === 'impact') {
-    td.style.maxWidth = '300px';
-    td.style.width = '300px';
-}
+            if (champ === 'description') {
+                td.style.maxWidth = '350px';
+                td.style.width = '350px';
+            }
+            if (champ === 'impact') {
+                td.style.maxWidth = '300px';
+                td.style.width = '300px';
+            }
+
             let input;
             if (champ === 'statut') {
                 input = document.createElement('select');
@@ -433,13 +434,12 @@ if (champ === 'impact') {
                 });
             } else if (champ === 'description' || champ === 'impact') {
                 input = document.createElement('textarea');
+                input.value = valeur;
             } else {
                 input = document.createElement('input');
                 input.type = 'text';
+                input.value = valeur;
             }
-
-            if (champ !== 'description' && champ !== 'impact' && champ !== 'statut') input.value = valeur;
-            if (champ === 'description' || champ === 'impact') input.value = valeur;
             input.style.width = '100%';
             input.dataset.champ = champ;
 

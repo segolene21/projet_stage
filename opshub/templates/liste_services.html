@@ -11,7 +11,7 @@
         {% endif %}
     </div>
 <form method="get" class="filtres-recherche">
-    <input type="text" name="q" value="{{ requete }}" placeholder="Rechercher un service...">
+    <input type="text" name="q" id="champ_recherche_services" value="{{ requete }}" placeholder="Rechercher un service...">
 
     <select name="outil">
         <option value="">Tous les outils</option>
@@ -65,7 +65,7 @@
             </div>
         </div>
     {% endif %}
-
+      <h2 style="font-size:16px; font-weight:700; color:#FFCC00; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">Services</h2>
     <ul id="liste-services">
         {% for service in services %}
             <li id="service-{{ service.id }}">

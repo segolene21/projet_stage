@@ -4,7 +4,7 @@
 {% block content %}
 
     <div class="outils-header">
-        <h1>Outils de monitoring</h1>
+        <h1>Liste des Outils de monitoring</h1>
         <div style="display:flex; gap:10px;">
             {% if user.is_teamlead %}
                 <button class="btn-primary" onclick="ouvrirModaleAjout()" data-url-ajout="{% url 'ajouter_outil' %}">
@@ -14,7 +14,7 @@
         </div>
     </div>
 <form method="get" class="filtres-recherche">
-    <input type="text" name="q" value="{{ requete }}" placeholder="Rechercher un outil...">
+    <input type="text" name="q" id="champ_recherche_outils" value="{{ requete }}" placeholder="Rechercher un outil...">
 
     <select name="team">
         <option value="">Toutes les équipes</option>

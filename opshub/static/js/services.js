@@ -140,7 +140,8 @@ if (champRechercheServices) {
         const items = document.querySelectorAll('#liste-services li');
 
         items.forEach(function(item) {
-            const nom = item.textContent.toLowerCase();
+            const lienNom = item.querySelector('a[id^="nom-service-"]');
+            const nom = lienNom ? lienNom.textContent.toLowerCase() : item.textContent.toLowerCase();
             item.style.display = nom.includes(texte) ? '' : 'none';
         });
     });

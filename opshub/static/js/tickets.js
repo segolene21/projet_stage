@@ -209,8 +209,19 @@ async function chargerListeImports(recherche = '') {
     const zone = document.getElementById('liste-imports');
     if (!zone) return;
 
+    const periodeType = document.getElementById('filtre-periode-type')?.value || '';
+    const annee = document.getElementById('filtre-annee')?.value || '';
+    const mois = document.getElementById('filtre-mois')?.value || '';
+    const semaine = document.getElementById('filtre-semaine')?.value || '';
+
+    const params = new URLSearchParams();
+    if (periodeType) params.set('periode_type', periodeType);
+    if (annee) params.set('annee', annee);
+    if (mois) params.set('mois', mois);
+    if (semaine) params.set('semaine', semaine);
+
     try {
-        const res = await fetch('/api/imports/', { cache: 'no-store' });
+        const res = await fetch(`/api/imports/?${params.toString()}`, { cache: 'no-store' });
         if (res.status === 403) {
             zone.innerHTML = '<p class="empty-state">Accès interdit</p>';
             return;
@@ -278,6 +289,13 @@ async function chargerListeImports(recherche = '') {
         console.error('Erreur de chargement des imports :', erreur);
         zone.innerHTML = '<p class="empty-state">Erreur de chargement</p>';
     }
+}
+
+let timerRechercheImports = null;
+function rechercherImports() {
+    clearTimeout(timerRechercheImports);
+    const valeur = document.getElementById('recherche-import').value;
+    timerRechercheImports = setTimeout(() => chargerListeImports(valeur), 300);
 }
 
 // --- Modale : tableau complet d'un import, édition inline ---
@@ -569,4 +587,36 @@ async function enregistrerModificationsGlobales() {
 function supprimerLotActuel() {
     if (!lotActuelId) return;
     supprimerLot(lotActuelId);
+}
+
+function changerTypeFiltre() {
+    const type = document.getElementById('filtre-periode-type').value;
+    const selectAnnee = document.getElementById('filtre-annee');
+    const selectMois = document.getElementById('filtre-mois');
+    const inputSemaine = document.getElementById('filtre-semaine');
+
+    selectAnnee.style.display = (type === 'annee' || type === 'mois' || type === 'semaine') ? 'inline-block' : 'none';
+    selectMois.style.display = (type === 'mois') ? 'inline-block' : 'none';
+    inputSemaine.style.display = (type === 'semaine') ? 'inline-block' : 'none';
+
+    if (selectAnnee.options.length === 0) {
+        const anneeActuelle = new Date().getFullYear();
+        for (let a = anneeActuelle; a >= anneeActuelle - 5; a--) {
+            const option = document.createElement('option');
+            option.value = a;
+            option.textContent = a;
+            selectAnnee.appendChild(option);
+        }
+    }
+
+    chargerListeImports();
+}
+
+function reinitialiserFiltresImports() {
+    document.getElementById('filtre-periode-type').value = '';
+    document.getElementById('filtre-annee').style.display = 'none';
+    document.getElementById('filtre-mois').style.display = 'none';
+    document.getElementById('filtre-semaine').style.display = 'none';
+    document.getElementById('filtre-semaine').value = '';
+    chargerListeImports();
 }
