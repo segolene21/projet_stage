@@ -671,7 +671,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 @login_required
 def exporter_lot_excel(request, lot_id):
     lot = get_object_or_404(ImportLot, id=lot_id)
-    tickets = lot.tickets.all()
+    tickets = lot.tickets.all().order_by('id')
     format = request.GET.get('format', 'xlsx')
 
     if format == 'pdf':
