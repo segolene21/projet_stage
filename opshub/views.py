@@ -1198,13 +1198,12 @@ def incident_detail(request, incident_pk):
             return JsonResponse({"message": "Incident supprimé"})
 
         if request.method == 'PUT':
-            data = json.loads(request.body)
-            for champ in ('incident_id', 'description', 'severite', 'impact', 'owner_email', 'statut'):
-                if champ in data:
-                    setattr(incident, champ, data[champ])
-            incident.save()
-            return JsonResponse({"message": "Incident modifié"})
-
+         data = json.loads(request.body)
+         for champ in ('incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email'):
+             if champ in data:
+                 setattr(incident, champ, data[champ])
+        incident.save()
+        return JsonResponse({"message": "Incident modifié"})
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
