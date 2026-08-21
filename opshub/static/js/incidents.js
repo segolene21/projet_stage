@@ -405,7 +405,7 @@ async function supprimerIncident(pk) {
 
 function activerModeEditionGlobalIncidents() {
     const corps = document.getElementById('corps-tableau-incidents');
-    const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email',];
+    const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email'];
 
     corps.querySelectorAll('tr').forEach(tr => {
         champsEditables.forEach(champ => {
@@ -413,26 +413,20 @@ function activerModeEditionGlobalIncidents() {
             if (!td) return;
             const valeur = td.textContent;
 
-            if (champ === 'description') {
-                td.style.maxWidth = '350px';
-                td.style.width = '350px';
-            }
-            if (champ === 'impact') {
-                td.style.maxWidth = '300px';
-                td.style.width = '300px';
-            }
-
             let input;
-            if (champ === 'statut') {
+            if (champ === 'statut_rca') {
                 input = document.createElement('select');
-                ['ouvert', 'en_cours', 'resolu', 'ferme'].forEach(val => {
+                [
+                    ['provided', 'Provided'],
+                    ['not_provided', 'Not Provided'],
+                ].forEach(([val, label]) => {
                     const option = document.createElement('option');
                     option.value = val;
-                    option.textContent = val;
-                    if (val === valeur) option.selected = true;
+                    option.textContent = label;
+                    if (label === valeur) option.selected = true;
                     input.appendChild(option);
                 });
-            } else if (champ === 'description' || champ === 'impact') {
+            } else if (champ === 'description' || champ === 'impact' || champ === 'root_cause' || champ === 'action_resolution' || champ === 'affected_service') {
                 input = document.createElement('textarea');
                 input.value = valeur;
             } else {
@@ -440,26 +434,17 @@ function activerModeEditionGlobalIncidents() {
                 input.type = 'text';
                 input.value = valeur;
             }
+
             input.style.width = '100%';
+            input.style.boxSizing = 'border-box';
             input.dataset.champ = champ;
 
-            if (champ === 'description' || champ === 'impact') {
-                input.style.resize = 'none';
-                input.style.overflow = 'hidden';
-                input.style.fontFamily = 'inherit';
-                input.style.fontSize = 'inherit';
-                input.style.padding = '6px';
-                input.style.boxSizing = 'border-box';
-                input.style.lineHeight = '1.4';
-
-                const ajusterHauteur = () => {
-                    input.style.height = 'auto';
-                    input.style.height = input.scrollHeight + 'px';
-                };
-                input.addEventListener('input', ajusterHauteur);
-                requestAnimationFrame(ajusterHauteur);
+            if (champ === 'incident_id') {
+                input.style.minWidth = '110px';
+                input.style.fontWeight = 'bold';
             }
 
+            td.style.minWidth = champ === 'incident_id' ? '120px' : '';
             td.textContent = '';
             td.appendChild(input);
         });
