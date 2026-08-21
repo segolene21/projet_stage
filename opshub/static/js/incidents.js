@@ -405,7 +405,7 @@ async function supprimerIncident(pk) {
 
 function activerModeEditionGlobalIncidents() {
     const corps = document.getElementById('corps-tableau-incidents');
-    const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'owner_email', 'statut'];
+    const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email',];
 
     corps.querySelectorAll('tr').forEach(tr => {
         champsEditables.forEach(champ => {

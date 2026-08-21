@@ -533,7 +533,6 @@ from .models import Ticket, ImportLot, Permission
 def page_tickets(request):
     return render(request, 'liste_tickets.html')
 
-
 @csrf_exempt
 def import_tickets_excel(request):
     if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_TICKETS):
@@ -560,23 +559,22 @@ def import_tickets_excel(request):
     lot = ImportLot.objects.create(titre=titre, cree_par=request.user)
 
     count = 0
-    dernier_ticket = None
     for row in ws.iter_rows(min_row=2, values_only=True):
-        ticket_id, state, requester, details = row[:4]
+        valeurs = list(row) + [None] * 12
+        (number, _short_desc, description, _priority, _created, created_by,
+         _assignment_group, assigned_to, state, _updated, _updated_by, _comments) = valeurs[:12]
 
-        if not ticket_id:
-            if dernier_ticket and details:
-                dernier_ticket.details = (dernier_ticket.details + "\n" + str(details)).strip()
-                dernier_ticket.save(update_fields=["details"])
+        if not number:
             continue
 
-        ticket_id_str = str(ticket_id)
-        dernier_ticket = Ticket.objects.create(
+        ticket_id_str = str(number)
+        Ticket.objects.create(
             import_lot=lot,
             ticket_id=ticket_id_str,
             state=state or "",
-            requester=requester or "",
-            details=details or "",
+            requester=created_by or "",
+            assigned_to=assigned_to or "",
+            details=description or "",
             feedback=feedbacks.get(ticket_id_str, ""),
         )
         count += 1
@@ -630,19 +628,20 @@ def _generer_pdf(tickets, response):
         leftMargin=1*cm, rightMargin=1*cm, topMargin=1*cm, bottomMargin=1*cm
     )
 
-    donnees = [["ID", "State", "Requester", "Details", "Feedback", "Modifié le"]]
+    donnees = [["ID", "State", "Requester", "Assigned to", "Details", "Feedback", "Modifié le"]]
 
     for t in tickets:
         donnees.append([
             Paragraph(t.ticket_id or "", style_cellule),
             t.state,
             Paragraph(t.requester or "", style_cellule),
+            Paragraph(t.assigned_to or "", style_cellule),
             Paragraph(t.details or "", style_cellule),
             Paragraph(t.feedback or "", style_cellule),
             timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M") if t.modifie_le else "",
         ])
 
-    largeurs = [2.5*cm, 2.5*cm, 4*cm, 8*cm, 6*cm, 3*cm]
+    largeurs = [2.3*cm, 2.3*cm, 3*cm, 3*cm, 7*cm, 5.5*cm, 2.6*cm]
 
     tableau = Table(donnees, colWidths=largeurs, repeatRows=1)
     tableau.setStyle(TableStyle([
@@ -673,24 +672,21 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 def exporter_lot_excel(request, lot_id):
     lot = get_object_or_404(ImportLot, id=lot_id)
     tickets = lot.tickets.all()
-    format = request.GET.get('format', 'xlsx')  # <-- on lit le format demandé
+    format = request.GET.get('format', 'xlsx')
 
-    # --- Branche PDF ---
     if format == 'pdf':
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="tickets_{lot.id}.pdf"'
         _generer_pdf(tickets, response)
         return response
 
-
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Tickets"
-    ...
 
     header_font = Font(bold=True, color="FFCC00", size=11)
     header_fill = PatternFill("solid", fgColor="1A1A1A")
-    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True) # <- wrap_text=True
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
     border = Border(
         left=Side(style='thin', color='DDDDDD'),
         right=Side(style='thin', color='DDDDDD'),
@@ -698,30 +694,28 @@ def exporter_lot_excel(request, lot_id):
         bottom=Side(style='thin', color='DDDDDD')
     )
 
-    # En-têtes
-    entetes = ['ID Ticket', 'State', 'Requester', 'Details', 'Feedback', 'Modifié le']
+    entetes = ['ID Ticket', 'State', 'Requester', 'Assigned to', 'Details', 'Feedback', 'Modifié le']
     for col, entete in enumerate(entetes, 1):
         cell = ws.cell(row=1, column=col, value=entete)
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = header_align
         cell.border = border
-    ws.row_dimensions[1].height = 25 # Hauteur entete
+    ws.row_dimensions[1].height = 25
 
     fill_pair = [
-        PatternFill("solid", fgColor="FFFFFF"), # Blanc
-        PatternFill("solid", fgColor="FFF8D6"), # Beige clair
+        PatternFill("solid", fgColor="FFFFFF"),
+        PatternFill("solid", fgColor="FFF8D6"),
     ]
-    data_align = Alignment(vertical="top", wrap_text=True) # <- wrap_text=True + top
+    data_align = Alignment(vertical="top", wrap_text=True)
 
-    # Données
-    tickets = lot.tickets.all()
     for row, ticket in enumerate(tickets, 2):
         valeurs = [
             ticket.ticket_id,
             ticket.state,
             ticket.requester,
-            ticket.details, 
+            ticket.assigned_to,
+            ticket.details,
             ticket.feedback,
             timezone.localtime(ticket.modifie_le).strftime('%d/%m/%Y %H:%M') if ticket.modifie_le else '',
         ]
@@ -731,22 +725,19 @@ def exporter_lot_excel(request, lot_id):
             cell.alignment = data_align
             cell.border = border
 
-    # LARGEUR COLONNES FIXE comme le tableau bleu - plus de auto
-    ws.column_dimensions['A'].width = 18 # ID Ticket
-    ws.column_dimensions['B'].width = 16 # State
-    ws.column_dimensions['C'].width = 22 # Requester
-    ws.column_dimensions['D'].width = 55 # Details <- LARGE
-    ws.column_dimensions['E'].width = 40 # Feedback
-    ws.column_dimensions['F'].width = 20 # Modifié le
+    ws.column_dimensions['A'].width = 18  # ID Ticket
+    ws.column_dimensions['B'].width = 16  # State
+    ws.column_dimensions['C'].width = 22  # Requester
+    ws.column_dimensions['D'].width = 22  # Assigned to
+    ws.column_dimensions['E'].width = 50  # Details
+    ws.column_dimensions['F'].width = 35  # Feedback
+    ws.column_dimensions['G'].width = 20  # Modifié le
 
-    # HAUTEUR LIGNE AUTO pour les \n
     for r in range(2, ws.max_row + 1):
-        ws.row_dimensions[r].height = None # None = auto
+        ws.row_dimensions[r].height = None
 
-    # Figer la première ligne
     ws.freeze_panes = "A2"
 
-    # Réponse HTTP
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
@@ -772,7 +763,7 @@ def ticket_detail(request, ticket_pk):
 
         if request.method == 'PUT':
           data = json.loads(request.body)
-          for champ in ('ticket_id', 'state', 'requester', 'details', 'feedback', 'modifie_le'):
+          for champ in ('ticket_id', 'state', 'requester', 'assigned_to', 'details', 'feedback', 'modifie_le'):
               if champ in data:
                   setattr(ticket, champ, data[champ])
           ticket.save()
@@ -798,9 +789,7 @@ def supprimer_lot(request, lot_id):
 @login_required
 def tickets_du_lot(request, lot_id):
     q = request.GET.get('q', '').strip()
-    state = request.GET.get('state', '').strip()
-    date_debut = request.GET.get('date_debut', '').strip()
-    date_fin = request.GET.get('date_fin', '').strip()
+    assigne_a = request.GET.get('assigned_to', '').strip()
 
     try:
         lot = ImportLot.objects.get(id=lot_id)
@@ -812,27 +801,30 @@ def tickets_du_lot(request, lot_id):
     if q:
         qs = qs.filter(
             Q(ticket_id__icontains=q) | Q(state__icontains=q) |
-            Q(requester__icontains=q) | Q(details__icontains=q) | Q(feedback__icontains=q)
+            Q(requester__icontains=q) | Q(details__icontains=q) |
+            Q(feedback__icontains=q) | Q(assigned_to__icontains=q)
         )
 
-    if state:
-        qs = qs.filter(state=state)
-
-    if date_debut:
-        qs = qs.filter(modifie_le__date__gte=date_debut)
-
-    if date_fin:
-        qs = qs.filter(modifie_le__date__lte=date_fin)
+    if assigne_a:
+        qs = qs.filter(assigned_to=assigne_a)
 
     tickets = []
     for t in qs:
         tickets.append({
             "id": t.id, "ticket_id": t.ticket_id, "state": t.state, "requester": t.requester,
-            "details": t.details, "feedback": t.feedback,
+            "assigned_to": t.assigned_to, "details": t.details, "feedback": t.feedback,
             "modifie_le": timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M"),
         })
 
-    return JsonResponse({"titre": lot.titre, "tickets": tickets})
+    # Décompte par personne assignée (pour peupler le filtre + afficher les chiffres)
+    from django.db.models import Count
+    repartition = list(
+        lot.tickets.exclude(assigned_to='').values('assigned_to')
+        .annotate(total=Count('id')).order_by('-total')
+    )
+
+    return JsonResponse({"titre": lot.titre, "tickets": tickets, "repartition": repartition})
+
 
 
 import json

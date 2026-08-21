@@ -25,6 +25,7 @@
         <option value="semaine">Par semaine</option>
     </select>
 
+
     <select id="filtre-annee" style="display:none;" onchange="rechercherImports()"></select>
     <select id="filtre-mois" style="display:none;" onchange="rechercherImports()">
         <option value="1">Janvier</option>
@@ -59,6 +60,8 @@
             <input type="text" id="titre-import" placeholder="Ex : Tickets semaine 33" />
         </div>
 
+
+        
         <div class="form-group">
             <label>Fichier Excel (ServiceNow)</label>
             <input type="file" id="fichier-ticket" accept=".xlsx"
@@ -103,14 +106,22 @@
         </div>
         <table id="tableau-tickets">
             <div class="filtres-recherche">
-    <input type="text" id="recherche-ticket-modale" placeholder="Rechercher dans cet import..." oninput="rechercherDansModale()" />
+    <input type="text" id="recherche-ticket-modale" placeholder="Rechercher..." oninput="rechercherDansModale()" />
+    <select id="filtre-assigned-to" onchange="rechercherDansModale()">
+        <option value="">Tous les assignés</option>
+        <!-- rempli dynamiquement -->
+    </select>
+    <span id="compteur-assignation" style="font-size:12px; color:#888;"></span>
+</div>
     
 
 </div>
             <thead>
                 <tr>
-                    <th>ID</th><th>State</th><th>Requester</th><th>Details</th>
-                    <th>Feedback</th><th>Modifié le</th><th>Actions</th>
+                    <tr>
+    <th>ID</th><th>State</th><th>Requester</th><th>Assigned to</th><th>Details</th>
+    <th>Feedback</th><th>Modifié le</th><th>Actions</th>
+</tr>
                 </tr>
             </thead>
             <tbody id="corps-tableau-tickets"></tbody>

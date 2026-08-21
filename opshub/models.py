@@ -207,6 +207,7 @@ class Ticket(models.Model):
     ticket_id = models.CharField(max_length=50, verbose_name="ID")
     state = models.CharField(max_length=50, verbose_name="State")
     requester = models.CharField(max_length=150, verbose_name="Requester")
+    assigned_to = models.CharField(max_length=150, blank=True, verbose_name="Assigned to")
     details = models.TextField(verbose_name="Details")
     feedback = models.TextField(blank=True, null=True, verbose_name="Feedback")
     cree_le = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
