@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 <a href="{% url 'liste_outils' %}" class="back-link">← Retour à la liste des outils</a>
+<div class ="page-centree">
+
     <div class="detail-card">
         <h1>{{ outil.nom }}</h1>
 
@@ -27,9 +30,13 @@
        <div class="detail-row">
     <span class="detail-label">Équipe</span>
     {% if outil.outil_team %}
-        <a href="{% url 'detail_outil_team' outil.outil_team.id %}" class="detail-link">{{ outil.outil_team.nom }}</a>
+       <a href="{% url 'detail_outil_team' outil.outil_team.id %}?depuis_outil={{ outil.id }}" class="detail-link">{{ outil.outil_team.nom }}</a>
     {% else %}
         <span>—</span>
     {% endif %}
 </div>
+
+    </div>
+</div>
+    
 {% endblock %}

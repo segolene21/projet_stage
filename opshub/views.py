@@ -1071,6 +1071,11 @@ def _generer_pdf_incidents(incidents, response):
     doc.build([tableau])
 
 
+
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
+
+
 @login_required
 def export_lot_incidents(request, lot_id):
     format_export = request.GET.get('format', 'xlsx')
@@ -1106,6 +1111,44 @@ def export_lot_incidents(request, lot_id):
             "Oui" if i.rca_present else "Non",
         ])
 
+    # ---------- STYLE ----------
+
+    couleur_entete_fond = "000000"    # noir
+    couleur_entete_texte = "FFC000"   # orange
+    couleur_ligne_alt = "FFF2CC"      # jaune pâle
+    police_nom = "Arial"
+
+    font_entete = Font(name=police_nom, bold=True, color=couleur_entete_texte, size=11)
+    fill_entete = PatternFill(start_color=couleur_entete_fond, end_color=couleur_entete_fond, fill_type="solid")
+    fill_alt = PatternFill(start_color=couleur_ligne_alt, end_color=couleur_ligne_alt, fill_type="solid")
+
+    bordure_fine = Side(style="thin", color="B7B7B7")
+    bordure = Border(left=bordure_fine, right=bordure_fine, top=bordure_fine, bottom=bordure_fine)
+
+    nb_colonnes = len(entetes)
+    nb_lignes = ws.max_row
+
+    # Ligne d'en-tête
+    for col in range(1, nb_colonnes + 1):
+        cellule = ws.cell(row=1, column=col)
+        cellule.font = font_entete
+        cellule.fill = fill_entete
+        cellule.border = bordure
+        cellule.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    ws.row_dimensions[1].height = 28
+
+    # Lignes de données : bordures + alignement + alternance de couleur (1 ligne sur 2)
+    for row in range(2, nb_lignes + 1):
+        est_alt = (row % 2 == 0)
+        for col in range(1, nb_colonnes + 1):
+            cellule = ws.cell(row=row, column=col)
+            cellule.font = Font(name=police_nom, size=10)
+            cellule.border = bordure
+            cellule.alignment = Alignment(wrap_text=True, vertical="top")
+            if est_alt:
+                cellule.fill = fill_alt
+
     # Largeurs de colonnes adaptées au contenu
     largeurs_colonnes = {
         'A': 18, 'B': 40, 'C': 18, 'D': 10, 'E': 30, 'F': 30,
@@ -1114,11 +1157,8 @@ def export_lot_incidents(request, lot_id):
     for lettre, largeur in largeurs_colonnes.items():
         ws.column_dimensions[lettre].width = largeur
 
-    # Retour à la ligne automatique + alignement en haut pour toutes les cellules
-    from openpyxl.styles import Alignment
-    for ligne in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(entetes)):
-        for cellule in ligne:
-            cellule.alignment = Alignment(wrap_text=True, vertical='top')
+    # Ligne d'en-tête figée
+    ws.freeze_panes = "A2"
 
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f'attachment; filename="{nom_base}.xlsx"'

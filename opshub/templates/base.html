@@ -32,11 +32,14 @@
             {% block nav %}
             <ul>
                 <li><a href="{% url 'liste_outils' %}" class="nav-item"><img src="{% static 'img/Image de fond/outil.jpg' %}" class="nav-icon" alt=""> Outils</a></li>
-                <li><a href="{% url 'page_tickets' %}" class="nav-item"><i class="bi bi-ticket-perforated nav-icon" style="font-size:18px; margin-right:8px;"></i> Tickets Requests</a></li>
-                <li><a href="{% url 'liste_incidents' %}" class="nav-item"><img src="{% static 'img/Image de fond/incident.jpg' %}" class="nav-icon" alt=""> Incidents</a></li>
+                
+               
                 <li><a href="{% url 'liste_services' %}" class="nav-item"><img src="{% static 'img/Image de fond/services .jpg' %}" class="nav-icon" alt=""> Services</a></li>
                 <li><a href="{% url 'liste_mots_cles' %}" class="nav-item"><img src="{% static 'img/Image de fond/mots-clés.jpg' %}" class="nav-icon" alt=""> Mots-clés</a></li>
-                <li><a href="{% url 'experiences_membres' %}" class="nav-item"><img src="{% static 'img/Image de fond/membre.jpg' %}" class="nav-icon" alt=""> Expériences Membres</a></li>
+                
+                <li><a href="{% url 'page_tickets' %}" class="nav-item"><img src="{% static 'img/Image de fond/ticket.jpg' %}" class="nav-icon" alt=""></i> Tickets Requests</a></li>
+                 <li><a href="{% url 'liste_incidents' %}" class="nav-item"><img src="{% static 'img/Image de fond/incident.jpg' %}" class="nav-icon" alt=""> Incidents & RCA</a></li>
+                 <li><a href="{% url 'experiences_membres' %}" class="nav-item"><img src="{% static 'img/Image de fond/membre.jpg' %}" class="nav-icon" alt=""> Expériences Membres</a></li>
                  {% if user.is_administrateur %} 
                 <li><a href="{% url 'liste_utilisateurs' %}" class="nav-item"><img src="{% static 'img/Image de fond/utilisateurs .jpg' %}" class="nav-icon" alt=""> Utilisateurs</a></li> 
                 {% endif %} 
@@ -48,7 +51,7 @@
                 <div class="nav-item">Connecté(e) en tant que {{ user.username }}</div>
                 <form method="post" action="{% url 'logout' %}" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="nav-item logout">⎋ Se déconnecter</button>
+                    <button type="submit" class="nav-item logout"><i class="bi bi-box-arrow-right"></i> Se déconnecter</button>
                 </form>
             {% else %}
                 <a href="{% url 'login' %}" class="nav-item">→ Se connecter</a>
@@ -65,7 +68,7 @@
                 <div class="dash-header-top">
                     <div>
                         <h2>TechCommand Center Portal</h2>
-                        <p>Connect         -        Manage        -       Simplify        -       Perform</p>
+                        <p>Gérer vos outils et services, suivre vos tickets et incidents, organiser vos mots-clés, valoriser l'expérience de vos équipes, en toute simplicité .</p>
                     </div>
                     <a href="{% url 'parametres' %}" class="header-settings-link">
                         <img src="{% static 'img/Image de fond/6624d6d3f06dfbbee42af47079bee12c.jpg' %}" class="header-settings-icon" alt="Paramètres">
@@ -89,7 +92,6 @@
 <script src="/static/js/csrf.js"></script>
 <script src="/static/js/sidebar.js"></script>
 <script src="{% static 'js/toast.js' %}"></script>
-<script src="/static/js/incidents.js"></script>
 <script src="{% static 'js/tickets.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
 {% block extra_js %}{% endblock %}

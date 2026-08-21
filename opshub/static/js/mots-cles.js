@@ -108,12 +108,17 @@ if (champRechercheMotsCles) {
         const lignes = document.querySelectorAll('#table-mots-cles tbody tr');
 
         lignes.forEach(function(ligne) {
-            const contenu = ligne.textContent.toLowerCase();
-            ligne.style.display = contenu.includes(texte) ? '' : 'none';
+            const celluleIntitule = ligne.querySelector('td[id^="intitule-"]');
+            const celluleEquipe = ligne.querySelector('td[id^="equipe-"]');
+
+            const texteIntitule = celluleIntitule ? celluleIntitule.textContent.toLowerCase() : '';
+            const texteEquipe = celluleEquipe ? celluleEquipe.textContent.toLowerCase() : '';
+
+            const correspond = texteIntitule.includes(texte) || texteEquipe.includes(texte);
+            ligne.style.display = correspond ? '' : 'none';
         });
     });
 }
-
 
 // --- ÉQUIPE (créée depuis n'importe quel select cible) ---
 

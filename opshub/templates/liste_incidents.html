@@ -1,12 +1,15 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h1>Liste des incidents</h1>
 
-<div class="barre-actions">
-    <button onclick="document.getElementById('modale-import-incidents').style.display='block'">Importer des incidents</button>
-    <input type="text" id="recherche-import-incidents" placeholder="Rechercher un import par titre..." oninput="rechercherImportsIncidents()" />
+<div class="outils-header">
+    <h1>Liste des incidents</h1>
+    <button class="btn-primary" onclick="document.getElementById('modale-import-incidents').style.display='flex'">+ Importer des incidents</button>
 </div>
-<div class="filtres-imports-incidents">
+
+
+<div class="filtres-recherche">
+    <input type="text" id="recherche-import-incidents" class="search-input" placeholder="Rechercher un import par titre..." oninput="rechercherImportsIncidents()" />
     <select id="filtre-periode-type-incidents" onchange="changerTypeFiltreIncidents()">
         <option value="">Toutes les périodes</option>
         <option value="annee">Par année</option>
@@ -31,68 +34,85 @@
     </select>
     <input type="number" id="filtre-semaine-incidents" style="display:none;" min="1" max="53" placeholder="N° semaine (1-53)" onchange="chargerListeImportsIncidents()">
 
-    <button onclick="reinitialiserFiltresImportsIncidents()">Réinitialiser</button>
+    <button class="btn-filtre-reset" onclick="reinitialiserFiltresImportsIncidents()">Réinitialiser</button>
 </div>
+ <h2 style="font-size:16px; font-weight:700; color:#FFCC00; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">Incidents</h2>
 <div id="liste-imports-incidents">
     <!-- rempli dynamiquement -->
 </div>
 
 <!-- Modale Import -->
-<div id="modale-import-incidents" class="modale" style="display:none;">
-    <div class="modale-contenu">
-        <h2>Importer des incidents</h2>
-        <label>Titre de l'import</label>
-        <input type="text" id="titre-import-incidents" placeholder="Ex: Incidents semaine 33" />
-        <input type="file" id="fichier-incidents" accept=".xlsx" onchange="previsualiserIncidents(this)" />
-        <div id="apercu-incidents" style="display:none;">
-            <h3>Aperçu</h3>
-            <div id="tableau-apercu-incidents"></div>
+<div id="modale-import-incidents" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:800px; width:90%;">
+        <h2 class="modal-title">Importer des incidents</h2>
+
+        <div class="form-group">
+            <label>Titre de l'import</label>
+            <input type="text" id="titre-import-incidents" placeholder="Ex: Incidents semaine 33">
         </div>
-        <div class="modale-actions">
-            <button onclick="confirmerImportIncidents()">Confirmer l'import</button>
-            <button onclick="fermerModaleImportIncidents()">Annuler</button>
+
+        <div class="form-group">
+            <input type="file" id="fichier-incidents" accept=".xlsx" onchange="previsualiserIncidents(this)">
+        </div>
+
+        <div id="apercu-incidents" style="display:none;">
+            <h3 class="detail-subtitle">Aperçu</h3>
+            <div id="tableau-apercu-incidents" style="overflow-x:auto;"></div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="fermerModaleImportIncidents()">Annuler</button>
+            <button type="button" class="btn-primary" onclick="confirmerImportIncidents()">Confirmer l'import</button>
         </div>
     </div>
 </div>
 
 <!-- Modale Tableau complet -->
-<div id="modale-incidents" class="modale" style="display:none;">
-    <div class="modale-contenu modale-large">
-        <div class="modale-header">
-            <h2 id="titre-modale-incidents">Incidents</h2>
-            <button onclick="fermerModaleIncidents()">Fermer</button>
+<div id="modale-incidents" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:90vw; width:90%; max-height:90vh; overflow-y:auto;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 class="modal-title" id="titre-modale-incidents" style="margin:0;">Incidents</h2>
+            <button class="btn-secondary" onclick="fermerModaleIncidents()">Fermer</button>
         </div>
-        <div class="modale-actions-top">
-            <button onclick="telechargerLotIncidentsActuel('xlsx')">Télécharger en Excel</button>
-            <button onclick="telechargerLotIncidentsActuel('pdf')">Télécharger en PDF</button>
-            <button class="btn-delete" onclick="supprimerLotIncidentsActuel()">Supprimer l'import</button>
+
+        <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="telechargerLotIncidentsActuel('xlsx')">Télécharger Excel</button>
+            <button class="btn-secondary" onclick="telechargerLotIncidentsActuel('pdf')">Télécharger PDF</button>
+            <button class="btn-delete" onclick="supprimerLotIncidentsActuel()">Supprimer</button>
             <button id="btn-modifier-global-incidents" class="btn-edit" onclick="activerModeEditionGlobalIncidents()">Modifier</button>
             <button id="btn-enregistrer-global-incidents" class="btn-edit" onclick="enregistrerModificationsGlobalesIncidents()" style="display:none;">Enregistrer</button>
-            <button id="btn-annuler-global-incidents" onclick="annulerModificationsGlobalesIncidents()" style="display:none;">Annuler</button>
+            <button id="btn-annuler-global-incidents" class="btn-secondary" onclick="annulerModificationsGlobalesIncidents()" style="display:none;">Annuler</button>
         </div>
-        <div class="filtres-incidents">
-            <input type="text" id="recherche-incident-modale" placeholder="Rechercher..." oninput="rechercherDansModaleIncidents()" />
+
+        <div class="filtres-recherche">
+            <input type="text" id="recherche-incident-modale" placeholder="Rechercher..." oninput="rechercherDansModaleIncidents()">
             <select id="filtre-rca" onchange="rechercherDansModaleIncidents()">
                 <option value="">Tous les incidents</option>
                 <option value="sans">Sans RCA</option>
                 <option value="avec">Avec RCA</option>
             </select>
-            <span id="compteur-rca" style="font-size:12px; color:#888;"></span>
+            <span id="compteur-rca" style="font-size:12px; color:var(--muted);"></span>
         </div>
-        <table id="tableau-incidents">
+
+        <div style="overflow-x:auto;">
             <table id="tableau-incidents">
-    <thead>
-        <tr>
-            <th>ID</th><th>Description</th><th>Reported Date</th><th>Severity</th>
-            <th>Impact</th><th>Affected Service</th><th>Root Cause</th><th>Action</th>
-            <th>Duration</th><th>RCA Status</th><th>Owner Email</th>
-            <th>RCA</th><th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="corps-tableau-incidents"></tbody>
-</table>
-            <tbody id="corps-tableau-incidents"></tbody>
-        </table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Description</th><th>Reported Date</th><th>Severity</th>
+                        <th>Impact</th><th>Affected Service</th><th>Root Cause</th><th>Action</th>
+                        <th>Duration</th><th>RCA Status</th><th>Owner Email</th>
+                        <th>RCA</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="corps-tableau-incidents"></tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/incidents.js' %}"></script>
 {% endblock %}

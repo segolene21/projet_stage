@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Changer mon mot de passe</h1>
 
+    <h1>Changer mon mot de passe</h1>
+    <a href="{% url 'parametres' %}" class="back-link">← Retour aux paramètres</a>
+    <div class ="page-centree">
     <div class="settings-card password-change-card">
         <form method="post">
             {% csrf_token %}
@@ -44,5 +46,6 @@
                 <button type="submit" class="btn-primary">Changer</button>
             </div>
         </form>
+    </div>
     </div>
 {% endblock %}

@@ -45,7 +45,7 @@
 
     <a href="#" class="btn-filtre-reset" onclick="reinitialiserFiltresImports(); return false;">Réinitialiser</a>
 </div>
-
+ <h2 style="font-size:16px; font-weight:700; color:#FFCC00; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #FFCC00;">Tickets Requests </h2>
 <div id="liste-imports" style="margin-top:20px;">
     <!-- rempli dynamiquement -->
 </div>
@@ -65,7 +65,7 @@
         <div class="form-group">
             <label>Fichier Excel (ServiceNow)</label>
             <input type="file" id="fichier-ticket" accept=".xlsx"
-                style="width:100%; padding:10px; border:2px dashed #FFCC00; border-radius:8px; background:#FFF8D6; font-size:13px; cursor:pointer;"
+                style="width:100%; padding:10px; border:2px dashed #FFCC00; border-radius:8px; background:white; font-size:13px; cursor:pointer;"
                 onchange="previsualiserTicket(this)" />
         </div>
 
@@ -126,7 +126,4 @@
             </thead>
             <tbody id="corps-tableau-tickets"></tbody>
         </table>
-
-        
-<script src="{% static 'js/tickets.js' %}"></script>
 {% endblock %}
