@@ -61,4 +61,5 @@ urlpatterns += [
     path("api/incidents-imports/<int:lot_id>/", views.supprimer_lot_incidents, name="supprimer_lot_incidents"),
     path("api/incidents/<int:incident_pk>/", views.incident_detail, name="incident_detail"),
     path("api/incidents/<int:incident_pk>/rca/", views.uploader_rca, name="uploader_rca"),
+    path("api/incidents-imports/<int:lot_id>/apercu-long/", views.apercu_rapport_long, name="apercu_rapport_long"),
     ]

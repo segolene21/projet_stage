@@ -405,13 +405,24 @@ async function supprimerIncident(pk) {
 
 function activerModeEditionGlobalIncidents() {
     const corps = document.getElementById('corps-tableau-incidents');
-    const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'owner_email'];
+    const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email'];
 
     corps.querySelectorAll('tr').forEach(tr => {
         champsEditables.forEach(champ => {
             const td = tr.querySelector(`[data-champ="${champ}"]`);
             if (!td) return;
             const valeur = td.textContent;
+
+            const champsLongs = ['description', 'impact', 'affected_service', 'root_cause', 'action_resolution'];
+            if (champsLongs.includes(champ)) {
+                td.style.maxWidth = '300px';
+                td.style.width = '300px';
+            }
+
+            if (champ === 'incident_id') {
+    td.style.minWidth = '130px';
+    td.style.width = '130px';
+}
 
             let input;
             if (champ === 'statut_rca') {
@@ -426,7 +437,7 @@ function activerModeEditionGlobalIncidents() {
                     if (label === valeur) option.selected = true;
                     input.appendChild(option);
                 });
-            } else if (champ === 'description' || champ === 'impact' || champ === 'root_cause' || champ === 'action_resolution' || champ === 'affected_service') {
+            } else if (champsLongs.includes(champ)) {
                 input = document.createElement('textarea');
                 input.value = valeur;
             } else {
@@ -436,15 +447,25 @@ function activerModeEditionGlobalIncidents() {
             }
 
             input.style.width = '100%';
-            input.style.boxSizing = 'border-box';
             input.dataset.champ = champ;
 
-            if (champ === 'incident_id') {
-                input.style.minWidth = '110px';
-                input.style.fontWeight = 'bold';
+            if (champsLongs.includes(champ)) {
+                input.style.resize = 'none';
+                input.style.overflow = 'hidden';
+                input.style.fontFamily = 'inherit';
+                input.style.fontSize = 'inherit';
+                input.style.padding = '6px';
+                input.style.boxSizing = 'border-box';
+                input.style.lineHeight = '1.4';
+
+                const ajusterHauteur = () => {
+                    input.style.height = 'auto';
+                    input.style.height = input.scrollHeight + 'px';
+                };
+                input.addEventListener('input', ajusterHauteur);
+                requestAnimationFrame(ajusterHauteur);
             }
 
-            td.style.minWidth = champ === 'incident_id' ? '120px' : '';
             td.textContent = '';
             td.appendChild(input);
         });
@@ -590,4 +611,48 @@ function reinitialiserFiltresImportsIncidents() {
     document.getElementById('filtre-semaine-incidents').style.display = 'none';
     document.getElementById('filtre-semaine-incidents').value = '';
     chargerListeImportsIncidents();
+}
+
+async function ouvrirApercuLong() {
+    if (!lotIncidentsActuelId) return;
+
+    try {
+        const res = await fetch(`/api/incidents-imports/${lotIncidentsActuelId}/apercu-long/`, { cache: 'no-store' });
+        const data = await res.json();
+
+        const corps = document.getElementById('corps-apercu-long');
+        corps.innerHTML = '';
+
+        data.lignes.forEach(l => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${echapperHtml(l.month)}</td>
+                <td>${echapperHtml(l.incident_id)}</td>
+                <td style="max-width:250px; white-space:pre-wrap;">${echapperHtml(l.description)}</td>
+                <td>${echapperHtml(l.date_signalement)}</td>
+                <td>${echapperHtml(l.severite)}</td>
+                <td>${echapperHtml(l.statut_rca)}</td>
+                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.impact)}</td>
+                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.affected_service)}</td>
+                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.root_cause)}</td>
+                <td style="max-width:200px; white-space:pre-wrap;">${echapperHtml(l.action_resolution)}</td>
+                <td>${echapperHtml(l.duree)}</td>
+                <td>${echapperHtml(l.team)}</td>
+                <td>${echapperHtml(l.in_charge)}</td>
+                <td>${echapperHtml(l.service_now_status)}</td>
+                <td>${echapperHtml(l.close_date)}</td>
+                <td>${echapperHtml(l.rca)}</td>
+            `;
+            corps.appendChild(tr);
+        });
+
+        document.getElementById('modale-apercu-long').style.display = 'block';
+    } catch (erreur) {
+        alert('Erreur lors du chargement de l\'aperçu : ' + erreur.message);
+        console.error(erreur);
+    }
+}
+
+function fermerApercuLong() {
+    document.getElementById('modale-apercu-long').style.display = 'none';
 }

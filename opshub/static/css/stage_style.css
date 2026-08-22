@@ -191,11 +191,12 @@ main h1{
 /* ================= INPUT ================= */
 
 input[type=text],
-input[type=search]{
+input[type=search],
+textarea{
     width:100%;
     max-width:500px;
     border:none;
-    background:#f3d457;
+    background:#f6e764;
     padding:15px 20px;
     border-radius:14px;
     box-shadow:0 6px 18px rgba(5, 5, 5, 0.05);
@@ -1877,7 +1878,7 @@ footer{
     background: rgba(255,204,0,.12);
 }
 #tableau-incidents {
-    min-width: 1600px;
+    min-width: 2200px;
 }
 
 .ligne-import{

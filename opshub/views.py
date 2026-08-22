@@ -1,3 +1,5 @@
+from itertools import count
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
@@ -864,21 +866,6 @@ def _parser_date(valeur):
         return None
 
 
-def _parser_duree(valeur):
-    """Excel renvoie souvent les durées comme un objet time ou timedelta."""
-    if not valeur:
-        return None
-    if isinstance(valeur, dt_module.timedelta):
-        return valeur
-    if isinstance(valeur, dt_module.time):
-        return dt_module.timedelta(hours=valeur.hour, minutes=valeur.minute, seconds=valeur.second)
-    try:
-        h, m, s = str(valeur).strip().split(':')
-        return dt_module.timedelta(hours=int(h), minutes=int(m), seconds=int(s))
-    except (ValueError, AttributeError):
-        return None
-
-
 def _parser_statut_rca(valeur):
     if not valeur:
         return ''
@@ -911,30 +898,31 @@ def import_incidents_excel(request):
 
     count = 0
     for row in ws.iter_rows(min_row=2, values_only=True):
-        valeurs = list(row) + [None] * 12
-        (incident_id, description, reported, severite, _rca_vide, _colonne_vide, impact,
-         affected_service, root_cause, action_resolution, duration, rca_statut) = valeurs[:12]
+        valeurs = list(row) + [None] * 16
+        (number, description, _short_desc, _caller, state, assignment_group, assigned_to,
+         _org_unit, priority, opened, _fixed_by, _caused_by, _rca_text,
+         resolution_notes, resolution_time, resolved) = valeurs[:16]
 
-        if not incident_id:
+        if not number:
             continue
 
         Incident.objects.create(
-            import_lot=lot,
-            incident_id=str(incident_id),
-            description=description or "",
-            date_signalement=_parser_date(reported),
-            severite=str(severite) if severite else "",
-            impact=impact or "",
-            affected_service=affected_service or "",
-            root_cause=root_cause or "",
-            action_resolution=action_resolution or "",
-            duree=_parser_duree(duration),
-            statut_rca=_parser_statut_rca(rca_statut),
-        )
+    import_lot=lot,
+    incident_id=str(number),
+    description=description or "",
+    date_signalement=_parser_date(opened),
+    severite=str(priority) if priority else "",
+    action_resolution=resolution_notes or "",
+    duree_secondes=int(resolution_time) if resolution_time else None,
+    in_charge=assigned_to or "",
+    service_now_status=state or "",
+    close_date=_parser_date(resolved),
+    statut_rca=Incident.StatutRCA.NOT_PROVIDED,
+)
         count += 1
 
     return JsonResponse({"message": f"{count} incidents importés", "lot_id": lot.id, "titre": lot.titre})
-
+ 
 
 
 @login_required
@@ -1011,7 +999,7 @@ def incidents_du_lot(request, lot_id):
             "affected_service": i.affected_service,
             "root_cause": i.root_cause,
             "action_resolution": i.action_resolution,
-            "duree": str(i.duree) if i.duree else "",
+            "duree": str(i.duree_secondes) if i.duree_secondes else "",
             "statut_rca": i.statut_rca,
             "owner_email": i.owner_email or "",
             "rca_present": i.rca_present,
@@ -1050,7 +1038,7 @@ def _generer_pdf_incidents(incidents, response):
             Paragraph(i.affected_service or "", style_cellule),
             Paragraph(i.root_cause or "", style_cellule),
             Paragraph(i.action_resolution or "", style_cellule),
-            str(i.duree) if i.duree else "",
+            str(i.duree_secondes) if i.duree_secondes else "",
             i.get_statut_rca_display(),
             Paragraph(i.owner_email or "", style_cellule),
             "Oui" if i.rca_present else "Non",
@@ -1107,7 +1095,7 @@ def export_lot_incidents(request, lot_id):
             i.incident_id, i.description,
             timezone.localtime(i.date_signalement).strftime("%d/%m/%Y %H:%M") if i.date_signalement else "",
             i.severite, i.impact, i.affected_service, i.root_cause, i.action_resolution,
-            str(i.duree) if i.duree else "", i.get_statut_rca_display(), i.owner_email or "",
+            str(i.duree_secondes) if i.duree_secondes else "", i.get_statut_rca_display(), i.owner_email or "",
             "Oui" if i.rca_present else "Non",
         ])
 
@@ -1198,13 +1186,12 @@ def incident_detail(request, incident_pk):
             return JsonResponse({"message": "Incident supprimé"})
 
         if request.method == 'PUT':
-            data = json.loads(request.body)
-            for champ in ('incident_id', 'description', 'severite', 'impact', 'owner_email', 'statut'):
-                if champ in data:
-                    setattr(incident, champ, data[champ])
-            incident.save()
-            return JsonResponse({"message": "Incident modifié"})
-
+         data = json.loads(request.body)
+         for champ in ('incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email'):
+             if champ in data:
+                 setattr(incident, champ, data[champ])
+        incident.save()
+        return JsonResponse({"message": "Incident modifié"})
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
@@ -1247,3 +1234,36 @@ def changer_theme(request):
     request.user.save(update_fields=["theme_sombre"])
 
     return JsonResponse({"succes": True})
+
+
+@login_required
+def apercu_rapport_long(request, lot_id):
+    try:
+        lot = ImportIncidents.objects.get(id=lot_id)
+    except ImportIncidents.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    incidents = lot.incidents.all().order_by('id')
+
+    lignes = []
+    for i in incidents:
+        lignes.append({
+            "month": i.month,
+            "incident_id": i.incident_id,
+            "description": i.description,
+            "date_signalement": timezone.localtime(i.date_signalement).strftime("%m/%d/%Y %I:%M %p") if i.date_signalement else "",
+            "severite": i.severite,
+            "statut_rca": i.get_statut_rca_display() if i.statut_rca else "",
+            "impact": i.impact,
+            "affected_service": i.affected_service,
+            "root_cause": i.root_cause,
+            "action_resolution": i.action_resolution,
+            "duree": i.duree_secondes if i.duree_secondes is not None else "",
+            "team": i.team,
+            "in_charge": i.in_charge,
+            "service_now_status": i.service_now_status,
+            "close_date": timezone.localtime(i.close_date).strftime("%m/%d/%Y %I:%M %p") if i.close_date else "",
+            "rca": "Oui" if i.rca_present else "Non",
+        })
+
+    return JsonResponse({"titre": lot.titre, "lignes": lignes})

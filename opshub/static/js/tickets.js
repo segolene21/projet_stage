@@ -595,7 +595,6 @@ async function enregistrerModificationsGlobales() {
             }
         });
 
-        // N'envoie une requête que si quelque chose a réellement changé sur cette ligne
         if (aChange) {
             requetes.push(
                 fetch(`/api/tickets/${pk}/`, {
@@ -608,12 +607,12 @@ async function enregistrerModificationsGlobales() {
     });
 
     if (requetes.length === 0) {
-        // Rien n'a changé, pas besoin de recharger
         document.getElementById('btn-modifier-global').style.display = '';
         btn.style.display = 'none';
         document.getElementById('btn-annuler-global').style.display = 'none';
         btn.disabled = false;
         btn.textContent = 'Enregistrer';
+        afficherToast('Aucune modification à enregistrer', 'info');
         return;
     }
 
@@ -622,7 +621,9 @@ async function enregistrerModificationsGlobales() {
         const echecs = resultats.filter(r => !r.ok);
 
         if (echecs.length > 0) {
-            alert(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`);
+            afficherToast(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`, 'erreur');
+        } else {
+            afficherToast('Modifications enregistrées', 'succes');
         }
 
         document.getElementById('btn-modifier-global').style.display = '';
@@ -632,14 +633,13 @@ async function enregistrerModificationsGlobales() {
         await chargerTicketsDuLot();
         await chargerListeImports();
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     } finally {
         btn.disabled = false;
         btn.textContent = 'Enregistrer';
     }
 }
-
 function supprimerLotActuel() {
     if (!lotActuelId) return;
     supprimerLot(lotActuelId);

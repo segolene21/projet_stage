@@ -52,7 +52,7 @@
         </div>
 
         <div class="form-group">
-            <input type="file" id="fichier-incidents" accept=".xlsx" onchange="previsualiserIncidents(this)">
+            <input type="file" id="fichier-incidents" accept=".xlsx" style="width:100%; padding:10px; border:2px dashed #FFCC00; border-radius:8px; background:white; font-size:13px; cursor:pointer;" onchange="previsualiserIncidents(this)">
         </div>
 
         <div id="apercu-incidents" style="display:none;">
@@ -76,14 +76,15 @@
             <button class="btn-secondary" onclick="fermerModaleIncidents()">Fermer</button>
         </div>
 
-        <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-            <button class="btn-primary" onclick="telechargerLotIncidentsActuel('xlsx')">Télécharger Excel</button>
-            <button class="btn-secondary" onclick="telechargerLotIncidentsActuel('pdf')">Télécharger PDF</button>
-            <button class="btn-delete" onclick="supprimerLotIncidentsActuel()">Supprimer</button>
-            <button id="btn-modifier-global-incidents" class="btn-edit" onclick="activerModeEditionGlobalIncidents()">Modifier</button>
-            <button id="btn-enregistrer-global-incidents" class="btn-edit" onclick="enregistrerModificationsGlobalesIncidents()" style="display:none;">Enregistrer</button>
-            <button id="btn-annuler-global-incidents" class="btn-secondary" onclick="annulerModificationsGlobalesIncidents()" style="display:none;">Annuler</button>
-        </div>
+       <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+    <button class="btn-primary" onclick="telechargerLotIncidentsActuel('court')">Rapport court (Excel)</button>
+    <button class="btn-primary" onclick="ouvrirApercuLong()">Aperçu rapport long</button>
+    <button class="btn-secondary" onclick="telechargerLotIncidentsActuel('pdf')">Télécharger PDF</button>
+    <button class="btn-delete" onclick="supprimerLotIncidentsActuel()">Supprimer</button>
+    <button id="btn-modifier-global-incidents" class="btn-edit" onclick="activerModeEditionGlobalIncidents()">Modifier</button>
+    <button id="btn-enregistrer-global-incidents" class="btn-edit" onclick="enregistrerModificationsGlobalesIncidents()" style="display:none;">Enregistrer</button>
+    <button id="btn-annuler-global-incidents" class="btn-secondary" onclick="annulerModificationsGlobalesIncidents()" style="display:none;">Annuler</button>
+</div>
 
         <div class="filtres-recherche">
             <input type="text" id="recherche-incident-modale" placeholder="Rechercher..." oninput="rechercherDansModaleIncidents()">
@@ -106,6 +107,31 @@
                     </tr>
                 </thead>
                 <tbody id="corps-tableau-incidents"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="modale-apercu-long" class="modale" style="display:none;">
+    <div class="modale-contenu modale-large">
+        <div class="modale-header">
+            <h2>Aperçu — Rapport long</h2>
+            <button onclick="fermerApercuLong()">Fermer</button>
+        </div>
+        <div class="modale-actions-top">
+            <button onclick="telechargerLotIncidentsActuel('long')">Télécharger ce rapport</button>
+        </div>
+        <div style="overflow-x:auto;">
+            <table id="tableau-apercu-long">
+                <thead>
+                    <tr>
+                        <th>Month</th><th>ID</th><th>Issue Description</th><th>Reported Date</th>
+                        <th>Severity</th><th>SIGNED RCA STATUS</th><th>Impacted</th><th>Affected Service</th>
+                        <th>root cause</th><th>Action for Resolution</th><th>Duration</th>
+                        <th>TEAM</th><th>In charge</th><th>STATUS</th><th>close date</th><th>RCA</th>
+                    </tr>
+                </thead>
+                <tbody id="corps-apercu-long"></tbody>
             </table>
         </div>
     </div>
