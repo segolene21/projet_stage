@@ -529,10 +529,9 @@ async function enregistrerModificationsGlobalesIncidents() {
 
 // --- Téléchargement ---
 
-function telechargerLotIncidents(lotId, format) {
-    window.location.href = `/api/incidents-imports/${lotId}/export/?format=${format}`;
+function telechargerLotIncidents(lotId, type) {
+    window.location.href = `/api/incidents-imports/${lotId}/export/?type=${type}`;
 }
-
 function telechargerLotIncidentsActuel(format) {
     if (!lotIncidentsActuelId) return;
     telechargerLotIncidents(lotIncidentsActuelId, format);
@@ -646,7 +645,8 @@ async function ouvrirApercuLong() {
             corps.appendChild(tr);
         });
 
-        document.getElementById('modale-apercu-long').style.display = 'block';
+        document.getElementById('modale-incidents').style.display = 'none';
+        document.getElementById('modale-apercu-long').style.display = 'flex';
     } catch (erreur) {
         alert('Erreur lors du chargement de l\'aperçu : ' + erreur.message);
         console.error(erreur);
@@ -655,4 +655,5 @@ async function ouvrirApercuLong() {
 
 function fermerApercuLong() {
     document.getElementById('modale-apercu-long').style.display = 'none';
+    document.getElementById('modale-incidents').style.display = 'flex';
 }

@@ -1066,7 +1066,7 @@ from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 
 @login_required
 def export_lot_incidents(request, lot_id):
-    format_export = request.GET.get('format', 'xlsx')
+    type_rapport = request.GET.get('type', 'court')
 
     try:
         lot = ImportIncidents.objects.get(id=lot_id)
@@ -1074,30 +1074,23 @@ def export_lot_incidents(request, lot_id):
         return JsonResponse({"erreur": "Import introuvable"}, status=404)
 
     incidents = lot.incidents.all().order_by('id')
-    nom_base = lot.titre.replace(" ", "_")
+    nom_base = f"{lot.titre.replace(' ', '_')}_rapport_{type_rapport}"
 
-    if format_export == 'pdf':
+    if type_rapport == 'pdf':
         response = HttpResponse(content_type='application/pdf')
         response["Content-Disposition"] = f'attachment; filename="{nom_base}.pdf"'
         _generer_pdf_incidents(incidents, response)
         return response
 
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Incidents"
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="{nom_base}.xlsx"'
 
-    entetes = ["ID", "Description", "Reported Date", "Severity", "Impact", "Affected Service",
-               "Root Cause", "Action for Resolution", "Duration", "RCA Status", "Owner Email", "RCA attaché"]
-    ws.append(entetes)
+    if type_rapport == 'long':
+      _export_incidents_long(incidents, response)
+    else:
+        _export_incidents_court(incidents, response)
 
-    for i in incidents:
-        ws.append([
-            i.incident_id, i.description,
-            timezone.localtime(i.date_signalement).strftime("%d/%m/%Y %H:%M") if i.date_signalement else "",
-            i.severite, i.impact, i.affected_service, i.root_cause, i.action_resolution,
-            str(i.duree_secondes) if i.duree_secondes else "", i.get_statut_rca_display(), i.owner_email or "",
-            "Oui" if i.rca_present else "Non",
-        ])
+    return response
 
     # ---------- STYLE ----------
 
@@ -1219,7 +1212,8 @@ def uploader_rca(request, incident_pk):
     incident.save()
 
     return JsonResponse({"message": "RCA attaché avec succès", "rca_url": incident.rca_fichier.url})
-   
+
+
 
 @csrf_exempt
 @login_required
@@ -1235,6 +1229,124 @@ def changer_theme(request):
 
     return JsonResponse({"succes": True})
 
+
+import re
+
+CARACTERES_INVALIDES_XML = re.compile('[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
+
+def nettoyer_texte_excel(valeur):
+    if valeur is None:
+        return ""
+    texte = str(valeur)
+    return CARACTERES_INVALIDES_XML.sub('', texte)
+@login_required
+def export_lot_incidents(request, lot_id):
+    type_rapport = request.GET.get('type', 'court')
+
+    try:
+        lot = ImportIncidents.objects.get(id=lot_id)
+    except ImportIncidents.DoesNotExist:
+        return JsonResponse({"erreur": "Import introuvable"}, status=404)
+
+    incidents = lot.incidents.all().order_by('id')
+    nom_base = f"{lot.titre.replace(' ', '_')}_rapport_{type_rapport}"
+
+    if type_rapport == 'pdf':
+        response = HttpResponse(content_type='application/pdf')
+        response["Content-Disposition"] = f'attachment; filename="{nom_base}.pdf"'
+        _generer_pdf_incidents(incidents, response)
+        return response
+
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="{nom_base}.xlsx"'
+
+    if type_rapport == 'long':
+        _export_incidents_long(incidents, response)
+    else:
+        _export_incidents_court(incidents, response)
+
+    return response
+
+
+def _export_incidents_long(incidents, response):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Incidents"
+
+    entetes = ["Month", "ID", "Issue Description", "Reported Date", "Severity", "SIGNED RCA STATUS",
+               "Impacted", "Affected Service", "root cause", "Action for Resolution", "Duration",
+               "TEAM", "In charge", "STATUS", "close date", "RCA"]
+    ws.append(entetes)
+
+    for i in incidents:
+        ws.append([
+            nettoyer_texte_excel(i.month),
+            nettoyer_texte_excel(i.incident_id),
+            nettoyer_texte_excel(i.description),
+            timezone.localtime(i.date_signalement).strftime("%m/%d/%Y %I:%M %p") if i.date_signalement else "",
+            nettoyer_texte_excel(i.severite),
+            i.get_statut_rca_display() if i.statut_rca else "",
+            nettoyer_texte_excel(i.impact),
+            nettoyer_texte_excel(i.affected_service),
+            nettoyer_texte_excel(i.root_cause),
+            nettoyer_texte_excel(i.action_resolution),
+            i.duree_secondes if i.duree_secondes is not None else "",
+            nettoyer_texte_excel(i.team),
+            nettoyer_texte_excel(i.in_charge),
+            nettoyer_texte_excel(i.service_now_status),
+            timezone.localtime(i.close_date).strftime("%m/%d/%Y %I:%M %p") if i.close_date else "",
+            "Oui" if i.rca_present else "Non",
+        ])
+
+    largeurs = {
+        'A': 10, 'B': 15, 'C': 35, 'D': 18, 'E': 12, 'F': 16,
+        'G': 22, 'H': 22, 'I': 22, 'J': 30, 'K': 12,
+        'L': 20, 'M': 18, 'N': 15, 'O': 18, 'P': 10,
+    }
+    for lettre, largeur in largeurs.items():
+        ws.column_dimensions[lettre].width = largeur
+
+    from openpyxl.styles import Alignment
+    for ligne in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(entetes)):
+        for cellule in ligne:
+            cellule.alignment = Alignment(wrap_text=True, vertical='top')
+
+    wb.save(response)
+
+
+def _export_incidents_court(incidents, response):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Incidents"
+
+    entetes = ["ID", "Issue Description", "Reported Date", "Severity", "Impact",
+               "Affected Service", "root cause", "Action for Resolution", "Duration", "RCA"]
+    ws.append(entetes)
+
+    for i in incidents:
+        ws.append([
+            nettoyer_texte_excel(i.incident_id),
+            nettoyer_texte_excel(i.description),
+            timezone.localtime(i.date_signalement).strftime("%m/%d/%Y %I:%M %p") if i.date_signalement else "",
+            nettoyer_texte_excel(i.severite),
+            nettoyer_texte_excel(i.impact),
+            nettoyer_texte_excel(i.affected_service),
+            nettoyer_texte_excel(i.root_cause),
+            nettoyer_texte_excel(i.action_resolution),
+            i.duree_secondes if i.duree_secondes is not None else "",
+            i.get_statut_rca_display() if i.statut_rca else "",
+        ])
+
+    largeurs = {'A': 15, 'B': 40, 'C': 18, 'D': 12, 'E': 25, 'F': 25, 'G': 25, 'H': 35, 'I': 12, 'J': 14}
+    for lettre, largeur in largeurs.items():
+        ws.column_dimensions[lettre].width = largeur
+
+    from openpyxl.styles import Alignment
+    for ligne in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(entetes)):
+        for cellule in ligne:
+            cellule.alignment = Alignment(wrap_text=True, vertical='top')
+
+    wb.save(response)
 
 @login_required
 def apercu_rapport_long(request, lot_id):
