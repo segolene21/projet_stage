@@ -408,7 +408,7 @@ async function supprimerIncident(pk) {
 
 function activerModeEditionGlobalIncidents() {
     const corps = document.getElementById('corps-tableau-incidents');
-    const champsEditables = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email'];
+    const champsEditables = ['incident_id', 'description', 'date_signalement', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'duree', 'statut_rca', 'owner_email'];
 
     corps.querySelectorAll('tr').forEach(tr => {
         champsEditables.forEach(champ => {
@@ -558,13 +558,13 @@ function afficherIncidentsEnLecture() {
         tr.innerHTML = `
             <td data-champ="incident_id">${echapperHtml(i.incident_id)}</td>
             <td data-champ="description" style="max-width:250px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.description)}</td>
-            <td>${echapperHtml(i.date_signalement)}</td>
+            <td data-champ="date_signalement">${echapperHtml(i.date_signalement)}</td>
             <td data-champ="severite">${echapperHtml(i.severite)}</td>
             <td data-champ="impact" style="max-width:200px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.impact)}</td>
             <td data-champ="affected_service" style="max-width:200px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.affected_service)}</td>
             <td data-champ="root_cause" style="max-width:200px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.root_cause)}</td>
             <td data-champ="action_resolution" style="max-width:200px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.action_resolution)}</td>
-            <td>${echapperHtml(i.duree)}</td>
+            <td data-champ="duree">${echapperHtml(i.duree)}</td>
             <td data-champ="statut_rca">${echapperHtml(i.statut_rca)}</td>
             <td data-champ="owner_email">${echapperHtml(i.owner_email)}</td>
             <td data-role="rca-cell">
@@ -583,7 +583,6 @@ function afficherIncidentsEnLecture() {
         corps.appendChild(tr);
     });
 }
-
 function changerTypeFiltreIncidents() {
     const type = document.getElementById('filtre-periode-type-incidents').value;
     const selectAnnee = document.getElementById('filtre-annee-incidents');
@@ -616,38 +615,17 @@ function reinitialiserFiltresImportsIncidents() {
     chargerListeImportsIncidents();
 }
 
+let lignesApercuLong = [];
+
 async function ouvrirApercuLong() {
     if (!lotIncidentsActuelId) return;
 
     try {
         const res = await fetch(`/api/incidents-imports/${lotIncidentsActuelId}/apercu-long/`, { cache: 'no-store' });
         const data = await res.json();
+        lignesApercuLong = data.lignes;
 
-        const corps = document.getElementById('corps-apercu-long');
-        corps.innerHTML = '';
-
-        data.lignes.forEach(l => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${echapperHtml(l.month)}</td>
-                <td>${echapperHtml(l.incident_id)}</td>
-                <td style="max-width:250px; white-space:pre-wrap;">${echapperHtml(l.description)}</td>
-                <td>${echapperHtml(l.date_signalement)}</td>
-                <td>${echapperHtml(l.severite)}</td>
-                <td>${echapperHtml(l.statut_rca)}</td>
-                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.impact)}</td>
-                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.affected_service)}</td>
-                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.root_cause)}</td>
-                <td style="max-width:200px; white-space:pre-wrap;">${echapperHtml(l.action_resolution)}</td>
-                <td>${echapperHtml(l.duree)}</td>
-                <td>${echapperHtml(l.team)}</td>
-                <td>${echapperHtml(l.in_charge)}</td>
-                <td>${echapperHtml(l.service_now_status)}</td>
-                <td>${echapperHtml(l.close_date)}</td>
-                <td>${echapperHtml(l.rca)}</td>
-            `;
-            corps.appendChild(tr);
-        });
+        afficherApercuLongEnLecture();
 
         document.getElementById('modale-incidents').style.display = 'none';
         document.getElementById('modale-apercu-long').style.display = 'flex';
@@ -655,6 +633,130 @@ async function ouvrirApercuLong() {
     afficherToast('Erreur lors du chargement de l\'aperçu : ' + erreur.message, 'erreur');
     console.error(erreur);
    }
+}
+
+function afficherApercuLongEnLecture() {
+    const corps = document.getElementById('corps-apercu-long');
+    corps.innerHTML = '';
+
+    lignesApercuLong.forEach(l => {
+        const tr = document.createElement('tr');
+        tr.dataset.pk = l.id;
+
+        tr.innerHTML = `
+            <td>${echapperHtml(l.month)}</td>
+            <td data-champ="incident_id">${echapperHtml(l.incident_id)}</td>
+            <td data-champ="description" style="max-width:250px; white-space:pre-wrap;">${echapperHtml(l.description)}</td>
+            <td data-champ="date_signalement">${echapperHtml(l.date_signalement)}</td>
+            <td data-champ="severite">${echapperHtml(l.severite)}</td>
+            <td data-champ="statut_rca">${l.statut_rca === 'provided' ? 'Provided' : 'Not Provided'}</td>
+            <td data-champ="impact" style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.impact)}</td>
+            <td data-champ="affected_service" style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.affected_service)}</td>
+            <td data-champ="root_cause" style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.root_cause)}</td>
+            <td data-champ="action_resolution" style="max-width:200px; white-space:pre-wrap;">${echapperHtml(l.action_resolution)}</td>
+            <td data-champ="duree">${echapperHtml(l.duree)}</td>
+            <td data-champ="team">${echapperHtml(l.team)}</td>
+            <td data-champ="in_charge">${echapperHtml(l.in_charge)}</td>
+            <td data-champ="service_now_status">${echapperHtml(l.service_now_status)}</td>
+            <td data-champ="close_date">${echapperHtml(l.close_date)}</td>
+            <td>${echapperHtml(l.rca)}</td>
+        `;
+        corps.appendChild(tr);
+    });
+}
+
+function activerModeEditionApercuLong() {
+    const corps = document.getElementById('corps-apercu-long');
+    const champsTexte = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'team', 'in_charge', 'service_now_status', 'duree'];
+    const champsDate = ['date_signalement', 'close_date'];
+    const champsLongs = ['description', 'impact', 'affected_service', 'root_cause', 'action_resolution'];
+
+    corps.querySelectorAll('tr').forEach(tr => {
+        [...champsTexte, ...champsDate, 'statut_rca'].forEach(champ => {
+            const td = tr.querySelector(`[data-champ="${champ}"]`);
+            if (!td) return;
+            const valeur = td.textContent;
+
+            let input;
+            if (champ === 'statut_rca') {
+                input = document.createElement('select');
+                [['provided', 'Provided'], ['not_provided', 'Not Provided']].forEach(([val, label]) => {
+                    const option = document.createElement('option');
+                    option.value = val;
+                    option.textContent = label;
+                    if (label === valeur) option.selected = true;
+                    input.appendChild(option);
+                });
+            } else if (champsLongs.includes(champ)) {
+                input = document.createElement('textarea');
+                input.value = valeur;
+            } else {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.value = valeur;
+            }
+
+            input.style.width = '100%';
+            input.style.boxSizing = 'border-box';
+            input.dataset.champ = champ;
+
+            td.textContent = '';
+            td.appendChild(input);
+        });
+    });
+
+    document.getElementById('btn-modifier-apercu-long').style.display = 'none';
+    document.getElementById('btn-enregistrer-apercu-long').style.display = '';
+    document.getElementById('btn-annuler-apercu-long').style.display = '';
+}
+
+function annulerModificationsApercuLong() {
+    afficherApercuLongEnLecture();
+    document.getElementById('btn-modifier-apercu-long').style.display = '';
+    document.getElementById('btn-enregistrer-apercu-long').style.display = 'none';
+    document.getElementById('btn-annuler-apercu-long').style.display = 'none';
+}
+
+async function enregistrerModificationsApercuLong() {
+    const corps = document.getElementById('corps-apercu-long');
+    const lignes = corps.querySelectorAll('tr');
+    const requetes = [];
+
+    lignes.forEach(tr => {
+        const pk = tr.dataset.pk;
+        const donnees = {};
+        tr.querySelectorAll('[data-champ]').forEach(td => {
+            const input = td.querySelector('input, textarea, select');
+            if (input) donnees[input.dataset.champ] = input.value;
+        });
+
+        requetes.push(
+            fetch(`/api/incidents/${pk}/`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(donnees),
+            }).then(res => res.json().then(data => ({ ok: res.ok, pk, data })))
+        );
+    });
+
+    try {
+        const resultats = await Promise.all(requetes);
+        const echecs = resultats.filter(r => !r.ok);
+
+        if (echecs.length > 0) {
+            alert(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`);
+        }
+
+        document.getElementById('btn-modifier-apercu-long').style.display = '';
+        document.getElementById('btn-enregistrer-apercu-long').style.display = 'none';
+        document.getElementById('btn-annuler-apercu-long').style.display = 'none';
+
+        await ouvrirApercuLong();
+        await chargerListeImportsIncidents();
+    } catch (erreur) {
+        alert('Erreur : ' + erreur.message);
+        console.error(erreur);
+    }
 }
 
 function fermerApercuLong() {

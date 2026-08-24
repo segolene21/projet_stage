@@ -859,11 +859,14 @@ def _parser_date(valeur):
         return None
     if isinstance(valeur, dt_module.datetime):
         return timezone.make_aware(valeur) if timezone.is_naive(valeur) else valeur
-    try:
-        parsed = dt_module.datetime.strptime(str(valeur).strip(), "%d/%m/%Y %H:%M")
-        return timezone.make_aware(parsed)
-    except ValueError:
-        return None
+    texte = str(valeur).strip()
+    for fmt in ("%d/%m/%Y %H:%M", "%Y-%m-%dT%H:%M"):
+        try:
+            parsed = dt_module.datetime.strptime(texte, fmt)
+            return timezone.make_aware(parsed)
+        except ValueError:
+            continue
+    return None
 
 
 def _parser_statut_rca(valeur):
@@ -1126,12 +1129,30 @@ def incident_detail(request, incident_pk):
             return JsonResponse({"message": "Incident supprimé"})
 
         if request.method == 'PUT':
-         data = json.loads(request.body)
-         for champ in ('incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'statut_rca', 'owner_email'):
-             if champ in data:
-                 setattr(incident, champ, data[champ])
-        incident.save()
-        return JsonResponse({"message": "Incident modifié"})
+            data = json.loads(request.body)
+
+            champs_texte = ('incident_id', 'description', 'severite', 'impact', 'affected_service',
+                             'root_cause', 'action_resolution', 'statut_rca', 'owner_email',
+                             'team', 'in_charge', 'service_now_status')
+            for champ in champs_texte:
+                if champ in data:
+                    setattr(incident, champ, data[champ])
+
+            if 'date_signalement' in data:
+                incident.date_signalement = _parser_date(data['date_signalement']) if data['date_signalement'] else None
+
+            if 'close_date' in data:
+                incident.close_date = _parser_date(data['close_date']) if data['close_date'] else None
+
+            if 'duree_secondes' in data:
+                try:
+                    incident.duree_secondes = int(data['duree_secondes']) if data['duree_secondes'] else None
+                except (ValueError, TypeError):
+                    pass
+
+            incident.save()
+            return JsonResponse({"message": "Incident modifié"})
+
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
@@ -1347,6 +1368,8 @@ def _export_incidents_court(incidents, response):
     ws.freeze_panes = "A2"
 
     wb.save(response)
+
+
 @login_required
 def apercu_rapport_long(request, lot_id):
     try:
@@ -1359,12 +1382,13 @@ def apercu_rapport_long(request, lot_id):
     lignes = []
     for i in incidents:
         lignes.append({
+            "id": i.id,
             "month": i.month,
             "incident_id": i.incident_id,
             "description": i.description,
-            "date_signalement": timezone.localtime(i.date_signalement).strftime("%m/%d/%Y %I:%M %p") if i.date_signalement else "",
+            "date_signalement": timezone.localtime(i.date_signalement).strftime("%d/%m/%Y %H:%M") if i.date_signalement else "",
             "severite": i.severite,
-            "statut_rca": i.get_statut_rca_display() if i.statut_rca else "",
+            "statut_rca": i.statut_rca,
             "impact": i.impact,
             "affected_service": i.affected_service,
             "root_cause": i.root_cause,
@@ -1373,7 +1397,7 @@ def apercu_rapport_long(request, lot_id):
             "team": i.team,
             "in_charge": i.in_charge,
             "service_now_status": i.service_now_status,
-            "close_date": timezone.localtime(i.close_date).strftime("%m/%d/%Y %I:%M %p") if i.close_date else "",
+            "close_date": timezone.localtime(i.close_date).strftime("%d/%m/%Y %H:%M") if i.close_date else "",
             "rca": "Oui" if i.rca_present else "Non",
         })
 
