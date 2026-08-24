@@ -15,6 +15,8 @@ function fermerModaleImport() {
     document.getElementById('fichier-ticket').value = '';
     document.getElementById('titre-import').value = '';
     donneesTicket = null;
+
+document.querySelector('#modale-import .modal-box').style.background = '';
 }
 
 function previsualiserTicket(input) {
@@ -57,10 +59,13 @@ function previsualiserTicket(input) {
         html += '</table>';
 
         document.getElementById('tableau-ticket').innerHTML = html;
-        document.getElementById('apercu-ticket').style.display = 'block';
+        document.querySelector('#modale-import .modal-box').style.maxWidth = '1200px';
+document.querySelector('#modale-import .modal-box').style.background = '#ffffff';
+document.getElementById('apercu-ticket').style.display = 'block';
     };
     reader.readAsArrayBuffer(fichier);
 }
+ 
 
 async function confirmerImport() {
     const inputFichier = document.getElementById('fichier-ticket');

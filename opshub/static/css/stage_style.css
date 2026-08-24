@@ -1922,3 +1922,50 @@ footer{
     max-width:900px;
     margin:0 auto;
 }
+
+
+
+#tableau-apercu-long th {
+    background: #1a1a1a;
+    color: #FFCC00;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    text-align: left;
+}
+
+#tableau-apercu-long td {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    vertical-align: top;
+}
+
+#tableau-apercu-long tbody tr:nth-child(even) {
+    background: rgba(255,204,0,.06);
+}
+
+#tableau-apercu-long tbody tr:hover {
+    background: rgba(255,204,0,.12);
+}
+
+#modale-apercu-long .modal-box {
+    background: #ffffff !important;
+}
+
+#tableau-apercu-long {
+    min-width: 2200px;
+}
+
+
+
+#modale-import-incidents .modal-title {
+    color: #111;
+}
+
+
+#modale-import .modal-title {
+    color: #111;
+}

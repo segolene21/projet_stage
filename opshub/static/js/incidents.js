@@ -9,13 +9,14 @@ function echapperHtml(texte) {
 }
 
 // --- Import ---
-
 function fermerModaleImportIncidents() {
     document.getElementById('modale-import-incidents').style.display = 'none';
     document.getElementById('apercu-incidents').style.display = 'none';
     document.getElementById('fichier-incidents').value = '';
     document.getElementById('titre-import-incidents').value = '';
     donneesIncidents = null;
+    document.querySelector('#modale-import-incidents .modal-box').style.maxWidth = '800px';
+document.querySelector('#modale-import-incidents .modal-box').style.background = '';
 }
 
 function previsualiserIncidents(input) {
@@ -54,7 +55,9 @@ function previsualiserIncidents(input) {
         html += '</table>';
 
         document.getElementById('tableau-apercu-incidents').innerHTML = html;
-        document.getElementById('apercu-incidents').style.display = 'block';
+       document.querySelector('#modale-import-incidents .modal-box').style.maxWidth = '1200px';
+document.querySelector('#modale-import-incidents .modal-box').style.background = '#ffffff';
+document.getElementById('apercu-incidents').style.display = 'block';
     };
     reader.readAsArrayBuffer(fichier);
 }
@@ -529,13 +532,13 @@ async function enregistrerModificationsGlobalesIncidents() {
 
 // --- Téléchargement ---
 
-function telechargerLotIncidents(lotId, format) {
-    window.location.href = `/api/incidents-imports/${lotId}/export/?format=${format}`;
+function telechargerLotIncidents(lotId, type) {
+    window.location.href = `/api/incidents-imports/${lotId}/export/?type=${type}`;
 }
 
-function telechargerLotIncidentsActuel(format) {
+function telechargerLotIncidentsActuel(type) {
     if (!lotIncidentsActuelId) return;
-    telechargerLotIncidents(lotIncidentsActuelId, format);
+    telechargerLotIncidents(lotIncidentsActuelId, type);
 }
 
 // --- Init ---
@@ -611,4 +614,50 @@ function reinitialiserFiltresImportsIncidents() {
     document.getElementById('filtre-semaine-incidents').style.display = 'none';
     document.getElementById('filtre-semaine-incidents').value = '';
     chargerListeImportsIncidents();
+}
+
+async function ouvrirApercuLong() {
+    if (!lotIncidentsActuelId) return;
+
+    try {
+        const res = await fetch(`/api/incidents-imports/${lotIncidentsActuelId}/apercu-long/`, { cache: 'no-store' });
+        const data = await res.json();
+
+        const corps = document.getElementById('corps-apercu-long');
+        corps.innerHTML = '';
+
+        data.lignes.forEach(l => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${echapperHtml(l.month)}</td>
+                <td>${echapperHtml(l.incident_id)}</td>
+                <td style="max-width:250px; white-space:pre-wrap;">${echapperHtml(l.description)}</td>
+                <td>${echapperHtml(l.date_signalement)}</td>
+                <td>${echapperHtml(l.severite)}</td>
+                <td>${echapperHtml(l.statut_rca)}</td>
+                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.impact)}</td>
+                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.affected_service)}</td>
+                <td style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.root_cause)}</td>
+                <td style="max-width:200px; white-space:pre-wrap;">${echapperHtml(l.action_resolution)}</td>
+                <td>${echapperHtml(l.duree)}</td>
+                <td>${echapperHtml(l.team)}</td>
+                <td>${echapperHtml(l.in_charge)}</td>
+                <td>${echapperHtml(l.service_now_status)}</td>
+                <td>${echapperHtml(l.close_date)}</td>
+                <td>${echapperHtml(l.rca)}</td>
+            `;
+            corps.appendChild(tr);
+        });
+
+        document.getElementById('modale-incidents').style.display = 'none';
+        document.getElementById('modale-apercu-long').style.display = 'flex';
+    } catch (erreur) {
+    afficherToast('Erreur lors du chargement de l\'aperçu : ' + erreur.message, 'erreur');
+    console.error(erreur);
+   }
+}
+
+function fermerApercuLong() {
+    document.getElementById('modale-apercu-long').style.display = 'none';
+    document.getElementById('modale-incidents').style.display = 'flex';
 }

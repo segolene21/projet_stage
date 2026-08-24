@@ -238,13 +238,18 @@ class Incident(models.Model):
     incident_id = models.CharField(max_length=100, verbose_name="ID")
     description = models.TextField(verbose_name="Issue Description")
     date_signalement = models.DateTimeField(null=True, blank=True, verbose_name="Reported Date")
-    severite = models.CharField(max_length=10, blank=True, verbose_name="Severity")
+    severite = models.CharField(max_length=20, blank=True, verbose_name="Severity")
     impact = models.TextField(blank=True, verbose_name="Impact")
     affected_service = models.TextField(blank=True, verbose_name="Affected Service")
     root_cause = models.TextField(blank=True, verbose_name="Root Cause")
     action_resolution = models.TextField(blank=True, verbose_name="Action for Resolution")
-    duree = models.DurationField(null=True, blank=True, verbose_name="Duration")
+    duree_secondes = models.IntegerField(null=True, blank=True, verbose_name="Duration (secondes)")
     statut_rca = models.CharField(max_length=20, choices=StatutRCA.choices, blank=True, verbose_name="RCA Status")
+
+    team = models.CharField(max_length=150, blank=True, verbose_name="TEAM")
+    in_charge = models.CharField(max_length=150, blank=True, verbose_name="In charge")
+    service_now_status = models.CharField(max_length=50, blank=True, verbose_name="STATUS")
+    close_date = models.DateTimeField(null=True, blank=True, verbose_name="Close date")
 
     owner_email = models.EmailField(blank=True, null=True, verbose_name="Email du owner")
     rca_fichier = models.FileField(upload_to='rca/', blank=True, null=True, verbose_name="RCA (PDF)")
@@ -263,3 +268,7 @@ class Incident(models.Model):
     @property
     def rca_present(self):
         return bool(self.rca_fichier)
+
+    @property
+    def month(self):
+        return self.date_signalement.strftime("%B %Y") if self.date_signalement else ""
