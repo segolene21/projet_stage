@@ -118,9 +118,12 @@
             <h2>Aperçu — Rapport long</h2>
             <button onclick="fermerApercuLong()">Fermer</button>
         </div>
-        <div class="modale-actions-top">
-            <button onclick="telechargerLotIncidentsActuel('long')">Télécharger ce rapport</button>
-        </div>
+       <div class="modale-actions-top">
+    <button onclick="telechargerLotIncidentsActuel('long')">Télécharger ce rapport</button>
+    <button id="btn-modifier-apercu-long" onclick="activerModeEditionApercuLong()">Modifier</button>
+    <button id="btn-enregistrer-apercu-long" onclick="enregistrerModificationsApercuLong()" style="display:none;">Enregistrer</button>
+    <button id="btn-annuler-apercu-long" onclick="annulerModificationsApercuLong()" style="display:none;">Annuler</button>
+</div>
         <div style="overflow-x:auto;">
             <table id="tableau-apercu-long">
                 <thead>
