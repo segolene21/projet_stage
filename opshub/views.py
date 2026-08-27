@@ -1403,3 +1403,196 @@ def apercu_rapport_long(request, lot_id):
         })
 
     return JsonResponse({"titre": lot.titre, "lignes": lignes})
+
+    import re
+from collections import Counter
+from datetime import timedelta
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Avg, Count, Q
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils import timezone
+
+from .models import (
+    Feedback,
+    Incident,
+    OutilMonitoring,
+    Plainte,
+    Recommandation,
+    Service,
+    Ticket,
+)
+
+PERIODES = {
+    "semaine": 7,
+    "mois": 30,
+    "trimestre": 90,
+}
+
+MOTS_VIDES = {
+    "le", "la", "les", "de", "des", "du", "un", "une", "et", "est", "en",
+    "que", "qui", "pour", "dans", "sur", "avec", "pas", "plus", "ne",
+    "se", "ce", "cette", "ces", "au", "aux", "il", "elle", "on", "nous",
+    "vous", "ils", "à", "a", "été", "être", "avoir", "sont", "je",
+}
+
+
+def _borne_periode(periode):
+    jours = PERIODES.get(periode, 30)
+    return timezone.now() - timedelta(days=jours)
+
+
+def sujets_recurrents(plaintes_qs, top_n=5):
+    """Extraction simple des mots les plus fréquents dans le contenu
+    des plaintes récentes (sans NLP avancé, sans lemmatisation)."""
+    mots = []
+    for plainte in plaintes_qs:
+        tokens = re.findall(r"[a-zàâäéèêëïîôöùûüç]{4,}", plainte.contenu.lower())
+        mots.extend(t for t in tokens if t not in MOTS_VIDES)
+    compteur = Counter(mots)
+    return [
+        {"mot": mot, "occurrences": n}
+        for mot, n in compteur.most_common(top_n)
+        if n >= 2
+    ]
+
+
+def est_autorise_dashboard(user):
+    """Ajuste ici la liste des rôles autorisés à voir le dashboard."""
+    return user.is_manager or user.is_senior_manager or user.is_teamlead
+
+
+@login_required
+@user_passes_test(est_autorise_dashboard)
+def dashboard_page(request):
+    """Affiche la page du dashboard. Le contenu est vide côté serveur :
+    le JS (côté binôme) va chercher les données via dashboard_data()
+    et remplit les conteneurs."""
+    return render(request, "dashboard/manager_dashboard.html")
+
+
+@login_required
+@user_passes_test(est_autorise_dashboard)
+def dashboard_data(request):
+    """Retourne toutes les données du dashboard en JSON.
+    Paramètre GET optionnel : periode = semaine | mois | trimestre (défaut: mois)"""
+    periode = request.GET.get("periode", "mois")
+    depuis = _borne_periode(periode)
+
+    # ---------- TICKETS ----------
+    tickets_qs = Ticket.objects.filter(cree_le__gte=depuis)
+    tickets_par_agent = (
+        tickets_qs.values("assigned_to")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:10]
+    )
+    tickets_sans_feedback = tickets_qs.filter(
+        Q(feedback__isnull=True) | Q(feedback__exact="")
+    ).count()
+    seuil_anciennete = timezone.now() - timedelta(days=7)
+    tickets_anciens = (
+        tickets_qs.filter(cree_le__lt=seuil_anciennete)
+        .exclude(state__iexact="closed")
+        .count()
+    )
+
+    # ---------- INCIDENTS ----------
+    incidents_qs = Incident.objects.filter(date_signalement__gte=depuis)
+    incidents_par_severite = (
+        incidents_qs.values("severite").annotate(total=Count("id")).order_by("-total")
+    )
+    incidents_par_equipe = (
+        incidents_qs.values("team")
+        .annotate(total=Count("id"), duree_moy=Avg("duree_secondes"))
+        .order_by("-total")
+    )
+    rca_en_attente = incidents_qs.filter(
+        statut_rca=Incident.StatutRCA.NOT_PROVIDED
+    ).order_by("date_signalement")
+    duree_moyenne = incidents_qs.aggregate(moy=Avg("duree_secondes"))["moy"]
+
+    tendance_mensuelle = []
+    for i in range(5, -1, -1):
+        mois_debut = timezone.now().replace(day=1) - timedelta(days=30 * i)
+        mois_fin = mois_debut + timedelta(days=30)
+        count = Incident.objects.filter(
+            date_signalement__gte=mois_debut, date_signalement__lt=mois_fin
+        ).count()
+        tendance_mensuelle.append({"mois": mois_debut.strftime("%b %Y"), "total": count})
+
+    # ---------- CATALOGUE (Outils / Services) ----------
+    outils_qs = OutilMonitoring.objects.select_related("outil_team")
+    outils_sans_owner = outils_qs.filter(
+        Q(outil_team__nom_point_de_contact__exact="")
+        | Q(outil_team__nom_point_de_contact__isnull=True)
+    ).count()
+    services_non_couverts = Service.objects.filter(outils_monitoring__isnull=True).count()
+    outils_par_equipe = (
+        outils_qs.values("outil_team__nom").annotate(total=Count("id")).order_by("-total")
+    )
+    outils_avec_auth = outils_qs.filter(necessite_authentification=True).count()
+    outils_sans_auth = outils_qs.filter(necessite_authentification=False).count()
+
+    # ---------- EXPERIENCES MEMBRES ----------
+    feedbacks_qs = Feedback.objects.filter(date_soumission__gte=depuis)
+    plaintes_qs = Plainte.objects.filter(date_ajout__gte=depuis)
+    recommandations_qs = Recommandation.objects.filter(date_soumission__gte=depuis)
+
+    plaintes_anonymes = plaintes_qs.filter(anonyme=True).count()
+    plaintes_nominatives = plaintes_qs.filter(anonyme=False).count()
+
+    data = {
+        "periode": periode,
+        "kpis": {
+            "tickets_ouverts": tickets_qs.exclude(state__iexact="closed").count(),
+            "incidents_actifs": incidents_qs.exclude(
+                service_now_status__iexact="closed"
+            ).count(),
+            "rca_en_attente": rca_en_attente.count(),
+            "duree_moyenne_resolution_secondes": duree_moyenne,
+            "outils_sans_owner": outils_sans_owner,
+            "services_non_couverts": services_non_couverts,
+            "feedbacks_recents": feedbacks_qs.count()
+            + plaintes_qs.count()
+            + recommandations_qs.count(),
+        },
+        "tickets": {
+            "par_agent": list(tickets_par_agent),
+            "sans_feedback": tickets_sans_feedback,
+            "anciens_plus_7j": tickets_anciens,
+        },
+        "incidents": {
+            "par_severite": list(incidents_par_severite),
+            "par_equipe": list(incidents_par_equipe),
+            "rca_en_attente": [
+                {
+                    "incident_id": inc.incident_id,
+                    "severite": inc.severite,
+                    "date_signalement": inc.date_signalement,
+                    "team": inc.team,
+                }
+                for inc in rca_en_attente[:20]
+            ],
+            "tendance_mensuelle": tendance_mensuelle,
+        },
+        "catalogue": {
+            "total_outils": outils_qs.count(),
+            "total_services": Service.objects.count(),
+            "outils_sans_owner": outils_sans_owner,
+            "services_non_couverts": services_non_couverts,
+            "par_equipe": list(outils_par_equipe),
+            "avec_authentification": outils_avec_auth,
+            "sans_authentification": outils_sans_auth,
+        },
+        "experiences": {
+            "feedbacks": feedbacks_qs.count(),
+            "plaintes": plaintes_qs.count(),
+            "recommandations": recommandations_qs.count(),
+            "plaintes_anonymes": plaintes_anonymes,
+            "plaintes_nominatives": plaintes_nominatives,
+            "sujets_recurrents": sujets_recurrents(plaintes_qs),
+        },
+    }
+
+    return JsonResponse(data, json_dumps_params={"default": str, "ensure_ascii": False})

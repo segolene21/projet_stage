@@ -62,4 +62,6 @@ urlpatterns += [
     path("api/incidents/<int:incident_pk>/", views.incident_detail, name="incident_detail"),
     path("api/incidents/<int:incident_pk>/rca/", views.uploader_rca, name="uploader_rca"),
     path("api/incidents-imports/<int:lot_id>/apercu-long/", views.apercu_rapport_long, name="apercu_rapport_long"),
+    path("api/dashboard/", views.dashboard_data, name="dashboard_data"),
+    path("dashboard/", views.dashboard_page, name="dashboard_page"),
     ]
