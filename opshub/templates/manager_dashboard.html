@@ -1,43 +1,32 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
-<div id="dashboard-root" data-api-url="{% url 'dashboard_data' %}">
+<div class="page-centree" style="max-width:1100px;">
+  <div id="dashboard-root" data-api-url="{% url 'dashboard_data' %}">
 
-  <div id="dashboard-header">
-    <!-- titre + sélecteur de période, ex: <select id="periode-select"> -->
+    <div class="outils-header" id="dashboard-header">
+      <h1>Dashboard</h1>
+      <select id="periode-select" class="btn-secondary" style="cursor:pointer;">
+        <option value="semaine">Cette semaine</option>
+        <option value="mois" selected>Ce mois</option>
+        <option value="annee">Cette année</option>
+      </select>
+    </div>
+
+    <div id="alerte-container"></div>
+
+    <div id="kpis-container" class="dashboard-kpis-grid"></div>
+
+    <div class="dashboard-sections-grid">
+      <div class="detail-card dashboard-section" id="tickets-container"></div>
+      <div class="detail-card dashboard-section" id="incidents-container"></div>
+      <div class="detail-card dashboard-section" id="catalogue-container"></div>
+      <div class="detail-card dashboard-section" id="experiences-container"></div>
+    </div>
+
   </div>
-
-  <div id="alerte-container">
-    <!-- bandeau d'alerte RCA en retard, rempli en JS depuis kpis.rca_en_attente -->
-  </div>
-
-  <div id="kpis-container">
-    <!-- cartes KPI : tickets_ouverts, incidents_actifs, rca_en_attente,
-         duree_moyenne_resolution_secondes, outils_sans_owner,
-         services_non_couverts, feedbacks_recents -->
-  </div>
-
-  <div id="tickets-container">
-    <!-- tickets.par_agent, tickets.sans_feedback, tickets.anciens_plus_7j -->
-  </div>
-
-  <div id="incidents-container">
-    <!-- incidents.par_severite, incidents.par_equipe,
-         incidents.rca_en_attente (liste), incidents.tendance_mensuelle -->
-  </div>
-
-  <div id="catalogue-container">
-    <!-- catalogue.total_outils, total_services, par_equipe,
-         avec_authentification / sans_authentification -->
-  </div>
-
-  <div id="experiences-container">
-    <!-- experiences.feedbacks, plaintes, recommandations,
-         plaintes_anonymes / plaintes_nominatives, sujets_recurrents -->
-  </div>
-
 </div>
-
-<script src="{% static 'dashboard/dashboard.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

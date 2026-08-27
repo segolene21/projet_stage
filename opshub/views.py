@@ -1469,7 +1469,7 @@ def dashboard_page(request):
     """Affiche la page du dashboard. Le contenu est vide côté serveur :
     le JS (côté binôme) va chercher les données via dashboard_data()
     et remplit les conteneurs."""
-    return render(request, "dashboard/manager_dashboard.html")
+    return render(request, "manager_dashboard.html")
 
 
 @login_required
