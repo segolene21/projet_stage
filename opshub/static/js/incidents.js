@@ -429,18 +429,18 @@ function activerModeEditionGlobalIncidents() {
 
             let input;
             if (champ === 'statut_rca') {
-                input = document.createElement('select');
-                [
-                    ['provided', 'Provided'],
-                    ['not_provided', 'Not Provided'],
-                ].forEach(([val, label]) => {
-                    const option = document.createElement('option');
-                    option.value = val;
-                    option.textContent = label;
-                    if (label === valeur) option.selected = true;
-                    input.appendChild(option);
-                });
-            } else if (champsLongs.includes(champ)) {
+    input = document.createElement('select');
+    [
+        ['provided', 'Provided'],
+        ['not_provided', 'Not Provided'],
+    ].forEach(([val, label]) => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = label;
+        if (val === valeur) option.selected = true;
+        input.appendChild(option);
+    });
+}  else if (champsLongs.includes(champ)) {
                 input = document.createElement('textarea');
                 input.value = valeur;
             } else {
@@ -668,9 +668,9 @@ function afficherApercuLongEnLecture() {
 
 function activerModeEditionApercuLong() {
     const corps = document.getElementById('corps-apercu-long');
-    champs_texte = ('incident_id', 'description', 'severite', 'impact', 'affected_service',
-                 'root_cause', 'action_resolution', 'statut_rca', 'owner_email',
-                 'team', 'in_charge', 'service_now_status', 'cc_emails')
+   const champsTexte = ['incident_id', 'description', 'severite', 'impact', 'affected_service',
+             'root_cause', 'action_resolution', 'owner_email',
+             'team', 'in_charge', 'service_now_status', 'cc_emails'];
     const champsDate = ['date_signalement', 'close_date'];
     const champsLongs = ['description', 'impact', 'affected_service', 'root_cause', 'action_resolution'];
 
