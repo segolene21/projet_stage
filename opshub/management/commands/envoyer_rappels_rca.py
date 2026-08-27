@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.utils import timezone
 from datetime import timedelta
 from opshub.models import Incident
@@ -27,10 +27,14 @@ class Command(BaseCommand):
             return
 
         for incident in incidents_a_relancer:
+            destinataires_copie = []
+            if incident.cc_emails:
+                destinataires_copie = [e.strip() for e in incident.cc_emails.split(',') if e.strip()]
+
             try:
-                send_mail(
+                message = EmailMessage(
                     subject=f"Rappel RCA requis — Incident {incident.incident_id}",
-                    message=(
+                    body=(
                         f"Bonjour,\n\n"
                         f"Le RCA de l'incident {incident.incident_id} n'a pas encore été fourni.\n"
                         f"Description : {incident.description}\n"
@@ -38,12 +42,15 @@ class Command(BaseCommand):
                         f"Merci de le fournir dans les meilleurs délais.\n\n"
                         f"— OpsHub, MTN Bénin"
                     ),
-                    from_email=None,
-                    recipient_list=[incident.owner_email],
-                    fail_silently=False,
+                    to=[incident.owner_email],
+                    cc=destinataires_copie,
                 )
+                message.send(fail_silently=False)
+
                 incident.dernier_rappel_envoye = maintenant
                 incident.save(update_fields=['dernier_rappel_envoye'])
-                self.stdout.write(self.style.SUCCESS(f"Mail envoyé pour {incident.incident_id} → {incident.owner_email}"))
+                self.stdout.write(self.style.SUCCESS(
+                    f"Mail envoyé pour {incident.incident_id} → {incident.owner_email} (cc: {', '.join(destinataires_copie) or 'aucun'})"
+                ))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"Échec pour {incident.incident_id} : {e}"))

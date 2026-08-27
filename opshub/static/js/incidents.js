@@ -408,7 +408,7 @@ async function supprimerIncident(pk) {
 
 function activerModeEditionGlobalIncidents() {
     const corps = document.getElementById('corps-tableau-incidents');
-    const champsEditables = ['incident_id', 'description', 'date_signalement', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'duree', 'statut_rca', 'owner_email'];
+    const champsEditables = ['incident_id', 'description', 'date_signalement', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'duree', 'statut_rca', 'owner_email', 'cc_emails'];
 
     corps.querySelectorAll('tr').forEach(tr => {
         champsEditables.forEach(champ => {
@@ -567,6 +567,7 @@ function afficherIncidentsEnLecture() {
             <td data-champ="duree">${echapperHtml(i.duree)}</td>
             <td data-champ="statut_rca">${echapperHtml(i.statut_rca)}</td>
             <td data-champ="owner_email">${echapperHtml(i.owner_email)}</td>
+            <td data-champ="cc_emails">${echapperHtml(i.cc_emails)}</td>
             <td data-role="rca-cell">
                 ${i.rca_present
                     ? `<a href="${i.rca_url}" target="_blank" class="detail-link">Voir PDF</a>`
@@ -667,7 +668,9 @@ function afficherApercuLongEnLecture() {
 
 function activerModeEditionApercuLong() {
     const corps = document.getElementById('corps-apercu-long');
-    const champsTexte = ['incident_id', 'description', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'team', 'in_charge', 'service_now_status', 'duree'];
+    champs_texte = ('incident_id', 'description', 'severite', 'impact', 'affected_service',
+                 'root_cause', 'action_resolution', 'statut_rca', 'owner_email',
+                 'team', 'in_charge', 'service_now_status', 'cc_emails')
     const champsDate = ['date_signalement', 'close_date'];
     const champsLongs = ['description', 'impact', 'affected_service', 'root_cause', 'action_resolution'];
 

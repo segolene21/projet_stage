@@ -252,6 +252,7 @@ class Incident(models.Model):
     close_date = models.DateTimeField(null=True, blank=True, verbose_name="Close date")
 
     owner_email = models.EmailField(blank=True, null=True, verbose_name="Email du owner")
+    cc_emails = models.TextField(blank=True, null=True, verbose_name="CC (emails séparés par des virgules)")
     rca_fichier = models.FileField(upload_to='rca/', blank=True, null=True, verbose_name="RCA (PDF)")
 
     dernier_rappel_envoye = models.DateTimeField(null=True, blank=True)
