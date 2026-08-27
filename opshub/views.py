@@ -1005,6 +1005,7 @@ def incidents_du_lot(request, lot_id):
             "duree": str(i.duree_secondes) if i.duree_secondes else "",
             "statut_rca": i.statut_rca,
             "owner_email": i.owner_email or "",
+            "cc_emails": i.cc_emails or "",
             "rca_present": i.rca_present,
             "rca_url": i.rca_fichier.url if i.rca_fichier else "",
             "modifie_le": timezone.localtime(i.modifie_le).strftime("%d/%m/%Y %H:%M"),
@@ -1186,7 +1187,7 @@ def incident_detail(request, incident_pk):
 
             champs_texte = ('incident_id', 'description', 'severite', 'impact', 'affected_service',
                              'root_cause', 'action_resolution', 'statut_rca', 'owner_email',
-                             'team', 'in_charge', 'service_now_status')
+                             'team', 'in_charge', 'service_now_status', 'cc_emails')
             for champ in champs_texte:
                 if champ in data:
                     setattr(incident, champ, data[champ])
