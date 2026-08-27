@@ -423,7 +423,7 @@ function activerModeEditionGlobalIncidents() {
             }
 
             if (champ === 'incident_id') {
-    td.style.minWidth = '130px';
+    td.style.minWidth = '180px';
     td.style.width = '130px';
 }
 
@@ -677,6 +677,16 @@ function activerModeEditionApercuLong() {
             if (!td) return;
             const valeur = td.textContent;
 
+            if (champsLongs.includes(champ)) {
+                td.style.maxWidth = '250px';
+                td.style.width = '250px';
+                td.style.minWidth = '250px';
+            }
+            
+            if (champ === 'incident_id') {
+    td.style.minWidth = '180px';
+    td.style.width = '180px';
+}
             let input;
             if (champ === 'statut_rca') {
                 input = document.createElement('select');
@@ -699,6 +709,22 @@ function activerModeEditionApercuLong() {
             input.style.width = '100%';
             input.style.boxSizing = 'border-box';
             input.dataset.champ = champ;
+
+            if (champsLongs.includes(champ)) {
+                input.style.resize = 'none';
+                input.style.overflow = 'hidden';
+                input.style.fontFamily = 'inherit';
+                input.style.fontSize = 'inherit';
+                input.style.padding = '6px';
+                input.style.lineHeight = '1.4';
+
+                const ajusterHauteur = () => {
+                    input.style.height = 'auto';
+                    input.style.height = input.scrollHeight + 'px';
+                };
+                input.addEventListener('input', ajusterHauteur);
+                requestAnimationFrame(ajusterHauteur);
+            }
 
             td.textContent = '';
             td.appendChild(input);
@@ -744,7 +770,9 @@ async function enregistrerModificationsApercuLong() {
         const echecs = resultats.filter(r => !r.ok);
 
         if (echecs.length > 0) {
-            alert(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`);
+            afficherToast(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`, 'erreur');
+        } else {
+            afficherToast('Modifications enregistrées', 'succes');
         }
 
         document.getElementById('btn-modifier-apercu-long').style.display = '';
@@ -754,7 +782,7 @@ async function enregistrerModificationsApercuLong() {
         await ouvrirApercuLong();
         await chargerListeImportsIncidents();
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
