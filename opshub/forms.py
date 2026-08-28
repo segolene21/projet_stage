@@ -63,7 +63,7 @@ class EquipeForm(forms.ModelForm):
 class ProfilForm(forms.ModelForm):
     class Meta:
         model = Utilisateurs
-        fields = ['first_name', 'last_name', 'email', 'adresse']
+        fields = ['username', 'first_name', 'last_name', 'email', 'adresse']
 
 
 class TicketImportForm(forms.Form):

@@ -333,10 +333,16 @@ def ajouter_utilisateur(request):
         form = ProfilForm(request.POST)
         role_id = request.POST.get('role_id')
         role = get_object_or_404(Role, id=role_id) if role_id else None
+        password = request.POST.get('password1')
+        password_confirm = request.POST.get('password2')
+
+        if password != password_confirm:
+            return JsonResponse({'succes': False, 'erreurs': {'password2': ['Les mots de passe ne correspondent pas']}}, status=400)
 
         if form.is_valid():
             utilisateur = form.save(commit=False)
             utilisateur.role = role
+            utilisateur.set_password(password)
             utilisateur.save()
             return JsonResponse({'succes': True, 'id': utilisateur.id, 'username': utilisateur.username, 'role': role.nom if role else ''}, status=201)
         return JsonResponse({'succes': False, 'erreurs': form.errors}, status=400)
@@ -1404,7 +1410,7 @@ def apercu_rapport_long(request, lot_id):
 
     return JsonResponse({"titre": lot.titre, "lignes": lignes})
 
-    import re
+import re
 from collections import Counter
 from datetime import timedelta
 
