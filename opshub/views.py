@@ -1102,60 +1102,7 @@ def export_lot_incidents(request, lot_id):
 
     return response
 
-    # ---------- STYLE ----------
-
-    couleur_entete_fond = "000000"    # noir
-    couleur_entete_texte = "FFC000"   # orange
-    couleur_ligne_alt = "FFF2CC"      # jaune pâle
-    police_nom = "Arial"
-
-    font_entete = Font(name=police_nom, bold=True, color=couleur_entete_texte, size=11)
-    fill_entete = PatternFill(start_color=couleur_entete_fond, end_color=couleur_entete_fond, fill_type="solid")
-    fill_alt = PatternFill(start_color=couleur_ligne_alt, end_color=couleur_ligne_alt, fill_type="solid")
-
-    bordure_fine = Side(style="thin", color="B7B7B7")
-    bordure = Border(left=bordure_fine, right=bordure_fine, top=bordure_fine, bottom=bordure_fine)
-
-    nb_colonnes = len(entetes)
-    nb_lignes = ws.max_row
-
-    # Ligne d'en-tête
-    for col in range(1, nb_colonnes + 1):
-        cellule = ws.cell(row=1, column=col)
-        cellule.font = font_entete
-        cellule.fill = fill_entete
-        cellule.border = bordure
-        cellule.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-
-    ws.row_dimensions[1].height = 28
-
-    # Lignes de données : bordures + alignement + alternance de couleur (1 ligne sur 2)
-    for row in range(2, nb_lignes + 1):
-        est_alt = (row % 2 == 0)
-        for col in range(1, nb_colonnes + 1):
-            cellule = ws.cell(row=row, column=col)
-            cellule.font = Font(name=police_nom, size=10)
-            cellule.border = bordure
-            cellule.alignment = Alignment(wrap_text=True, vertical="top")
-            if est_alt:
-                cellule.fill = fill_alt
-
-    # Largeurs de colonnes adaptées au contenu
-    largeurs_colonnes = {
-        'A': 18, 'B': 40, 'C': 18, 'D': 10, 'E': 30, 'F': 30,
-        'G': 35, 'H': 35, 'I': 12, 'J': 14, 'K': 25, 'L': 12,
-    }
-    for lettre, largeur in largeurs_colonnes.items():
-        ws.column_dimensions[lettre].width = largeur
-
-    # Ligne d'en-tête figée
-    ws.freeze_panes = "A2"
-
-    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = f'attachment; filename="{nom_base}.xlsx"'
-    wb.save(response)
-    return response
-
+   
 
 @csrf_exempt
 def supprimer_lot_incidents(request, lot_id):
@@ -1301,13 +1248,35 @@ def _export_incidents_long(incidents, response):
     ws = wb.active
     ws.title = "Incidents"
 
+    header_font = Font(bold=True, color="FFCC00", size=11)
+    header_fill = PatternFill("solid", fgColor="1A1A1A")
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    border = Border(
+        left=Side(style='thin', color='DDDDDD'),
+        right=Side(style='thin', color='DDDDDD'),
+        top=Side(style='thin', color='DDDDDD'),
+        bottom=Side(style='thin', color='DDDDDD')
+    )
+
     entetes = ["Month", "ID", "Issue Description", "Reported Date", "Severity", "SIGNED RCA STATUS",
                "Impacted", "Affected Service", "root cause", "Action for Resolution", "Duration",
                "TEAM", "In charge", "STATUS", "close date", "RCA"]
-    ws.append(entetes)
+    for col, entete in enumerate(entetes, 1):
+        cell = ws.cell(row=1, column=col, value=entete)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_align
+        cell.border = border
+    ws.row_dimensions[1].height = 25
 
-    for i in incidents:
-        ws.append([
+    fill_pair = [
+        PatternFill("solid", fgColor="FFFFFF"),
+        PatternFill("solid", fgColor="FFF8D6"),
+    ]
+    data_align = Alignment(vertical="top", wrap_text=True)
+
+    for row, i in enumerate(incidents, 2):
+        valeurs = [
             nettoyer_texte_excel(i.month),
             nettoyer_texte_excel(i.incident_id),
             nettoyer_texte_excel(i.description),
@@ -1324,7 +1293,12 @@ def _export_incidents_long(incidents, response):
             nettoyer_texte_excel(i.service_now_status),
             timezone.localtime(i.close_date).strftime("%m/%d/%Y %I:%M %p") if i.close_date else "",
             "Oui" if i.rca_present else "Non",
-        ])
+        ]
+        for col, val in enumerate(valeurs, 1):
+            cell = ws.cell(row=row, column=col, value=val)
+            cell.fill = fill_pair[row % 2]
+            cell.alignment = data_align
+            cell.border = border
 
     largeurs = {
         'A': 10, 'B': 15, 'C': 35, 'D': 18, 'E': 12, 'F': 16,
@@ -1334,25 +1308,46 @@ def _export_incidents_long(incidents, response):
     for lettre, largeur in largeurs.items():
         ws.column_dimensions[lettre].width = largeur
 
-    from openpyxl.styles import Alignment
-    for ligne in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(entetes)):
-        for cellule in ligne:
-            cellule.alignment = Alignment(wrap_text=True, vertical='top')
+    for r in range(2, ws.max_row + 1):
+        ws.row_dimensions[r].height = None
+
+    ws.freeze_panes = "A2"
 
     wb.save(response)
-
 
 def _export_incidents_court(incidents, response):
     wb = Workbook()
     ws = wb.active
     ws.title = "Incidents"
 
+    header_font = Font(bold=True, color="FFCC00", size=11)
+    header_fill = PatternFill("solid", fgColor="1A1A1A")
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    border = Border(
+        left=Side(style='thin', color='DDDDDD'),
+        right=Side(style='thin', color='DDDDDD'),
+        top=Side(style='thin', color='DDDDDD'),
+        bottom=Side(style='thin', color='DDDDDD')
+    )
+
     entetes = ["ID", "Issue Description", "Reported Date", "Severity", "Impact",
                "Affected Service", "root cause", "Action for Resolution", "Duration", "RCA"]
-    ws.append(entetes)
+    for col, entete in enumerate(entetes, 1):
+        cell = ws.cell(row=1, column=col, value=entete)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_align
+        cell.border = border
+    ws.row_dimensions[1].height = 25
 
-    for i in incidents:
-        ws.append([
+    fill_pair = [
+        PatternFill("solid", fgColor="FFFFFF"),
+        PatternFill("solid", fgColor="FFF8D6"),
+    ]
+    data_align = Alignment(vertical="top", wrap_text=True)
+
+    for row, i in enumerate(incidents, 2):
+        valeurs = [
             nettoyer_texte_excel(i.incident_id),
             nettoyer_texte_excel(i.description),
             timezone.localtime(i.date_signalement).strftime("%m/%d/%Y %I:%M %p") if i.date_signalement else "",
@@ -1363,16 +1358,21 @@ def _export_incidents_court(incidents, response):
             nettoyer_texte_excel(i.action_resolution),
             i.duree_secondes if i.duree_secondes is not None else "",
             i.get_statut_rca_display() if i.statut_rca else "",
-        ])
+        ]
+        for col, val in enumerate(valeurs, 1):
+            cell = ws.cell(row=row, column=col, value=val)
+            cell.fill = fill_pair[row % 2]
+            cell.alignment = data_align
+            cell.border = border
 
     largeurs = {'A': 15, 'B': 40, 'C': 18, 'D': 12, 'E': 25, 'F': 25, 'G': 25, 'H': 35, 'I': 12, 'J': 14}
     for lettre, largeur in largeurs.items():
         ws.column_dimensions[lettre].width = largeur
 
-    from openpyxl.styles import Alignment
-    for ligne in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(entetes)):
-        for cellule in ligne:
-            cellule.alignment = Alignment(wrap_text=True, vertical='top')
+    for r in range(2, ws.max_row + 1):
+        ws.row_dimensions[r].height = None
+
+    ws.freeze_panes = "A2"
 
     wb.save(response)
 
@@ -1410,4 +1410,195 @@ def apercu_rapport_long(request, lot_id):
 
     return JsonResponse({"titre": lot.titre, "lignes": lignes})
 
-    
+import re
+from collections import Counter
+from datetime import timedelta
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Avg, Count, Q
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils import timezone
+
+from .models import (
+    Feedback,
+    Incident,
+    OutilMonitoring,
+    Plainte,
+    Recommandation,
+    Service,
+    Ticket,
+)
+
+PERIODES = {
+    "semaine": 7,
+    "mois": 30,
+    "trimestre": 90,
+}
+
+MOTS_VIDES = {
+    "le", "la", "les", "de", "des", "du", "un", "une", "et", "est", "en",
+    "que", "qui", "pour", "dans", "sur", "avec", "pas", "plus", "ne",
+    "se", "ce", "cette", "ces", "au", "aux", "il", "elle", "on", "nous",
+    "vous", "ils", "à", "a", "été", "être", "avoir", "sont", "je",
+}
+
+
+def _borne_periode(periode):
+    jours = PERIODES.get(periode, 30)
+    return timezone.now() - timedelta(days=jours)
+
+
+def sujets_recurrents(plaintes_qs, top_n=5):
+    """Extraction simple des mots les plus fréquents dans le contenu
+    des plaintes récentes (sans NLP avancé, sans lemmatisation)."""
+    mots = []
+    for plainte in plaintes_qs:
+        tokens = re.findall(r"[a-zàâäéèêëïîôöùûüç]{4,}", plainte.contenu.lower())
+        mots.extend(t for t in tokens if t not in MOTS_VIDES)
+    compteur = Counter(mots)
+    return [
+        {"mot": mot, "occurrences": n}
+        for mot, n in compteur.most_common(top_n)
+        if n >= 2
+    ]
+
+
+def est_autorise_dashboard(user):
+    """Ajuste ici la liste des rôles autorisés à voir le dashboard."""
+    return user.is_manager or user.is_senior_manager or user.is_teamlead
+
+
+@login_required
+@user_passes_test(est_autorise_dashboard)
+def dashboard_page(request):
+    """Affiche la page du dashboard. Le contenu est vide côté serveur :
+    le JS (côté binôme) va chercher les données via dashboard_data()
+    et remplit les conteneurs."""
+    return render(request, "manager_dashboard.html")
+
+
+@login_required
+@user_passes_test(est_autorise_dashboard)
+def dashboard_data(request):
+    """Retourne toutes les données du dashboard en JSON.
+    Paramètre GET optionnel : periode = semaine | mois | trimestre (défaut: mois)"""
+    periode = request.GET.get("periode", "mois")
+    depuis = _borne_periode(periode)
+
+    # ---------- TICKETS ----------
+    tickets_qs = Ticket.objects.filter(cree_le__gte=depuis)
+    tickets_par_agent = (
+        tickets_qs.values("assigned_to")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:10]
+    )
+    tickets_sans_feedback = tickets_qs.filter(
+        Q(feedback__isnull=True) | Q(feedback__exact="")
+    ).count()
+    seuil_anciennete = timezone.now() - timedelta(days=7)
+    tickets_anciens = (
+        tickets_qs.filter(cree_le__lt=seuil_anciennete)
+        .exclude(state__iexact="closed")
+        .count()
+    )
+
+    # ---------- INCIDENTS ----------
+    incidents_qs = Incident.objects.filter(date_signalement__gte=depuis)
+    incidents_par_severite = (
+        incidents_qs.values("severite").annotate(total=Count("id")).order_by("-total")
+    )
+    incidents_par_equipe = (
+        incidents_qs.values("team")
+        .annotate(total=Count("id"), duree_moy=Avg("duree_secondes"))
+        .order_by("-total")
+    )
+    rca_en_attente = incidents_qs.filter(
+        statut_rca=Incident.StatutRCA.NOT_PROVIDED
+    ).order_by("date_signalement")
+    duree_moyenne = incidents_qs.aggregate(moy=Avg("duree_secondes"))["moy"]
+
+    tendance_mensuelle = []
+    for i in range(5, -1, -1):
+        mois_debut = timezone.now().replace(day=1) - timedelta(days=30 * i)
+        mois_fin = mois_debut + timedelta(days=30)
+        count = Incident.objects.filter(
+            date_signalement__gte=mois_debut, date_signalement__lt=mois_fin
+        ).count()
+        tendance_mensuelle.append({"mois": mois_debut.strftime("%b %Y"), "total": count})
+
+    # ---------- CATALOGUE (Outils / Services) ----------
+    outils_qs = OutilMonitoring.objects.select_related("outil_team")
+    outils_sans_owner = outils_qs.filter(
+        Q(outil_team__nom_point_de_contact__exact="")
+        | Q(outil_team__nom_point_de_contact__isnull=True)
+    ).count()
+    services_non_couverts = Service.objects.filter(outils_monitoring__isnull=True).count()
+    outils_par_equipe = (
+        outils_qs.values("outil_team__nom").annotate(total=Count("id")).order_by("-total")
+    )
+    outils_avec_auth = outils_qs.filter(necessite_authentification=True).count()
+    outils_sans_auth = outils_qs.filter(necessite_authentification=False).count()
+
+    # ---------- EXPERIENCES MEMBRES ----------
+    feedbacks_qs = Feedback.objects.filter(date_soumission__gte=depuis)
+    plaintes_qs = Plainte.objects.filter(date_ajout__gte=depuis)
+    recommandations_qs = Recommandation.objects.filter(date_soumission__gte=depuis)
+
+    plaintes_anonymes = plaintes_qs.filter(anonyme=True).count()
+    plaintes_nominatives = plaintes_qs.filter(anonyme=False).count()
+
+    data = {
+        "periode": periode,
+        "kpis": {
+            "tickets_ouverts": tickets_qs.exclude(state__iexact="closed").count(),
+            "incidents_actifs": incidents_qs.exclude(
+                service_now_status__iexact="closed"
+            ).count(),
+            "rca_en_attente": rca_en_attente.count(),
+            "duree_moyenne_resolution_secondes": duree_moyenne,
+            "outils_sans_owner": outils_sans_owner,
+            "services_non_couverts": services_non_couverts,
+            "feedbacks_recents": feedbacks_qs.count()
+            + plaintes_qs.count()
+            + recommandations_qs.count(),
+        },
+        "tickets": {
+            "par_agent": list(tickets_par_agent),
+            "sans_feedback": tickets_sans_feedback,
+            "anciens_plus_7j": tickets_anciens,
+        },
+        "incidents": {
+            "par_severite": list(incidents_par_severite),
+            "par_equipe": list(incidents_par_equipe),
+            "rca_en_attente": [
+                {
+                    "incident_id": inc.incident_id,
+                    "severite": inc.severite,
+                    "date_signalement": inc.date_signalement,
+                    "team": inc.team,
+                }
+                for inc in rca_en_attente[:20]
+            ],
+            "tendance_mensuelle": tendance_mensuelle,
+        },
+        "catalogue": {
+            "total_outils": outils_qs.count(),
+            "total_services": Service.objects.count(),
+            "outils_sans_owner": outils_sans_owner,
+            "services_non_couverts": services_non_couverts,
+            "par_equipe": list(outils_par_equipe),
+            "avec_authentification": outils_avec_auth,
+            "sans_authentification": outils_sans_auth,
+        },
+        "experiences": {
+            "feedbacks": feedbacks_qs.count(),
+            "plaintes": plaintes_qs.count(),
+            "recommandations": recommandations_qs.count(),
+            "plaintes_anonymes": plaintes_anonymes,
+            "plaintes_nominatives": plaintes_nominatives,
+            "sujets_recurrents": sujets_recurrents(plaintes_qs),
+        },
+    }
+
+    return JsonResponse(data, json_dumps_params={"default": str, "ensure_ascii": False})

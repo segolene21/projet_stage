@@ -112,18 +112,18 @@
     </div>
 </div>
 
-<div id="modale-apercu-long" class="modale" style="display:none;">
-    <div class="modale-contenu modale-large">
-        <div class="modale-header">
-            <h2>Aperçu — Rapport long</h2>
-            <button onclick="fermerApercuLong()">Fermer</button>
+<div id="modale-apercu-long" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:90vw; width:90%; max-height:90vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 class="modal-title" style="margin:0;">Aperçu — Rapport long</h2>
+            <button class="btn-secondary" onclick="fermerApercuLong()">Fermer</button>
         </div>
-       <div class="modale-actions-top">
-    <button onclick="telechargerLotIncidentsActuel('long')">Télécharger ce rapport</button>
-    <button id="btn-modifier-apercu-long" onclick="activerModeEditionApercuLong()">Modifier</button>
-    <button id="btn-enregistrer-apercu-long" onclick="enregistrerModificationsApercuLong()" style="display:none;">Enregistrer</button>
-    <button id="btn-annuler-apercu-long" onclick="annulerModificationsApercuLong()" style="display:none;">Annuler</button>
-</div>
+        <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="telechargerLotIncidentsActuel('long')">Télécharger ce rapport</button>
+            <button id="btn-modifier-apercu-long" class="btn-edit" onclick="activerModeEditionApercuLong()">Modifier</button>
+            <button id="btn-enregistrer-apercu-long" class="btn-edit" onclick="enregistrerModificationsApercuLong()" style="display:none;">Enregistrer</button>
+            <button id="btn-annuler-apercu-long" class="btn-secondary" onclick="annulerModificationsApercuLong()" style="display:none;">Annuler</button>
+        </div>
         <div style="overflow-x:auto;">
             <table id="tableau-apercu-long">
                 <thead>

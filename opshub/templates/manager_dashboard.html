@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-centree" style="max-width:1100px;">
+  <div id="dashboard-root" data-api-url="{% url 'dashboard_data' %}">
+
+    <div class="outils-header" id="dashboard-header">
+      <h1>Dashboard</h1>
+      <select id="periode-select" class="btn-secondary" style="cursor:pointer;">
+        <option value="semaine">Cette semaine</option>
+        <option value="mois" selected>Ce mois</option>
+        <option value="annee">Cette année</option>
+      </select>
+    </div>
+
+    <div id="alerte-container"></div>
+
+    <div id="kpis-container" class="dashboard-kpis-grid"></div>
+
+    <div class="dashboard-sections-grid">
+      <div class="detail-card dashboard-section" id="tickets-container"></div>
+      <div class="detail-card dashboard-section" id="incidents-container"></div>
+      <div class="detail-card dashboard-section" id="catalogue-container"></div>
+      <div class="detail-card dashboard-section" id="experiences-container"></div>
+    </div>
+
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

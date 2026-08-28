@@ -196,7 +196,7 @@ textarea{
     width:100%;
     max-width:500px;
     border:none;
-    background:#f6e764;
+    background:#fadf94;
     padding:15px 20px;
     border-radius:14px;
     box-shadow:0 6px 18px rgba(5, 5, 5, 0.05);
@@ -1921,4 +1921,230 @@ footer{
 .page-centree{
     max-width:900px;
     margin:0 auto;
+}
+
+
+
+#tableau-apercu-long th {
+    background: #1a1a1a;
+    color: #FFCC00;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    text-align: left;
+}
+
+#tableau-apercu-long td {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    vertical-align: top;
+}
+
+#tableau-apercu-long tbody tr:nth-child(even) {
+    background: rgba(255,204,0,.06);
+}
+
+#tableau-apercu-long tbody tr:hover {
+    background: rgba(255,204,0,.12);
+}
+
+#modale-apercu-long .modal-box {
+    background: #ffffff !important;
+}
+
+#tableau-apercu-long {
+    min-width: 2200px;
+}
+
+
+
+#modale-import-incidents .modal-title {
+    color: #111;
+}
+
+
+#modale-import .modal-title {
+    color: #111;
+}
+
+
+/* ================= DASHBOARD ================= */
+
+#dashboard-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+#dashboard-header h1{
+    font-size:26px;
+    font-weight:800;
+    color:#111;
+    margin:0;
+}
+
+#periode-select{
+    border:1px solid #e5e5e5;
+    border-radius:10px;
+    padding:9px 16px;
+    font-weight:700;
+    font-size:13px;
+    background:#fff;
+    color:#111;
+    cursor:pointer;
+}
+
+/* ---- KPI : cartes blanches, accent jaune ---- */
+.dashboard-kpis-grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:12px;
+    margin-bottom:24px;
+}
+
+.dashboard-kpi-card{
+    background:#fff;
+    border:1px solid #eee;
+    border-left:4px solid #facc15;
+    border-radius:10px;
+    padding:14px 16px;
+    text-align:left;
+}
+
+.dashboard-kpi-valeur{
+    font-size:22px;
+    font-weight:800;
+    color:#111;
+    margin-bottom:2px;
+}
+
+.dashboard-kpi-label{
+    font-size:11px;
+    color:#777;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+}
+
+/* Sur petit écran, on repasse en grille flexible */
+@media (max-width:1100px){
+    .dashboard-kpis-grid{
+        grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+    }
+}
+
+/* Carte RCA : alerte rouge réelle, se distingue du reste */
+.dashboard-kpi-alerte{
+    border-left-color:#dc2626;
+    background:#fef2f2;
+}
+.dashboard-kpi-alerte .dashboard-kpi-valeur{
+    color:#dc2626;
+}
+.dashboard-kpi-alerte .dashboard-kpi-label{
+    color:#b91c1c;
+}
+
+.dashboard-alerte{
+    background:#fef2f2;
+    color:#b91c1c;
+    border:1px solid #fecaca;
+    padding:14px 20px;
+    border-radius:12px;
+    font-weight:700;
+    margin-bottom:20px;
+}
+
+/* ---- Sections détaillées ---- */
+.dashboard-sections-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    align-items:start;
+}
+
+
+.dashboard-section{
+    max-width:none;
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:14px 18px;
+}
+
+/* Catalogue et Expériences n'ont pas de graphique : on les met côte à côte
+   pour ne pas gâcher une ligne entière avec du contenu court */
+#catalogue-container,
+#experiences-container{
+    display:inline-block;
+    width:calc(50% - 10px);
+    vertical-align:top;
+}
+
+#tickets-container,
+#incidents-container{
+    grid-column:1 / -1;
+}
+
+@media (max-width:800px){
+    .dashboard-sections-grid{
+        grid-template-columns:1fr;
+    }
+    #tickets-container,
+    #incidents-container,
+    #catalogue-container,
+    #experiences-container{
+        grid-column:1;
+    }
+}
+/* Espace généreux autour de chaque graphique */
+.dashboard-section canvas{
+    margin:8px 0 12px;
+    max-width:100%;
+    max-height:120px;
+}
+
+.dashboard-section-title{
+    font-size:15px;
+    font-weight:800;
+    color:#111;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:2px solid #facc15;
+}
+.dashboard-liste-classement{
+    list-style:none;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:0;
+    padding:0;
+}
+
+.dashboard-liste-classement li{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 14px;
+    background:#f9fafb;
+    border:1px solid #eee;
+    border-radius:999px;
+    font-size:13px;
+    color:#333;
+    white-space:nowrap;
+}
+
+.detail-subtitle{
+    font-size:12px;
+    font-weight:700;
+    color:#111;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    margin:10px 0 6px;
 }

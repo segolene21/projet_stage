@@ -9,13 +9,14 @@ function echapperHtml(texte) {
 }
 
 // --- Import ---
-
 function fermerModaleImportIncidents() {
     document.getElementById('modale-import-incidents').style.display = 'none';
     document.getElementById('apercu-incidents').style.display = 'none';
     document.getElementById('fichier-incidents').value = '';
     document.getElementById('titre-import-incidents').value = '';
     donneesIncidents = null;
+    document.querySelector('#modale-import-incidents .modal-box').style.maxWidth = '800px';
+document.querySelector('#modale-import-incidents .modal-box').style.background = '';
 }
 
 function previsualiserIncidents(input) {
@@ -54,7 +55,9 @@ function previsualiserIncidents(input) {
         html += '</table>';
 
         document.getElementById('tableau-apercu-incidents').innerHTML = html;
-        document.getElementById('apercu-incidents').style.display = 'block';
+       document.querySelector('#modale-import-incidents .modal-box').style.maxWidth = '1200px';
+document.querySelector('#modale-import-incidents .modal-box').style.background = '#ffffff';
+document.getElementById('apercu-incidents').style.display = 'block';
     };
     reader.readAsArrayBuffer(fichier);
 }
@@ -420,24 +423,24 @@ function activerModeEditionGlobalIncidents() {
             }
 
             if (champ === 'incident_id') {
-    td.style.minWidth = '130px';
+    td.style.minWidth = '180px';
     td.style.width = '130px';
 }
 
             let input;
             if (champ === 'statut_rca') {
-                input = document.createElement('select');
-                [
-                    ['provided', 'Provided'],
-                    ['not_provided', 'Not Provided'],
-                ].forEach(([val, label]) => {
-                    const option = document.createElement('option');
-                    option.value = val;
-                    option.textContent = label;
-                    if (label === valeur) option.selected = true;
-                    input.appendChild(option);
-                });
-            } else if (champsLongs.includes(champ)) {
+    input = document.createElement('select');
+    [
+        ['provided', 'Provided'],
+        ['not_provided', 'Not Provided'],
+    ].forEach(([val, label]) => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = label;
+        if (val === valeur) option.selected = true;
+        input.appendChild(option);
+    });
+}  else if (champsLongs.includes(champ)) {
                 input = document.createElement('textarea');
                 input.value = valeur;
             } else {
@@ -532,9 +535,10 @@ async function enregistrerModificationsGlobalesIncidents() {
 function telechargerLotIncidents(lotId, type) {
     window.location.href = `/api/incidents-imports/${lotId}/export/?type=${type}`;
 }
-function telechargerLotIncidentsActuel(format) {
+
+function telechargerLotIncidentsActuel(type) {
     if (!lotIncidentsActuelId) return;
-    telechargerLotIncidents(lotIncidentsActuelId, format);
+    telechargerLotIncidents(lotIncidentsActuelId, type);
 }
 
 // --- Init ---
@@ -627,9 +631,9 @@ async function ouvrirApercuLong() {
         document.getElementById('modale-incidents').style.display = 'none';
         document.getElementById('modale-apercu-long').style.display = 'flex';
     } catch (erreur) {
-        alert('Erreur lors du chargement de l\'aperçu : ' + erreur.message);
-        console.error(erreur);
-    }
+    afficherToast('Erreur lors du chargement de l\'aperçu : ' + erreur.message, 'erreur');
+    console.error(erreur);
+   }
 }
 
 function afficherApercuLongEnLecture() {
@@ -664,9 +668,9 @@ function afficherApercuLongEnLecture() {
 
 function activerModeEditionApercuLong() {
     const corps = document.getElementById('corps-apercu-long');
-    champs_texte = ('incident_id', 'description', 'severite', 'impact', 'affected_service',
-                 'root_cause', 'action_resolution', 'statut_rca', 'owner_email',
-                 'team', 'in_charge', 'service_now_status', 'cc_emails')
+   const champsTexte = ['incident_id', 'description', 'severite', 'impact', 'affected_service',
+             'root_cause', 'action_resolution', 'owner_email',
+             'team', 'in_charge', 'service_now_status', 'cc_emails'];
     const champsDate = ['date_signalement', 'close_date'];
     const champsLongs = ['description', 'impact', 'affected_service', 'root_cause', 'action_resolution'];
 
@@ -676,6 +680,16 @@ function activerModeEditionApercuLong() {
             if (!td) return;
             const valeur = td.textContent;
 
+            if (champsLongs.includes(champ)) {
+                td.style.maxWidth = '250px';
+                td.style.width = '250px';
+                td.style.minWidth = '250px';
+            }
+            
+            if (champ === 'incident_id') {
+    td.style.minWidth = '180px';
+    td.style.width = '180px';
+}
             let input;
             if (champ === 'statut_rca') {
                 input = document.createElement('select');
@@ -698,6 +712,22 @@ function activerModeEditionApercuLong() {
             input.style.width = '100%';
             input.style.boxSizing = 'border-box';
             input.dataset.champ = champ;
+
+            if (champsLongs.includes(champ)) {
+                input.style.resize = 'none';
+                input.style.overflow = 'hidden';
+                input.style.fontFamily = 'inherit';
+                input.style.fontSize = 'inherit';
+                input.style.padding = '6px';
+                input.style.lineHeight = '1.4';
+
+                const ajusterHauteur = () => {
+                    input.style.height = 'auto';
+                    input.style.height = input.scrollHeight + 'px';
+                };
+                input.addEventListener('input', ajusterHauteur);
+                requestAnimationFrame(ajusterHauteur);
+            }
 
             td.textContent = '';
             td.appendChild(input);
@@ -743,7 +773,9 @@ async function enregistrerModificationsApercuLong() {
         const echecs = resultats.filter(r => !r.ok);
 
         if (echecs.length > 0) {
-            alert(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`);
+            afficherToast(`${echecs.length} ligne(s) n'ont pas pu être enregistrées.`, 'erreur');
+        } else {
+            afficherToast('Modifications enregistrées', 'succes');
         }
 
         document.getElementById('btn-modifier-apercu-long').style.display = '';
@@ -753,7 +785,7 @@ async function enregistrerModificationsApercuLong() {
         await ouvrirApercuLong();
         await chargerListeImportsIncidents();
     } catch (erreur) {
-        alert('Erreur : ' + erreur.message);
+        afficherToast('Erreur : ' + erreur.message, 'erreur');
         console.error(erreur);
     }
 }
