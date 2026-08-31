@@ -1,260 +1,216 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const root = document.getElementById("dashboard-root");
-  const apiUrl = root.dataset.apiUrl;
-  const selectPeriode = document.getElementById("periode-select");
+let graphiques = {};
 
-  let chartAgents = null;
-  let chartSeverite = null;
-  let chartTendance = null;
+async function chargerDashboard() {
+    const debut = document.getElementById('filtre-debut').value;
+    const fin = document.getElementById('filtre-fin').value;
 
-  const PALETTE = ["#111827", "#facc15", "#dc2626", "#16a34a", "#9ca3af", "#f59e0b"];
+    const params = new URLSearchParams();
+    if (debut) params.set('debut', debut);
+    if (fin) params.set('fin', fin);
 
-  function detruireGraph(chart) {
-    if (chart) chart.destroy();
-  }
-
-  function charger(periode) {
-    fetch(`${apiUrl}?periode=${periode}`)
-      .then((res) => res.json())
-      .then((data) => afficher(data))
-      .catch((err) => {
-        console.error("Erreur chargement dashboard:", err);
-        root.insertAdjacentHTML(
-          "afterbegin",
-          `<p style="color:#dc2626">Erreur de chargement : ${err}</p>`
-        );
-      });
-  }
-
-  function afficher(data) {
-    afficherAlerte(data);
-    afficherKpis(data.kpis);
-    afficherTickets(data.tickets);
-    afficherIncidents(data.incidents);
-    afficherCatalogue(data.catalogue);
-    afficherExperiences(data.experiences);
-  }
-
-  function afficherAlerte(data) {
-    const zone = document.getElementById("alerte-container");
-    const nb = data.kpis.rca_en_attente;
-    if (!nb) {
-      zone.innerHTML = "";
-      return;
+    try {
+        const res = await fetch(`/api/dashboard/?${params.toString()}`, { cache: 'no-store' });
+        if (!res.ok) {
+            alert('Erreur lors du chargement du dashboard');
+            return;
+        }
+        const data = await res.json();
+        afficherKpis(data.kpis);
+        construireGraphiques(data);
+        afficherAlertes(data);
+    } catch (erreur) {
+        console.error('Erreur dashboard :', erreur);
     }
-    zone.innerHTML = `
-      <div class="dashboard-alerte">
-        ⚠️ ${nb} incident${nb > 1 ? "s" : ""} en attente de RCA
-      </div>
-    `;
-  }
+}
 
-  function carteKpi(valeur, label, accent = "") {
-    return `
-      <div class="dashboard-kpi-card ${accent}">
-        <div class="dashboard-kpi-valeur">${valeur}</div>
-        <div class="dashboard-kpi-label">${label}</div>
-      </div>
-    `;
-  }
+function reinitialiserFiltresDashboard() {
+    document.getElementById('filtre-debut').value = '';
+    document.getElementById('filtre-fin').value = '';
+    chargerDashboard();
+}
 
-  function afficherKpis(kpis) {
-    document.getElementById("kpis-container").innerHTML = `
-      ${carteKpi(kpis.tickets_ouverts, "Tickets ouverts")}
-      ${carteKpi(kpis.incidents_actifs, "Incidents actifs")}
-      ${carteKpi(kpis.rca_en_attente, "RCA en attente", kpis.rca_en_attente > 0 ? "dashboard-kpi-alerte" : "")}
-      ${carteKpi(formatDuree(kpis.duree_moyenne_resolution_secondes), "Durée moy. résolution")}
-      ${carteKpi(kpis.outils_sans_owner, "Outils sans owner")}
-      ${carteKpi(kpis.services_non_couverts, "Services non couverts")}
-      ${carteKpi(kpis.feedbacks_recents, "Feedbacks récents")}
-    `;
-  }
+function animerCompteur(elementId, valeurFinale) {
+    const element = document.getElementById(elementId);
+    const duree = 800;
+    const debut = performance.now();
+    const valeurInitiale = 0;
 
-  function afficherTickets(t) {
-  document.getElementById("tickets-container").innerHTML = `
-    <h2 class="dashboard-section-title">Tickets</h2>
-    <div class="detail-row">
-      <span class="detail-label">Sans feedback</span>
-      <span>${t.sans_feedback}</span>
-    </div>
-    <div class="detail-row">
-      <span class="detail-label">Anciens (+7j)</span>
-      <span>${t.anciens_plus_7j}</span>
-    </div>
-    <h3 class="detail-subtitle">Répartition par agent</h3>
-    <canvas id="chart-agents" height="70"></canvas>
-    <ul class="dashboard-liste-classement">
-      ${t.par_agent
-        .map(
-          (a) => `
-        <li>
-          <span>${a.assigned_to || "(non assigné)"}</span>
-          <span class="badge badge-yes">${a.total}</span>
-        </li>`
-        )
-        .join("")}
-    </ul>
-  `;
+    function etape(maintenant) {
+        const progres = Math.min((maintenant - debut) / duree, 1);
+        const valeurActuelle = Math.round(valeurInitiale + (valeurFinale - valeurInitiale) * progres);
+        element.textContent = valeurActuelle;
+        if (progres < 1) requestAnimationFrame(etape);
+    }
+    requestAnimationFrame(etape);
+}
 
-  detruireGraph(chartAgents);
-  const ctx = document.getElementById("chart-agents");
-  chartAgents = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: t.par_agent.map((a) => a.assigned_to || "(non assigné)"),
-      datasets: [{
-        label: "Tickets",
-        data: t.par_agent.map((a) => a.total),
-        backgroundColor: "#facc15",
-        borderRadius: 4,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: true },
-      },
-      scales: {
-        x: {
-          ticks: {
-            maxRotation: 0,
-            minRotation: 0,
-            autoSkip: false,
-            font: { size: 9 },
-            callback: function(value) {
-              const label = this.getLabelForValue(value);
-              return label.split(" ")[0];
-            },
-          },
+function afficherKpis(kpis) {
+    animerCompteur('kpi-tickets', kpis.total_tickets);
+    animerCompteur('kpi-incidents', kpis.total_incidents);
+    animerCompteur('kpi-outils', kpis.total_outils);
+    animerCompteur('kpi-services', kpis.total_services);
+    animerCompteur('kpi-contributions', kpis.total_contributions);
+}
+
+function detruireGraphique(id) {
+    if (graphiques[id]) {
+        graphiques[id].destroy();
+        delete graphiques[id];
+    }
+}
+
+function construireGraphiques(data) {
+    // --- Tickets par statut ---
+    detruireGraphique('tickets-state');
+    graphiques['tickets-state'] = new Chart(document.getElementById('chart-tickets-state'), {
+        type: 'doughnut',
+        data: {
+            labels: data.tickets.repartition_state.map(r => r.state),
+            datasets: [{
+                data: data.tickets.repartition_state.map(r => r.total),
+                backgroundColor: ['#FFCC00', '#1a1a1a', '#666', '#ccc', '#999'],
+            }],
         },
-        y: { display: false, beginAtZero: true },
-      },
-    },
-  });
-}
-
-  function afficherIncidents(i) {
-  document.getElementById("incidents-container").innerHTML = `
-    <h2 class="dashboard-section-title">Incidents</h2>
-    <h3 class="detail-subtitle">Par sévérité</h3>
-    <canvas id="chart-severite" height="90"></canvas>
-    <h3 class="detail-subtitle">Évolution mensuelle</h3>
-    <canvas id="chart-tendance" height="90"></canvas>
-    <h3 class="detail-subtitle">RCA en attente (les plus anciens)</h3>
-    <ul class="dashboard-liste-simple">
-      ${i.rca_en_attente
-        .map((r) => `<li>${r.incident_id} — ${r.severite} — ${r.team || "—"}</li>`)
-        .join("") || "<li>Aucun</li>"}
-    </ul>
-  `;
-
-  detruireGraph(chartSeverite);
-  const severite = i.par_severite || [];
-
-  if (severite.length === 0) {
-    document.getElementById("chart-severite").outerHTML =
-      '<p style="color:#999;font-size:13px;padding:8px 0;">Aucun incident classé par sévérité pour l\'instant.</p>';
-  } else {
-    const ctxSev = document.getElementById("chart-severite");
-    chartSeverite = new Chart(ctxSev, {
-      type: "doughnut",
-      data: {
-        labels: severite.map((s) => s.severite || "(non renseigné)"),
-        datasets: [{
-          data: severite.map((s) => s.total),
-          backgroundColor: PALETTE,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } } },
-      },
+        options: { plugins: { legend: { position: 'bottom' } } },
     });
-  }
 
-  detruireGraph(chartTendance);
-  const ctxTend = document.getElementById("chart-tendance");
-  const tendance = i.tendance_mensuelle || [];
-  chartTendance = new Chart(ctxTend, {
-    type: "line",
-    data: {
-      labels: tendance.map((m) => m.mois),
-      datasets: [{
-        label: "Incidents",
-        data: tendance.map((m) => m.total),
-        borderColor: "#111827",
-        backgroundColor: "rgba(250, 204, 21, 0.25)",
-        fill: true,
-        tension: 0.3,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, ticks: { precision: 0, font: { size: 9 } } },
-        x: { ticks: { font: { size: 9 } } },
-      },
-    },
-  });
+    // --- Top assignés tickets ---
+    detruireGraphique('tickets-assignes');
+    graphiques['tickets-assignes'] = new Chart(document.getElementById('chart-tickets-assignes'), {
+        type: 'bar',
+        data: {
+            labels: data.tickets.top_assignes.map(r => r.assigned_to),
+            datasets: [{
+                label: 'Tickets assignés',
+                data: data.tickets.top_assignes.map(r => r.total),
+                backgroundColor: '#FFCC00',
+            }],
+        },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } } },
+    });
+
+    // --- Incidents par sévérité ---
+    detruireGraphique('incidents-severite');
+    graphiques['incidents-severite'] = new Chart(document.getElementById('chart-incidents-severite'), {
+        type: 'pie',
+        data: {
+            labels: data.incidents.repartition_severite.map(r => r.severite),
+            datasets: [{
+                data: data.incidents.repartition_severite.map(r => r.total),
+                backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71', '#3498db'],
+            }],
+        },
+        options: { plugins: { legend: { position: 'bottom' } } },
+    });
+
+    // --- Incidents par team ---
+    detruireGraphique('incidents-team');
+    graphiques['incidents-team'] = new Chart(document.getElementById('chart-incidents-team'), {
+        type: 'bar',
+        data: {
+            labels: data.incidents.repartition_team.map(r => r.team),
+            datasets: [{
+                label: 'Incidents',
+                data: data.incidents.repartition_team.map(r => r.total),
+                backgroundColor: '#1a1a1a',
+            }],
+        },
+        options: { plugins: { legend: { display: false } } },
+    });
+
+    // --- Tendance expériences membres ---
+    detruireGraphique('experiences-tendance');
+    graphiques['experiences-tendance'] = new Chart(document.getElementById('chart-experiences-tendance'), {
+        type: 'line',
+        data: {
+            labels: data.experiences.tendance_mensuelle.map(t => t.mois),
+            datasets: [
+                {
+                    label: 'Feedback',
+                    data: data.experiences.tendance_mensuelle.map(t => t.feedback),
+                    borderColor: '#FFCC00',
+                    tension: 0.3,
+                },
+                {
+                    label: 'Plaintes',
+                    data: data.experiences.tendance_mensuelle.map(t => t.plainte),
+                    borderColor: '#e74c3c',
+                    tension: 0.3,
+                },
+                {
+                    label: 'Recommandations',
+                    data: data.experiences.tendance_mensuelle.map(t => t.recommandation),
+                    borderColor: '#2ecc71',
+                    tension: 0.3,
+                },
+            ],
+        },
+    });
+
+    // --- Outils par équipe ---
+    detruireGraphique('outils-equipe');
+    graphiques['outils-equipe'] = new Chart(document.getElementById('chart-outils-equipe'), {
+        type: 'bar',
+        data: {
+            labels: data.catalogue.repartition_outils_par_equipe.map(r => r.outil_team__nom),
+            datasets: [{
+                label: 'Outils',
+                data: data.catalogue.repartition_outils_par_equipe.map(r => r.total),
+                backgroundColor: '#FFCC00',
+            }],
+        },
+        options: { plugins: { legend: { display: false } } },
+    });
+
+    // --- Plaintes anonymes vs nominatives ---
+    detruireGraphique('plaintes-anonymat');
+    graphiques['plaintes-anonymat'] = new Chart(document.getElementById('chart-plaintes-anonymat'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Anonymes', 'Nominatives'],
+            datasets: [{
+                data: [data.experiences.plaintes_anonymes, data.experiences.plaintes_nominatives],
+                backgroundColor: ['#999', '#FFCC00'],
+            }],
+        },
+        options: { plugins: { legend: { position: 'bottom' } } },
+    });
 }
-  function afficherCatalogue(c) {
-    document.getElementById("catalogue-container").innerHTML = `
-      <h2 class="dashboard-section-title">Catalogue</h2>
-      <div class="detail-row">
-        <span class="detail-label">Total outils</span>
-        <span>${c.total_outils}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Total services</span>
-        <span>${c.total_services}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Sans owner</span>
-        <span>${c.outils_sans_owner}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Services non couverts</span>
-        <span>${c.services_non_couverts}</span>
-      </div>
-    `;
-  }
 
-  function afficherExperiences(e) {
-    document.getElementById("experiences-container").innerHTML = `
-      <h2 class="dashboard-section-title">Expériences membres</h2>
-      <div class="detail-row">
-        <span class="detail-label">Feedbacks</span>
-        <span>${e.feedbacks}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Plaintes</span>
-        <span>${e.plaintes} (anonymes : ${e.plaintes_anonymes})</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Recommandations</span>
-        <span>${e.recommandations}</span>
-      </div>
-      <h3 class="detail-subtitle">Sujets récurrents</h3>
-      <ul class="dashboard-liste-simple">
-        ${(e.sujets_recurrents || [])
-          .map((s) => `<li>${s.mot} (${s.occurrences} fois)</li>`)
-          .join("") || "<li>Aucun</li>"}
-      </ul>
-    `;
-  }
+function afficherAlertes(data) {
+    const liste = document.getElementById('liste-alertes');
+    liste.innerHTML = '';
 
-  function formatDuree(secondes) {
-    if (!secondes) return "—";
-    const heures = Math.floor(secondes / 3600);
-    const minutes = Math.round((secondes % 3600) / 60);
-    return `${heures}h${minutes.toString().padStart(2, "0")}`;
-  }
+    const alertes = [];
 
-  selectPeriode.addEventListener("change", () => charger(selectPeriode.value));
-  charger("mois");
+    if (data.tickets.sans_feedback > 0) {
+        alertes.push(`${data.tickets.sans_feedback} ticket(s) sans feedback renseigné`);
+    }
+    if (data.incidents.sans_rca > 0) {
+        alertes.push(`${data.incidents.sans_rca} incident(s) sans RCA fourni`);
+    }
+    if (data.incidents.en_attente > 0) {
+        alertes.push(`${data.incidents.en_attente} incident(s) en attente`);
+    }
+    if (data.catalogue.services_sans_outil > 0) {
+        alertes.push(`${data.catalogue.services_sans_outil} service(s) non couvert(s) par un outil de monitoring`);
+    }
+    if (data.catalogue.outils_inactifs > 0) {
+        alertes.push(`${data.catalogue.outils_inactifs} outil(s) inactif(s)`);
+    }
+
+    if (alertes.length === 0) {
+        liste.innerHTML = '<li>Aucun point d\'attention pour l\'instant</li>';
+        return;
+    }
+
+    alertes.forEach(texte => {
+        const li = document.createElement('li');
+        li.textContent = texte;
+        liste.appendChild(li);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    chargerDashboard();
 });

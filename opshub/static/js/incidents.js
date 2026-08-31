@@ -433,6 +433,7 @@ function activerModeEditionGlobalIncidents() {
     [
         ['provided', 'Provided'],
         ['not_provided', 'Not Provided'],
+        ['en_attente', 'En attente'],
     ].forEach(([val, label]) => {
         const option = document.createElement('option');
         option.value = val;
@@ -565,9 +566,8 @@ function afficherIncidentsEnLecture() {
             <td data-champ="root_cause" style="max-width:200px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.root_cause)}</td>
             <td data-champ="action_resolution" style="max-width:200px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.action_resolution)}</td>
             <td data-champ="duree">${echapperHtml(i.duree)}</td>
-            <td data-champ="statut_rca">${echapperHtml(i.statut_rca)}</td>
-            <td data-champ="owner_email">${echapperHtml(i.owner_email)}</td>
-            <td data-champ="cc_emails">${echapperHtml(i.cc_emails)}</td>
+            <td data-champ="owner_email">${creerLienMailto(i.owner_email)}</td>
+            <td data-champ="cc_emails">${creerLienMailto(i.cc_emails)}</td>
             <td data-role="rca-cell">
                 ${i.rca_present
                     ? `<a href="${i.rca_url}" target="_blank" class="detail-link">Voir PDF</a>`
@@ -693,7 +693,7 @@ function activerModeEditionApercuLong() {
             let input;
             if (champ === 'statut_rca') {
                 input = document.createElement('select');
-                [['provided', 'Provided'], ['not_provided', 'Not Provided']].forEach(([val, label]) => {
+                [['provided', 'Provided'], ['not_provided', 'Not Provided'], ['en_attente', 'En attente'] ].forEach(([val, label]) => {
                     const option = document.createElement('option');
                     option.value = val;
                     option.textContent = label;
@@ -793,4 +793,39 @@ async function enregistrerModificationsApercuLong() {
 function fermerApercuLong() {
     document.getElementById('modale-apercu-long').style.display = 'none';
     document.getElementById('modale-incidents').style.display = 'flex';
+}
+
+async function chargerFrequenceRappels() {
+    const res = await fetch('/api/config-rappels/');
+    const data = await res.json();
+    document.getElementById('frequence-rappels').value = data.frequence_jours;
+}
+
+async function sauvegarderFrequenceRappels() {
+    const valeur = document.getElementById('frequence-rappels').value;
+    const res = await fetch('/api/config-rappels/modifier/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ frequence_jours: valeur }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        alert(data.erreur);
+        return;
+    }
+    alert('Fréquence mise à jour : tous les ' + data.frequence_jours + ' jour(s)');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    chargerListeImportsIncidents();
+    chargerFrequenceRappels();
+});
+
+
+function creerLienMailto(emails) {
+    if (!emails) return '';
+    const liste = emails.split(',').map(e => e.trim()).filter(Boolean);
+    if (liste.length === 0) return '';
+    const href = `mailto:${liste.join(',')}`;
+    return `<a href="${href}">${echapperHtml(emails)}</a>`;
 }

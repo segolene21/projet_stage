@@ -20,19 +20,39 @@
         </div>
 
         <div class="detail-row">
-            <span class="detail-label">Contact du point de contact</span>
+            <span class="detail-label">Numero du point de contact</span>
             <span>{{ equipe.contact_point_de_contact|default:"—" }}</span>
         </div>
 
-        <div class="detail-row">
-            <span class="detail-label">Manager</span>
-            <span>{{ equipe.nom_manager|default:"—" }}</span>
-        </div>
+       <div class="detail-row">
+    <span class="detail-label">Mail du point de contact</span>
+    <span>
+        {% if equipe.mail_point_de_contact %}
+            <a href="mailto:{{ equipe.mail_point_de_contact }}">{{ equipe.mail_point_de_contact }}</a>
+        {% else %}
+            —
+        {% endif %}
+    </span>
+</div>
 
-        <div class="detail-row">
-            <span class="detail-label">Contact manager</span>
-            <span>{{ equipe.contact_manager|default:"—" }}</span>
-        </div>
-    </div>
+<div class="detail-row">
+    <span class="detail-label">Manager</span>
+    <span>{{ equipe.nom_manager|default:"—" }}</span>
+</div>
+
+<div class="detail-row">
+    <span class="detail-label">Contact manager</span>
+    <span>{{ equipe.contact_manager|default:"—" }}</span>
+</div>
+<div class="detail-row">
+    <span class="detail-label">Mail du manager</span>
+    <span>
+        {% if equipe.mail_manager %}
+            <a href="mailto:{{ equipe.mail_manager }}">{{ equipe.mail_manager }}</a>
+        {% else %}
+            —
+        {% endif %}
+    </span>
+</div>
 </div>
 {% endblock %}

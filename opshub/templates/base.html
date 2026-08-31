@@ -40,7 +40,9 @@
                 <li><a href="{% url 'page_tickets' %}" class="nav-item"><img src="{% static 'img/Image de fond/ticket.jpg' %}" class="nav-icon" alt=""></i> Tickets Requests</a></li>
                  <li><a href="{% url 'liste_incidents' %}" class="nav-item"><img src="{% static 'img/Image de fond/incident.jpg' %}" class="nav-icon" alt=""> Incidents & RCA</a></li>
                  <li><a href="{% url 'experiences_membres' %}" class="nav-item"><img src="{% static 'img/Image de fond/membre.jpg' %}" class="nav-icon" alt=""> Expériences Membres</a></li>
-                 <li><a href="{% url 'dashboard_page' %}" class="nav-item"><img src="{% static 'img/Image de fond/dashboard.jpg' %}" class="nav-icon" alt=""> Dashboard</a></li>
+                 {% if user.is_manager %}
+                 <li><a href="{% url 'page_dashboard' %}" class="nav-item"><img src="{% static 'img/Image de fond/dashboard.jpg' %}" class="nav-icon" alt=""> Dashboard</a></li>
+                    {% endif %}
                  {% if user.is_administrateur %} 
                 <li><a href="{% url 'liste_utilisateurs' %}" class="nav-item"><img src="{% static 'img/Image de fond/utilisateurs .jpg' %}" class="nav-icon" alt=""> Utilisateurs</a></li> 
                 {% endif %} 

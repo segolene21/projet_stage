@@ -102,6 +102,7 @@ class Equipe(models.Model):
     nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     nbr_membres = models.IntegerField()
+    
 
     def __str__(self):
         return self.nom
@@ -111,8 +112,10 @@ class OutilTeam(models.Model):
     nom = models.CharField(max_length=100)
     nom_point_de_contact = models.CharField(max_length=100)
     contact_point_de_contact = models.CharField(max_length=100)
+    mail_point_de_contact = models.EmailField(blank=True, default='')
     nom_manager = models.CharField(max_length=100)
     contact_manager = models.CharField(max_length=100)
+    mail_manager = models.EmailField(blank=True, default='')
 
     def __str__(self):
         return self.nom
@@ -233,7 +236,7 @@ class Incident(models.Model):
     class StatutRCA(models.TextChoices):
         PROVIDED = 'provided', 'Provided'
         NOT_PROVIDED = 'not_provided', 'Not Provided'
-
+        EN_ATTENTE = 'en_attente', 'En attente'
     import_lot = models.ForeignKey(ImportIncidents, on_delete=models.CASCADE, related_name="incidents")
     incident_id = models.CharField(max_length=100, verbose_name="ID")
     description = models.TextField(verbose_name="Issue Description")
@@ -273,3 +276,19 @@ class Incident(models.Model):
     @property
     def month(self):
         return self.date_signalement.strftime("%B %Y") if self.date_signalement else ""
+class ConfigurationRappels(models.Model):
+    """Un seul enregistrement — réglages globaux des rappels RCA."""
+    frequence_jours = models.PositiveIntegerField(default=2, verbose_name="Fréquence des rappels (jours)")
+    modifie_le = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Configuration des rappels"
+        verbose_name_plural = "Configuration des rappels"
+
+    def __str__(self):
+        return f"Rappels tous les {self.frequence_jours} jour(s)"
+    
+    @classmethod
+    def get_frequence(cls):
+        config, _ = cls.objects.get_or_create(pk=1, defaults={'frequence_jours': 2})
+        return config.frequence_jours

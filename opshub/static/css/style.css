@@ -763,3 +763,48 @@ body{
         font-size:12px;
     }
 }
+
+.dashboard-kpis {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.kpi-card {
+    background: #1a1a1a;
+    color: #FFCC00;
+    padding: 20px;
+    border-radius: 10px;
+    min-width: 140px;
+    text-align: center;
+}
+.kpi-valeur {
+    display: block;
+    font-size: 32px;
+    font-weight: bold;
+}
+.kpi-label {
+    font-size: 13px;
+    opacity: 0.8;
+}
+.dashboard-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+.dashboard-bloc {
+    background: white;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.dashboard-bloc-large {
+    grid-column: span 2;
+}
+.dashboard-alertes {
+    margin-top: 24px;
+    background: #fff8e1;
+    padding: 16px;
+    border-radius: 10px;
+    border-left: 4px solid #FFCC00;
+}
