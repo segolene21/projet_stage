@@ -60,13 +60,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function afficherKpis(kpis) {
     document.getElementById("kpis-container").innerHTML = `
-      ${carteKpi(kpis.tickets_ouverts, "Tickets ouverts")}
+      ${carteKpi(kpis.tickets_sans_feedback, "Tickets sans feedback")}
       ${carteKpi(kpis.incidents_actifs, "Incidents actifs")}
       ${carteKpi(kpis.rca_en_attente, "RCA en attente", kpis.rca_en_attente > 0 ? "dashboard-kpi-alerte" : "")}
       ${carteKpi(formatDuree(kpis.duree_moyenne_resolution_secondes), "Durée moy. résolution")}
       ${carteKpi(kpis.outils_sans_owner, "Outils sans owner")}
       ${carteKpi(kpis.services_non_couverts, "Services non couverts")}
-      ${carteKpi(kpis.feedbacks_recents, "Feedbacks récents")}
+      ${carteKpi(kpis.feedbacks_recents, "Retours-membres récents")}
     `;
   }
 

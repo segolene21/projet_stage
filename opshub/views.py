@@ -1486,61 +1486,68 @@ def dashboard_data(request):
     periode = request.GET.get("periode", "mois")
     depuis = _borne_periode(periode)
 
-    # ---------- TICKETS ----------
-    tickets_qs = Ticket.objects.filter(cree_le__gte=depuis)
-    tickets_par_agent = (
-        tickets_qs.values("assigned_to")
-        .annotate(total=Count("id"))
-        .order_by("-total")[:10]
-    )
-    tickets_sans_feedback = tickets_qs.filter(
+    # ---------- TICKETS (état actuel, indépendant de la période) ----------
+    tickets_ouverts_qs = Ticket.objects.exclude(state__icontains="closed")
+    tickets_sans_feedback = tickets_ouverts_qs.filter(
         Q(feedback__isnull=True) | Q(feedback__exact="")
     ).count()
     seuil_anciennete = timezone.now() - timedelta(days=7)
-    tickets_anciens = (
-        tickets_qs.filter(cree_le__lt=seuil_anciennete)
-        .exclude(state__iexact="closed")
-        .count()
-    )
+    tickets_anciens = tickets_ouverts_qs.filter(modifie_le__lt=seuil_anciennete).count()
 
-    # ---------- INCIDENTS ----------
-    incidents_qs = Incident.objects.filter(date_signalement__gte=depuis)
+    # Activité sur la période sélectionnée : répartition par agent des tickets modifiés/créés récemment
+    tickets_periode_qs = Ticket.objects.filter(modifie_le__gte=depuis)
+    tickets_par_agent = (
+    tickets_periode_qs.exclude(assigned_to__exact="")
+    .values("assigned_to")
+    .annotate(total=Count("id"))
+    .order_by("-total")[:10]
+)
+
+    # ---------- INCIDENTS (état actuel, indépendant de la période) ----------
+    incidents_actifs_qs = Incident.objects.exclude(service_now_status__iexact="closed")
     incidents_par_severite = (
-        incidents_qs.values("severite").annotate(total=Count("id")).order_by("-total")
-    )
-    incidents_par_equipe = (
-        incidents_qs.values("team")
-        .annotate(total=Count("id"), duree_moy=Avg("duree_secondes"))
+        incidents_actifs_qs.values("severite")
+        .exclude(severite__exact="")
+        .annotate(total=Count("id"))
         .order_by("-total")
     )
-    rca_en_attente = incidents_qs.filter(
+    rca_en_attente = Incident.objects.filter(
         statut_rca=Incident.StatutRCA.NOT_PROVIDED
     ).order_by("date_signalement")
-    duree_moyenne = incidents_qs.aggregate(moy=Avg("duree_secondes"))["moy"]
+    duree_moyenne = incidents_actifs_qs.aggregate(moy=Avg("duree_secondes"))["moy"]
 
+    # Tendance mensuelle : basée sur cree_le (date d'import), pas date_signalement (qui peut être ancienne)
     tendance_mensuelle = []
     for i in range(5, -1, -1):
-        mois_debut = timezone.now().replace(day=1) - timedelta(days=30 * i)
-        mois_fin = mois_debut + timedelta(days=30)
+        mois_debut = (timezone.now().replace(day=1) - timedelta(days=30 * i)).replace(day=1)
+        if i == 0:
+            mois_fin = timezone.now()
+        else:
+            mois_suivant = mois_debut.replace(day=28) + timedelta(days=4)
+            mois_fin = mois_suivant.replace(day=1)
         count = Incident.objects.filter(
-            date_signalement__gte=mois_debut, date_signalement__lt=mois_fin
+            cree_le__gte=mois_debut, cree_le__lt=mois_fin
         ).count()
         tendance_mensuelle.append({"mois": mois_debut.strftime("%b %Y"), "total": count})
 
-    # ---------- CATALOGUE (Outils / Services) ----------
+    # ---------- CATALOGUE (état actuel) ----------
     outils_qs = OutilMonitoring.objects.select_related("outil_team")
     outils_sans_owner = outils_qs.filter(
-        Q(outil_team__nom_point_de_contact__exact="")
+        Q(outil_team__isnull=True)
+        | Q(outil_team__nom_point_de_contact__exact="")
         | Q(outil_team__nom_point_de_contact__isnull=True)
     ).count()
     services_non_couverts = Service.objects.filter(outils_monitoring__isnull=True).count()
     outils_par_equipe = (
-        outils_qs.values("outil_team__nom").annotate(total=Count("id")).order_by("-total")
+        outils_qs.exclude(outil_team__isnull=True)
+        .values("outil_team__nom")
+        .annotate(total=Count("id"))
+        .order_by("-total")
     )
     outils_avec_auth = outils_qs.filter(necessite_authentification=True).count()
     outils_sans_auth = outils_qs.filter(necessite_authentification=False).count()
 
-    # ---------- EXPERIENCES MEMBRES ----------
+    # ---------- EXPERIENCES MEMBRES (activité sur la période) ----------
     feedbacks_qs = Feedback.objects.filter(date_soumission__gte=depuis)
     plaintes_qs = Plainte.objects.filter(date_ajout__gte=depuis)
     recommandations_qs = Recommandation.objects.filter(date_soumission__gte=depuis)
@@ -1551,10 +1558,8 @@ def dashboard_data(request):
     data = {
         "periode": periode,
         "kpis": {
-            "tickets_ouverts": tickets_qs.exclude(state__iexact="closed").count(),
-            "incidents_actifs": incidents_qs.exclude(
-                service_now_status__iexact="closed"
-            ).count(),
+           "tickets_sans_feedback": tickets_sans_feedback,
+            "incidents_actifs": incidents_actifs_qs.count(),
             "rca_en_attente": rca_en_attente.count(),
             "duree_moyenne_resolution_secondes": duree_moyenne,
             "outils_sans_owner": outils_sans_owner,
@@ -1570,7 +1575,6 @@ def dashboard_data(request):
         },
         "incidents": {
             "par_severite": list(incidents_par_severite),
-            "par_equipe": list(incidents_par_equipe),
             "rca_en_attente": [
                 {
                     "incident_id": inc.incident_id,
