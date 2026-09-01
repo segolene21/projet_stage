@@ -2,15 +2,16 @@ from django.core.management.base import BaseCommand
 from django.core.mail import EmailMessage
 from django.utils import timezone
 from datetime import timedelta
-from opshub.models import Incident
+from opshub.models import Incident, ConfigurationRappels
 
 
 class Command(BaseCommand):
-    help = "Envoie un rappel par mail aux owners des incidents sans RCA fourni, tous les 2 jours"
+    help = "Envoie un rappel par mail aux owners des incidents sans RCA fourni, selon la fréquence configurée"
 
     def handle(self, *args, **options):
         maintenant = timezone.now()
-        seuil = maintenant - timedelta(days=2)
+        frequence_jours = ConfigurationRappels.get_frequence()
+        seuil = maintenant - timedelta(days=frequence_jours)
 
         incidents_a_relancer = Incident.objects.filter(
             statut_rca=Incident.StatutRCA.NOT_PROVIDED,
@@ -23,7 +24,7 @@ class Command(BaseCommand):
         ]
 
         if not incidents_a_relancer:
-            self.stdout.write("Aucun incident à relancer aujourd'hui.")
+            self.stdout.write(f"Aucun incident à relancer aujourd'hui (fréquence : {frequence_jours} jour(s)).")
             return
 
         for incident in incidents_a_relancer:

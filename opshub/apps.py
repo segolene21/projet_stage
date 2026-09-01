@@ -41,6 +41,8 @@ def creer_roles_et_permissions(sender, **kwargs):
         Permission.Code.SUPPRIMER_FEEDBACK_TOUS,
         Permission.Code.GERER_TICKETS,
         Permission.Code.CONSULTER_TICKETS,
+        Permission.Code.GERER_INCIDENTS,
+        Permission.Code.CONSULTER_INCIDENTS,
     ]))
 
     # 4. Rôle Membre Techcommand

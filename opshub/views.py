@@ -14,7 +14,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from .models import ImportLot
+from .models import ConfigurationRappels, ImportLot
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from reportlab.lib.pagesizes import A4, landscape
@@ -1188,7 +1188,33 @@ def uploader_rca(request, incident_pk):
 
     return JsonResponse({"message": "RCA attaché avec succès", "rca_url": incident.rca_fichier.url})
 
+@login_required
+def obtenir_config_rappels(request):
+    frequence = ConfigurationRappels.get_frequence()
+    return JsonResponse({"frequence_jours": frequence})
 
+
+@csrf_exempt
+def modifier_config_rappels(request):
+    if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
+        return JsonResponse({"erreur": "Accès interdit"}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({"erreur": "Méthode non autorisée"}, status=405)
+
+    data = json.loads(request.body)
+    try:
+        nouvelle_frequence = int(data.get('frequence_jours'))
+        if nouvelle_frequence < 1:
+            raise ValueError
+    except (ValueError, TypeError):
+        return JsonResponse({"erreur": "La fréquence doit être un nombre entier positif"}, status=400)
+
+    config, _ = ConfigurationRappels.objects.get_or_create(pk=1)
+    config.frequence_jours = nouvelle_frequence
+    config.save()
+
+    return JsonResponse({"message": "Fréquence mise à jour", "frequence_jours": nouvelle_frequence})
 
 @csrf_exempt
 @login_required
@@ -1410,59 +1436,113 @@ def apercu_rapport_long(request, lot_id):
 
     return JsonResponse({"titre": lot.titre, "lignes": lignes})
 
-import re
-from collections import Counter
-from datetime import timedelta
-
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Avg, Count, Q
-from django.http import JsonResponse
-from django.shortcuts import render
-from django.utils import timezone
-
-from .models import (
-    Feedback,
-    Incident,
-    OutilMonitoring,
-    Plainte,
-    Recommandation,
-    Service,
-    Ticket,
-)
-
-PERIODES = {
-    "semaine": 7,
-    "mois": 30,
-    "trimestre": 90,
-}
-
-MOTS_VIDES = {
-    "le", "la", "les", "de", "des", "du", "un", "une", "et", "est", "en",
-    "que", "qui", "pour", "dans", "sur", "avec", "pas", "plus", "ne",
-    "se", "ce", "cette", "ces", "au", "aux", "il", "elle", "on", "nous",
-    "vous", "ils", "à", "a", "été", "être", "avoir", "sont", "je",
-}
+from django.db.models import Count, Avg, Q
+from datetime import datetime
 
 
-def _borne_periode(periode):
-    jours = PERIODES.get(periode, 30)
-    return timezone.now() - timedelta(days=jours)
+@login_required
+def dashboard_data(request):
+    if not request.user.a_la_permission(Permission.Code.GERER_UTILISATEURS) and not request.user.is_manager and not request.user.is_senior_manager and not request.user.is_teamlead:
+        return JsonResponse({"erreur": "Accès interdit"}, status=403)
 
+    date_debut = request.GET.get('debut')
+    date_fin = request.GET.get('fin')
 
-def sujets_recurrents(plaintes_qs, top_n=5):
-    """Extraction simple des mots les plus fréquents dans le contenu
-    des plaintes récentes (sans NLP avancé, sans lemmatisation)."""
-    mots = []
-    for plainte in plaintes_qs:
-        tokens = re.findall(r"[a-zàâäéèêëïîôöùûüç]{4,}", plainte.contenu.lower())
-        mots.extend(t for t in tokens if t not in MOTS_VIDES)
-    compteur = Counter(mots)
-    return [
-        {"mot": mot, "occurrences": n}
-        for mot, n in compteur.most_common(top_n)
-        if n >= 2
+    def parser_date_filtre(valeur):
+        if not valeur:
+            return None
+        try:
+            return datetime.strptime(valeur, "%Y-%m-%d").date()
+        except ValueError:
+            return None
+
+    debut = parser_date_filtre(date_debut)
+    fin = parser_date_filtre(date_fin)
+
+    # --- Tickets (filtrés par cree_le) ---
+    tickets_qs = Ticket.objects.all()
+    if debut:
+        tickets_qs = tickets_qs.filter(cree_le__date__gte=debut)
+    if fin:
+        tickets_qs = tickets_qs.filter(cree_le__date__lte=fin)
+
+    total_tickets = tickets_qs.count()
+    tickets_sans_feedback = tickets_qs.filter(Q(feedback__isnull=True) | Q(feedback__exact='')).count()
+    repartition_state = list(
+        tickets_qs.values('state').annotate(total=Count('id')).order_by('-total')
+    )
+    top_assignes = list(
+        tickets_qs.exclude(assigned_to='').values('assigned_to').annotate(total=Count('id')).order_by('-total')[:5]
+    )
+
+    # --- Incidents (filtrés par date_signalement) ---
+    incidents_qs = Incident.objects.all()
+    if debut:
+        incidents_qs = incidents_qs.filter(date_signalement__date__gte=debut)
+    if fin:
+        incidents_qs = incidents_qs.filter(date_signalement__date__lte=fin)
+
+    total_incidents = incidents_qs.count()
+    incidents_sans_rca = incidents_qs.filter(Q(rca_fichier='') | Q(rca_fichier__isnull=True)).count()
+    incidents_en_attente = incidents_qs.filter(statut_rca=Incident.StatutRCA.EN_ATTENTE).count()
+    repartition_severite = list(
+        incidents_qs.exclude(severite='').values('severite').annotate(total=Count('id')).order_by('-total')
+    )
+    repartition_team = list(
+        incidents_qs.exclude(team='').values('team').annotate(total=Count('id')).order_by('-total')
+    )
+    duree_moyenne = incidents_qs.exclude(duree_secondes__isnull=True).aggregate(moyenne=Avg('duree_secondes'))['moyenne']
+
+    # --- Catalogue (snapshot actuel, pas de filtre période) ---
+    total_outils = OutilMonitoring.objects.count()
+    outils_actifs = OutilMonitoring.objects.filter(statut=True).count()
+    outils_inactifs = total_outils - outils_actifs
+    outils_avec_auth = OutilMonitoring.objects.filter(necessite_authentification=True).count()
+    total_services = Service.objects.count()
+    services_sans_outil = Service.objects.annotate(nb_outils=Count('outils_monitoring')).filter(nb_outils=0).count()
+    repartition_outils_par_equipe = list(
+        OutilMonitoring.objects.values('outil_team__nom').annotate(total=Count('id')).order_by('-total')
+    )
+
+    # --- Expériences membres (Feedback, Plainte, Recommandation) ---
+    feedback_qs = Feedback.objects.all()
+    plainte_qs = Plainte.objects.all()
+    recommandation_qs = Recommandation.objects.all()
+
+    if debut:
+        feedback_qs = feedback_qs.filter(date_soumission__gte=debut)
+        plainte_qs = plainte_qs.filter(date_ajout__date__gte=debut)
+        recommandation_qs = recommandation_qs.filter(date_soumission__gte=debut)
+    if fin:
+        feedback_qs = feedback_qs.filter(date_soumission__lte=fin)
+        plainte_qs = plainte_qs.filter(date_ajout__date__lte=fin)
+        recommandation_qs = recommandation_qs.filter(date_soumission__lte=fin)
+
+    total_feedback = feedback_qs.count()
+    total_plainte = plainte_qs.count()
+    total_recommandation = recommandation_qs.count()
+    plaintes_anonymes = plainte_qs.filter(anonyme=True).count()
+    plaintes_nominatives = total_plainte - plaintes_anonymes
+
+    # Tendance mensuelle (12 derniers mois par défaut, ou selon la période filtrée)
+    from collections import defaultdict
+    tendance = defaultdict(lambda: {"feedback": 0, "plainte": 0, "recommandation": 0})
+
+    for f in feedback_qs.values('date_soumission'):
+        cle = f['date_soumission'].strftime("%Y-%m")
+        tendance[cle]["feedback"] += 1
+    for p in plainte_qs.values('date_ajout'):
+        cle = p['date_ajout'].strftime("%Y-%m")
+        tendance[cle]["plainte"] += 1
+    for r in recommandation_qs.values('date_soumission'):
+        cle = r['date_soumission'].strftime("%Y-%m")
+        tendance[cle]["recommandation"] += 1
+
+    tendance_mensuelle = [
+        {"mois": mois, **valeurs} for mois, valeurs in sorted(tendance.items())
     ]
 
+<<<<<<< HEAD
 
 def est_autorise_dashboard(user):
     """Ajuste ici la liste des rôles autorisés à voir le dashboard."""
@@ -1567,13 +1647,28 @@ def dashboard_data(request):
             "feedbacks_recents": feedbacks_qs.count()
             + plaintes_qs.count()
             + recommandations_qs.count(),
+=======
+    return JsonResponse({
+        "periode": {
+            "debut": date_debut or None,
+            "fin": date_fin or None,
+        },
+        "kpis": {
+            "total_tickets": total_tickets,
+            "total_incidents": total_incidents,
+            "total_outils": total_outils,
+            "total_services": total_services,
+            "total_contributions": total_feedback + total_plainte + total_recommandation,
+>>>>>>> 977fe2d766dbd5ddbd6fc70dcda3425508464df7
         },
         "tickets": {
-            "par_agent": list(tickets_par_agent),
+            "total": total_tickets,
             "sans_feedback": tickets_sans_feedback,
-            "anciens_plus_7j": tickets_anciens,
+            "repartition_state": repartition_state,
+            "top_assignes": top_assignes,
         },
         "incidents": {
+<<<<<<< HEAD
             "par_severite": list(incidents_par_severite),
             "rca_en_attente": [
                 {
@@ -1585,24 +1680,40 @@ def dashboard_data(request):
                 for inc in rca_en_attente[:20]
             ],
             "tendance_mensuelle": tendance_mensuelle,
+=======
+            "total": total_incidents,
+            "sans_rca": incidents_sans_rca,
+            "en_attente": incidents_en_attente,
+            "repartition_severite": repartition_severite,
+            "repartition_team": repartition_team,
+            "duree_moyenne_secondes": round(duree_moyenne) if duree_moyenne else None,
+>>>>>>> 977fe2d766dbd5ddbd6fc70dcda3425508464df7
         },
         "catalogue": {
-            "total_outils": outils_qs.count(),
-            "total_services": Service.objects.count(),
-            "outils_sans_owner": outils_sans_owner,
-            "services_non_couverts": services_non_couverts,
-            "par_equipe": list(outils_par_equipe),
-            "avec_authentification": outils_avec_auth,
-            "sans_authentification": outils_sans_auth,
+            "total_outils": total_outils,
+            "outils_actifs": outils_actifs,
+            "outils_inactifs": outils_inactifs,
+            "outils_necessitant_auth": outils_avec_auth,
+            "outils_sans_auth": total_outils - outils_avec_auth,
+            "total_services": total_services,
+            "services_sans_outil": services_sans_outil,
+            "repartition_outils_par_equipe": repartition_outils_par_equipe,
         },
         "experiences": {
-            "feedbacks": feedbacks_qs.count(),
-            "plaintes": plaintes_qs.count(),
-            "recommandations": recommandations_qs.count(),
+            "total_feedback": total_feedback,
+            "total_plainte": total_plainte,
+            "total_recommandation": total_recommandation,
             "plaintes_anonymes": plaintes_anonymes,
             "plaintes_nominatives": plaintes_nominatives,
-            "sujets_recurrents": sujets_recurrents(plaintes_qs),
+            "tendance_mensuelle": tendance_mensuelle,
         },
+<<<<<<< HEAD
     }
 
     return JsonResponse(data, json_dumps_params={"default": str, "ensure_ascii": False})
+=======
+    })
+@login_required
+def page_dashboard(request):
+    return render(request, 'dashboard.html')
+>>>>>>> 977fe2d766dbd5ddbd6fc70dcda3425508464df7

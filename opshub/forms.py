@@ -51,7 +51,7 @@ class PlainteForm(forms.ModelForm):
 class OutilTeamForm(forms.ModelForm):
     class Meta:
         model = OutilTeam
-        fields = ['nom', 'nom_point_de_contact', 'contact_point_de_contact', 'nom_manager', 'contact_manager']
+        fields = ['nom', 'nom_point_de_contact', 'contact_point_de_contact', 'mail_point_de_contact', 'nom_manager', 'contact_manager', 'mail_manager']
 
 
 class EquipeForm(forms.ModelForm):

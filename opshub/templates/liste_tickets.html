@@ -7,7 +7,7 @@
 
 <div class="outils-header">
     <h1>Gestion des tickets</h1>
-    {% if user.is_teamlead %}
+    {% if user.is_teamlead or user.is_manager or user.is_senior_manager %}
     <button class="btn-primary" onclick="document.getElementById('modale-import').style.display='flex'">
         + Importer un ticket
     </button>

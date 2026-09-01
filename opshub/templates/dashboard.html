@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<h1>Dashboard</h1>
+
+<div class="filtres-recherche">
+    <label>Du <input type="date" id="filtre-debut"></label>
+    <label>Au <input type="date" id="filtre-fin"></label>
+    <button onclick="chargerDashboard()">Filtrer</button>
+    <button onclick="reinitialiserFiltresDashboard()">Réinitialiser</button>
+</div>
+
+<div class="dashboard-kpis">
+    <div class="kpi-card">
+        <span class="kpi-valeur" id="kpi-tickets">0</span>
+        <span class="kpi-label">Tickets</span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-valeur" id="kpi-incidents">0</span>
+        <span class="kpi-label">Incidents</span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-valeur" id="kpi-outils">0</span>
+        <span class="kpi-label">Outils</span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-valeur" id="kpi-services">0</span>
+        <span class="kpi-label">Services</span>
+    </div>
+    <div class="kpi-card">
+        <span class="kpi-valeur" id="kpi-contributions">0</span>
+        <span class="kpi-label">Contributions</span>
+    </div>
+</div>
+
+<div class="dashboard-grille">
+    <div class="dashboard-bloc">
+        <h3>Tickets par statut</h3>
+        <canvas id="chart-tickets-state"></canvas>
+    </div>
+
+    <div class="dashboard-bloc">
+        <h3>Top 5 des assignés (tickets)</h3>
+        <canvas id="chart-tickets-assignes"></canvas>
+    </div>
+
+    <div class="dashboard-bloc">
+        <h3>Incidents par sévérité</h3>
+        <canvas id="chart-incidents-severite"></canvas>
+    </div>
+
+    <div class="dashboard-bloc">
+        <h3>Incidents par équipe (TEAM)</h3>
+        <canvas id="chart-incidents-team"></canvas>
+    </div>
+
+    <div class="dashboard-bloc dashboard-bloc-large">
+        <h3>Tendance des expériences membres</h3>
+        <canvas id="chart-experiences-tendance"></canvas>
+    </div>
+
+    <div class="dashboard-bloc">
+        <h3>Outils par équipe</h3>
+        <canvas id="chart-outils-equipe"></canvas>
+    </div>
+
+    <div class="dashboard-bloc">
+        <h3>Plaintes anonymes vs nominatives</h3>
+        <canvas id="chart-plaintes-anonymat"></canvas>
+    </div>
+</div>
+
+<div class="dashboard-alertes">
+    <h3>Points d'attention</h3>
+    <ul id="liste-alertes"></ul>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
