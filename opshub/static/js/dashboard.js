@@ -11,7 +11,7 @@ async function chargerDashboard() {
     try {
         const res = await fetch(`/api/dashboard/?${params.toString()}`, { cache: 'no-store' });
         if (!res.ok) {
-            alert('Erreur lors du chargement du dashboard');
+            afficherToast('Erreur lors du chargement du dashboard', 'erreur');
             return;
         }
         const data = await res.json();
@@ -29,25 +29,11 @@ function reinitialiserFiltresDashboard() {
     chargerDashboard();
 }
 
-<<<<<<< HEAD
-  function afficherKpis(kpis) {
-    document.getElementById("kpis-container").innerHTML = `
-      ${carteKpi(kpis.tickets_sans_feedback, "Tickets sans feedback")}
-      ${carteKpi(kpis.incidents_actifs, "Incidents actifs")}
-      ${carteKpi(kpis.rca_en_attente, "RCA en attente", kpis.rca_en_attente > 0 ? "dashboard-kpi-alerte" : "")}
-      ${carteKpi(formatDuree(kpis.duree_moyenne_resolution_secondes), "Durée moy. résolution")}
-      ${carteKpi(kpis.outils_sans_owner, "Outils sans owner")}
-      ${carteKpi(kpis.services_non_couverts, "Services non couverts")}
-      ${carteKpi(kpis.feedbacks_recents, "Retours-membres récents")}
-    `;
-  }
-=======
 function animerCompteur(elementId, valeurFinale) {
     const element = document.getElementById(elementId);
     const duree = 800;
     const debut = performance.now();
     const valeurInitiale = 0;
->>>>>>> 977fe2d766dbd5ddbd6fc70dcda3425508464df7
 
     function etape(maintenant) {
         const progres = Math.min((maintenant - debut) / duree, 1);
@@ -85,7 +71,10 @@ function construireGraphiques(data) {
                 backgroundColor: ['#FFCC00', '#1a1a1a', '#666', '#ccc', '#999'],
             }],
         },
-        options: { plugins: { legend: { position: 'bottom' } } },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+        },
     });
 
     // --- Top assignés tickets ---
@@ -100,7 +89,11 @@ function construireGraphiques(data) {
                 backgroundColor: '#FFCC00',
             }],
         },
-        options: { indexAxis: 'y', plugins: { legend: { display: false } } },
+        options: {
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+        },
     });
 
     // --- Incidents par sévérité ---
@@ -114,7 +107,10 @@ function construireGraphiques(data) {
                 backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71', '#3498db'],
             }],
         },
-        options: { plugins: { legend: { position: 'bottom' } } },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+        },
     });
 
     // --- Incidents par team ---
@@ -129,7 +125,10 @@ function construireGraphiques(data) {
                 backgroundColor: '#1a1a1a',
             }],
         },
-        options: { plugins: { legend: { display: false } } },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+        },
     });
 
     // --- Tendance expériences membres ---
@@ -159,6 +158,9 @@ function construireGraphiques(data) {
                 },
             ],
         },
+        options: {
+            maintainAspectRatio: false,
+        },
     });
 
     // --- Outils par équipe ---
@@ -173,7 +175,10 @@ function construireGraphiques(data) {
                 backgroundColor: '#FFCC00',
             }],
         },
-        options: { plugins: { legend: { display: false } } },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+        },
     });
 
     // --- Plaintes anonymes vs nominatives ---
@@ -187,7 +192,10 @@ function construireGraphiques(data) {
                 backgroundColor: ['#999', '#FFCC00'],
             }],
         },
-        options: { plugins: { legend: { position: 'bottom' } } },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+        },
     });
 }
 
@@ -214,7 +222,7 @@ function afficherAlertes(data) {
     }
 
     if (alertes.length === 0) {
-        liste.innerHTML = '<li>Aucun point d\'attention pour l\'instant</li>';
+        liste.innerHTML = '<li style="background:#dcfce7; color:#15803d;">Aucun point d\'attention pour l\'instant</li>';
         return;
     }
 

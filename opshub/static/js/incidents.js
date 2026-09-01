@@ -421,10 +421,51 @@ function activerModeEditionGlobalIncidents() {
                 td.style.maxWidth = '300px';
                 td.style.width = '300px';
             }
-
             if (champ === 'incident_id') {
+    td.style.minWidth = '150px';
+    td.style.width = '150px';
+}
+if (champ === 'impact') {
+    td.style.minWidth = '150px';
+    td.style.width = '150px';
+}
+
+            
+
+            if (champ === 'root_cause') {
+    td.style.minWidth = '150px';
+    td.style.width = '150px';
+}
+
+            if (champ == 'description') {
+    td.style.minWidth = '700px';
+    td.style.width = '700px';}
+        if (champ == 'action_resolution') {
+    td.style.minWidth = '700px';
+    td.style.width = '700px';}
+if (champ === 'date_signalement') {
     td.style.minWidth = '180px';
-    td.style.width = '130px';
+    td.style.width = '180px';
+}
+if (champ === 'duree') {
+    td.style.minWidth = '120px';
+    td.style.width = '120px';
+}
+if (champ === 'cc_emails') {
+    td.style.minWidth = '200px';
+    td.style.width = '200px';
+}
+if (champ === 'owner_email') {
+    td.style.minWidth = '180px';
+    td.style.width = '180px';
+}
+if (champ === 'statut_rca') {
+    td.style.minWidth = '140px';
+    td.style.width = '140px';
+}
+if (champ === 'severite') {
+    td.style.minWidth = '150px';
+    td.style.width = '150px';
 }
 
             let input;
