@@ -46,6 +46,7 @@
                  {% if user.is_administrateur %} 
                 <li><a href="{% url 'liste_utilisateurs' %}" class="nav-item"><img src="{% static 'img/Image de fond/utilisateurs .jpg' %}" class="nav-icon" alt=""> Utilisateurs</a></li> 
                 {% endif %} 
+                <li><a href="{% url 'page_aide' %}" class="nav-item"><img src="{% static 'img/Image de fond/aide.jpg' %}" class="nav-icon" alt=""> Centre d'aide</a></li>
             </ul>
             {% endblock %}
         </nav>
@@ -95,6 +96,7 @@
 <script src="/static/js/csrf.js"></script>
 <script src="/static/js/sidebar.js"></script>
 <script src="{% static 'js/toast.js' %}"></script>
+<script src="{% static 'js/tour.js' %}"></script>
 <script src="{% static 'js/tickets.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

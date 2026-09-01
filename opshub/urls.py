@@ -66,4 +66,5 @@ urlpatterns += [
     path("api/config-rappels/modifier/", views.modifier_config_rappels, name="modifier_config_rappels"),    
    path("api/dashboard/", views.dashboard_data, name="dashboard_data"),
    path("dashboard/", views.page_dashboard, name="page_dashboard"),
+   path("aide/", views.page_aide, name="page_aide"),
     ]

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-
+# # Modèles pour la gestion des utilisateurs, rôles, permissions, outils, services, mots-clés, feedbacks, recommandations, plaintes, tickets et incidents.
 class Permission(models.Model):
     class Code(models.TextChoices):
         GERER_OUTILS = 'gerer_outils', 'Créer, modifier, supprimer un outil de monitoring'

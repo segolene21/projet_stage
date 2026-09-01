@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<h1>Centre d'aide</h1>
+<input type="text" id="recherche-aide" class="search-input" placeholder="Rechercher dans l'aide..." oninput="filtrerAide()">
+
+<div class="aide-accordeon">
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">📋 Vue d'ensemble</button>
+        <div class="aide-contenu">
+            <p>OpsHub centralise le suivi des outils de monitoring, des services, des tickets ServiceNow, des incidents, des retours d'expérience de l'équipe et un dashboard synthétique. Chaque module est accessible selon votre rôle — voir le tableau des permissions en bas de cette page.</p>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">🛠️ Outils de monitoring</button>
+        <div class="aide-contenu">
+            <p><strong>Ce que c'est :</strong> le catalogue de tous les outils de monitoring utilisés par l'équipe, chacun rattaché à une équipe responsable.</p>
+            <p><strong>Recherche et filtres, en haut de la page :</strong></p>
+            <ul>
+                <li><em>Barre de recherche</em> — filtre par nom d'outil</li>
+                <li><em>Équipe</em> — n'affiche que les outils d'une équipe précise</li>
+                <li><em>Service</em> — n'affiche que les outils couvrant un service précis</li>
+                <li><em>Authentification</em> — filtre "Requiert authentification" / "Sans authentification"</li>
+                <li><em>Statut</em> — filtre "Actif" / "Inactif"</li>
+            </ul>
+            <p><strong>+ Ajouter un outil</strong> (Team Lead uniquement) — ouvre un formulaire avec : Nom, Statut, Lien d'accès, Nécessite authentification, Équipe (OutilTeam).</p>
+            <p><strong>Détail d'un outil</strong> — cliquez sur un outil dans la liste pour voir sa fiche complète, dont les emails du point de contact et du manager, cliquables pour ouvrir directement votre client mail.</p>
+            <a href="{% url 'liste_outils' %}?tour=outils" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">🗂️ Services</button>
+        <div class="aide-contenu">
+            <p><strong>Ce que c'est :</strong> la liste des services de l'entreprise, chacun pouvant être couvert par un ou plusieurs outils de monitoring.</p>
+            <p><strong>Filtre "Outil"</strong> — affiche uniquement les services couverts par un outil précis, utile pour vérifier la couverture de monitoring.</p>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">🏷️ Mots-clés d'assignation</button>
+        <div class="aide-contenu">
+            <p><strong>Ce que c'est :</strong> des mots-clés (intitulés) associés à une équipe, pour orienter les demandes vers la bonne équipe.</p>
+            <p><strong>Filtre "Équipe"</strong> — n'affiche que les mots-clés d'une équipe précise. Un mot-clé peut aussi n'avoir aucune équipe assignée.</p>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">🎫 Tickets</button>
+        <div class="aide-contenu">
+            <p><strong>1. Importer un ticket</strong> (bouton en haut, Team Lead/Manager/Senior Manager) :</p>
+            <ul>
+                <li>Donnez un <em>titre</em> à cet import</li>
+                <li>Choisissez le fichier Excel exporté depuis ServiceNow</li>
+                <li>Un aperçu du fichier s'affiche — vérifiez que les données sont correctes</li>
+                <li>Vous pouvez ajouter un feedback par ligne directement à cette étape (optionnel)</li>
+                <li>Cliquez "Confirmer l'import"</li>
+            </ul>
+            <p><strong>2. La liste des imports</strong> — chaque import apparaît avec son titre, sa date, et le nombre de tickets. Survolez le titre pour voir un aperçu des premières lignes.</p>
+            <p><strong>3. Boutons par import :</strong> Voir, Télécharger, Supprimer.</p>
+            <p><strong>4. Dans le tableau complet :</strong> Modifier rend toutes les lignes éditables d'un coup ; Enregistrer valide, Annuler abandonne. Recherche filtre sur tous les champs.</p>
+            <a href="{% url 'page_tickets' %}?tour=tickets" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">🚨 Incidents</button>
+        <div class="aide-contenu">
+            <p><strong>1. Importer des incidents</strong> — même principe que les tickets, avec le fichier ServiceNow des incidents.</p>
+            <p><strong>2. Champs à remplir vous-même :</strong> Impact, Affected Service, Root Cause, Owner Email, CC, RCA Status.</p>
+            <p><strong>3. Relances automatiques :</strong> tant qu'un incident est "Not Provided" avec un owner renseigné, un mail de rappel part automatiquement. Passez le statut à "En attente" pour suspendre temporairement.</p>
+            <p><strong>4. Attacher le RCA :</strong> uploadez le fichier PDF directement — le statut passe automatiquement à "Provided".</p>
+            <p><strong>5. Rapports :</strong> Rapport court, Aperçu rapport long (avec possibilité de modifier avant export), Télécharger PDF.</p>
+            <a href="{% url 'liste_incidents' %}?tour=incidents" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">💬 Expériences membres</button>
+        <div class="aide-contenu">
+            <p><strong>Ce que c'est :</strong> feedback, plaintes (anonymes possibles) et recommandations liés à un shift.</p>
+            <p><strong>Soumettre</strong> — bouton visible pour les Membres Techcommand.</p>
+            <p><strong>Supprimer</strong> — chaque membre peut supprimer ses propres contributions ; le Team Lead peut supprimer n'importe laquelle.</p>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">📊 Dashboard</button>
+        <div class="aide-contenu">
+            <p><strong>KPIs en haut</strong> — totaux animés (tickets, incidents, outils, services, contributions).</p>
+            <p><strong>Filtres de période</strong> — "Du" / "Au", cliquez "Filtrer".</p>
+            <p><strong>Graphiques :</strong> tickets par statut, top assignés, incidents par sévérité et équipe, tendance des expériences membres, outils par équipe, plaintes anonymes/nominatives.</p>
+            <p><strong>Points d'attention</strong> — signale ce qui nécessite une action.</p>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">⚙️ Paramètres</button>
+        <div class="aide-contenu">
+            <p><strong>Mode sombre / clair</strong> — interrupteur en haut à droite.</p>
+            <p><strong>Modifier mon profil</strong> — Prénom, Nom, Email, Adresse.</p>
+            <p><strong>Changer mon mot de passe</strong> — bouton dédié.</p>
+            <a href="{% url 'parametres' %}?tour=parametres" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+        </div>
+    </div>
+
+    {% if user.is_administrateur %}
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">👥 Gestion des utilisateurs</button>
+        <div class="aide-contenu">
+            <p><strong>+ Ajouter un utilisateur</strong> — Rôle, Nom d'utilisateur, Prénom, Nom, Email, Adresse, Mot de passe.</p>
+            <p><strong>Actions par utilisateur :</strong> ⇆ Activer/Désactiver, ✕ Supprimer.</p>
+            <a href="{% url 'liste_utilisateurs' %}?tour=utilisateurs" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">🔑 Qui peut faire quoi ?</button>
+        <div class="aide-contenu">
+            <table class="table-permissions">
+                <thead>
+                    <tr><th>Module</th><th>Administrateur</th><th>Team Lead</th><th>Membre Techcommand</th><th>Senior Manager</th><th>Manager</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Outils / Services / Mots-clés</td><td>Consulter</td><td>Gérer</td><td>Consulter</td><td>Consulter</td><td>Gérer</td></tr>
+                    <tr><td>Tickets</td><td>Consulter</td><td>Gérer</td><td>Consulter</td><td>Consulter</td><td>Gérer</td></tr>
+                    <tr><td>Incidents</td><td>Consulter</td><td>Consulter</td><td>Consulter</td><td>Gérer</td><td>Gérer</td></tr>
+                    <tr><td>Expériences membres</td><td>Consulter</td><td>Gérer</td><td>Soumettre + Consulter</td><td>Consulter</td><td>Gérer</td></tr>
+                    <tr><td>Utilisateurs</td><td>Gérer</td><td>—</td><td>—</td><td>—</td><td>Gérer</td></tr>
+                    <tr><td>Dashboard</td><td>Voir</td><td>—</td><td>—</td><td>Voir</td><td>Voir</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/aide.js' %}"></script>
+{% endblock %}

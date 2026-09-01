@@ -30,11 +30,28 @@ from .forms import (
 )
 from .decorators import permission_requise
 
+import json
+from openpyxl import load_workbook, Workbook
+from django.http import HttpResponse, JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Q
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+from .models import Ticket, ImportLot, Permission
+
 
 # ==========================================
 # GESTION DES OUTILS
 # ==========================================
 
+
+#Fonction pour consulter la liste des outils de monitoring'; paramètres de filtrage : requete, team_id, authentification, statut
 @permission_requise(Permission.Code.CONSULTER_OUTILS, is_json=False)
 @permission_requise(Permission.Code.CONSULTER_OUTILS, is_json=False)
 def liste_outils(request):
@@ -72,13 +89,13 @@ def liste_outils(request):
         'statut_selectionne': statut,
     })
 
-
+# fonction pour consulter le détail d'un outil de monitoring ; paramètre : outil_id
 @login_required
 def detail_outil(request, outil_id):
     outil = get_object_or_404(OutilMonitoring, id=outil_id)
     return render(request, 'detail_outil.html', {'outil': outil})
 
-
+#fonction pour l'ajout d'un outil de monitoring ; paramètre : request
 @csrf_exempt
 @permission_requise(Permission.Code.GERER_OUTILS)
 def ajouter_outil(request):
@@ -91,7 +108,7 @@ def ajouter_outil(request):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour la modification d'un outil de monitoring ; paramètres : request, outil_id
 @permission_requise(Permission.Code.GERER_OUTILS)
 def modifier_outil(request, outil_id):
     outil = get_object_or_404(OutilMonitoring, id=outil_id)
@@ -104,7 +121,7 @@ def modifier_outil(request, outil_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour la suppression d'un outil de monitoring ; paramètres : request, outil_id
 @permission_requise(Permission.Code.GERER_OUTILS)
 def supprimer_outil(request, outil_id):
     outil = get_object_or_404(OutilMonitoring, id=outil_id)
@@ -114,7 +131,7 @@ def supprimer_outil(request, outil_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour l'ajout d'une équipe d'outils de monitoring ; paramètre : request
 @permission_requise(Permission.Code.GERER_OUTILS)
 def ajouter_outil_team(request):
     if request.method == 'POST':
@@ -126,7 +143,7 @@ def ajouter_outil_team(request):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour consulter le détail d'une équipe d'outils de monitoring ; paramètre : team_id
 @login_required
 def detail_outil_team(request, team_id):
     equipe = get_object_or_404(OutilTeam, id=team_id)
@@ -136,6 +153,8 @@ def detail_outil_team(request, team_id):
 # ==========================================
 # GESTION DES SERVICES
 # ==========================================
+
+#fonction pour consulter la liste des services ; paramètres de filtrage : requete, outil_id
 
 @permission_requise(Permission.Code.CONSULTER_SERVICES, is_json=False)
 def liste_services(request):
@@ -162,13 +181,13 @@ def liste_services(request):
         'outil_id_selectionne': outil_id,
     })
 
-
+#fonction pour consulter le détail d'un service ; paramètre : service_id
 @login_required
 def detail_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     return render(request, 'detail_service.html', {'service': service})
 
-
+#fonction pour l'ajout d'un service ; paramètre : request
 @permission_requise(Permission.Code.GERER_SERVICES)
 def ajouter_service(request):
     if request.method == "POST":
@@ -180,7 +199,7 @@ def ajouter_service(request):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour la modification d'un service ; paramètres : request, service_id
 @permission_requise(Permission.Code.GERER_SERVICES)
 def modifier_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
@@ -193,7 +212,7 @@ def modifier_service(request, service_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour la suppression d'un service ; paramètres : request, service_id
 @permission_requise(Permission.Code.GERER_SERVICES)
 def supprimer_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
@@ -208,6 +227,7 @@ def supprimer_service(request, service_id):
 # GESTION DES MOTS-CLÉS & ÉQUIPES
 # ==========================================
 
+#fonction pour consulter la liste des mots-clés ; paramètres de filtrage : requete, equipe_id
 @permission_requise(Permission.Code.CONSULTER_MOTS_CLES, is_json=False)
 def liste_mots_cles(request):
     requete = request.GET.get('q', '')
@@ -233,7 +253,7 @@ def liste_mots_cles(request):
         'equipe_id_selectionne': equipe_id,
     })
 
-
+#fonction pour l'ajout d'un mot-clé ; paramètre : request
 @permission_requise(Permission.Code.GERER_MOTS_CLES)
 def ajouter_mot_cle(request):
     if request.method == 'POST':
@@ -250,7 +270,7 @@ def ajouter_mot_cle(request):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour l'ajout d'une équipe ; paramètre : request
 @permission_requise(Permission.Code.GERER_MOTS_CLES)
 def ajouter_equipe(request):
     if request.method == 'POST':
@@ -262,7 +282,7 @@ def ajouter_equipe(request):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour la modification d'un mot-clé ; paramètres : request, mot_cle_id
 @permission_requise(Permission.Code.GERER_MOTS_CLES)
 def modifier_mot_cle(request, mot_cle_id):
     mot_cle = get_object_or_404(MotsClesAssignation, id=mot_cle_id)
@@ -280,7 +300,7 @@ def modifier_mot_cle(request, mot_cle_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour la suppression d'un mot-clé ; paramètres : request, mot_cle_id
 @permission_requise(Permission.Code.GERER_MOTS_CLES)
 def supprimer_mot_cle(request, mot_cle_id):
     mot_cle = get_object_or_404(MotsClesAssignation, id=mot_cle_id)
@@ -295,6 +315,7 @@ def supprimer_mot_cle(request, mot_cle_id):
 # GESTION DES UTILISATEURS
 # ==========================================
 
+#fonction pour consulter la liste des utilisateurs ; paramètres de filtrage : requete, statut
 @login_required
 @permission_requise(Permission.Code.GERER_UTILISATEURS, is_json=False)
 def liste_utilisateurs(request):
@@ -327,6 +348,8 @@ def liste_utilisateurs(request):
         'requete': requete,
         'statut_selectionne': statut,
     })
+
+#fonction pour l'ajout d'un utilisateur ; paramètre : request
 @permission_requise(Permission.Code.GERER_UTILISATEURS)
 def ajouter_utilisateur(request):
     if request.method == 'POST':
@@ -350,6 +373,7 @@ def ajouter_utilisateur(request):
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
+#fonction pour la modification d'un utilisateur ; paramètres : request, user_id
 @permission_requise(Permission.Code.GERER_UTILISATEURS)
 def toggle_statut_utilisateur(request, user_id):
     utilisateur = get_object_or_404(Utilisateurs, id=user_id)
@@ -361,6 +385,7 @@ def toggle_statut_utilisateur(request, user_id):
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
+#fonction pour la suppression d'un utilisateur ; paramètres : request, user_id
 @permission_requise(Permission.Code.GERER_UTILISATEURS)
 def supprimer_utilisateur(request, user_id):
     utilisateur = get_object_or_404(Utilisateurs, id=user_id)
@@ -375,24 +400,26 @@ def supprimer_utilisateur(request, user_id):
 # GESTION DES FEEDBACKS / PLAINTES / RECOMMANDATIONS
 # ==========================================
 
+
+#fonction pour consulter la liste des feedbacks ; paramètre : request
 @permission_requise(Permission.Code.CONSULTER_FEEDBACK, is_json=False)
 def liste_feedbacks(request):
     feedbacks = Feedback.objects.all().order_by('-date_soumission')
     return render(request, 'liste-feedbacks.html', {'feedbacks': feedbacks})
 
-
+#fonction pour consulter la liste des plaintes ; paramètre : request
 @permission_requise(Permission.Code.CONSULTER_FEEDBACK, is_json=False)
 def liste_plaintes(request):
     plaintes = Plainte.objects.all().order_by('-date_ajout')
     return render(request, 'liste-plaintes.html', {'plaintes': plaintes})
 
-
+#fonction pour consulter la liste des recommandations ; paramètre : request
 @permission_requise(Permission.Code.CONSULTER_FEEDBACK, is_json=False)
 def liste_recommandations(request):
     recommandations = Recommandation.objects.all().order_by('-date_soumission')
     return render(request, 'liste-recommandations.html', {'recommandations': recommandations})
 
-
+#fonction pour l'ajout d'un feedback ; paramètre : request
 @permission_requise(Permission.Code.SOUMETTRE_FEEDBACK)
 def ajouter_feedback(request):
     if request.method == 'POST':
@@ -415,7 +442,7 @@ def ajouter_feedback(request):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour l'ajout d'une recommandation ; paramètre : request
 @permission_requise(Permission.Code.SOUMETTRE_FEEDBACK)
 def ajouter_recommandation(request):
     if request.method == 'POST':
@@ -429,7 +456,7 @@ def ajouter_recommandation(request):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour l'ajout d'une plainte ; paramètre : request
 @permission_requise(Permission.Code.SOUMETTRE_FEEDBACK)
 def ajouter_plainte(request):
     if request.method == 'POST':
@@ -445,6 +472,8 @@ def ajouter_plainte(request):
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
+
+#fonction pour la suppression d'un feedback ; paramètres : request, feedback_id
 @login_required
 def supprimer_feedback(request, feedback_id):
     feedback = get_object_or_404(Feedback, id=feedback_id)
@@ -460,6 +489,7 @@ def supprimer_feedback(request, feedback_id):
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
 
+#fonction pour la suppression d'une recommandation ; paramètres : request, recommandation_id
 @login_required
 def supprimer_recommandation(request, recommandation_id):
     recommandation = get_object_or_404(Recommandation, id=recommandation_id)
@@ -475,7 +505,7 @@ def supprimer_recommandation(request, recommandation_id):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour la suppression d'une plainte ; paramètres : request, plainte_id
 @login_required
 def supprimer_plainte(request, plainte_id):
     plainte = get_object_or_404(Plainte, id=plainte_id)
@@ -496,19 +526,21 @@ def supprimer_plainte(request, plainte_id):
 # GESTION DES TICKETS EXCEL & AUTRES VUES
 # ==========================================
 
+#fonction pour la page d'accueil ; paramètre : request
+
 def index(request):
     return render(request, 'index.html')
 
-
+#fonction pour la page de login ; paramètre : request
 def login(request):
     return render(request, 'Login.html')
 
-
+#fonction pour la page d'expériences des membres ; paramètre : request
 @login_required
 def experiences_membres(request):
     return render(request, 'experiences-membres.html')
 
-
+#fonction pour la page de paramètres du profil ; paramètre : request
 @login_required
 def parametres(request):
     if request.method == 'POST':
@@ -521,26 +553,14 @@ def parametres(request):
         form = ProfilForm(instance=request.user)
     return render(request, 'parametres.html', {'form': form})
 
-import json
-from openpyxl import load_workbook, Workbook
-from django.http import HttpResponse, JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
-from django.utils import timezone
-from django.db.models import Q
 
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import landscape, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-
-from .models import Ticket, ImportLot, Permission
-
-
+#fonction pour la page de tickets ; paramètre : request
 @login_required
 def page_tickets(request):
     return render(request, 'liste_tickets.html')
 
+
+#fonction pour l'importation de tickets depuis un fichier Excel ; paramètre : request
 @csrf_exempt
 def import_tickets_excel(request):
     if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_TICKETS):
@@ -589,6 +609,8 @@ def import_tickets_excel(request):
 
     return JsonResponse({"message": f"{count} tickets importés", "lot_id": lot.id, "titre": lot.titre})
 
+
+#fonction pour la liste des imports de tickets ; paramètre : request
 @login_required
 def liste_imports(request):
     periode_type = request.GET.get('periode_type', '')  # 'semaine', 'mois', 'annee', ou vide
@@ -625,6 +647,8 @@ def liste_imports(request):
 
     return JsonResponse(resultat, safe=False)
 
+
+#
 def _generer_pdf(tickets, response):
     styles = getSampleStyleSheet()
     style_cellule = styles["Normal"]
@@ -1194,6 +1218,8 @@ def obtenir_config_rappels(request):
     return JsonResponse({"frequence_jours": frequence})
 
 
+
+
 @csrf_exempt
 def modifier_config_rappels(request):
     if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
@@ -1210,12 +1236,14 @@ def modifier_config_rappels(request):
     except (ValueError, TypeError):
         return JsonResponse({"erreur": "La fréquence doit être un nombre entier positif"}, status=400)
 
-    config, _ = ConfigurationRappels.objects.get_or_create(pk=1)
+    config, _ = ConfigurationRappels.objects.get_or_create(pk=1) 
     config.frequence_jours = nouvelle_frequence
     config.save()
 
     return JsonResponse({"message": "Fréquence mise à jour", "frequence_jours": nouvelle_frequence})
 
+
+#fonction pour changer le thème sombre ou clair de l'utilisateur ; paramètre : request
 @csrf_exempt
 @login_required
 def changer_theme(request):
@@ -1402,8 +1430,7 @@ def _export_incidents_court(incidents, response):
 
     wb.save(response)
 
-
-@login_required
+#fonction pour l'aperçu du rapport long, accessible a tous les utilisateurs 
 def apercu_rapport_long(request, lot_id):
     try:
         lot = ImportIncidents.objects.get(id=lot_id)
@@ -1440,6 +1467,8 @@ from django.db.models import Count, Avg, Q
 from datetime import datetime
 
 
+
+#fonction pour le dashboard, accessible uniquement aux utilisateurs ayant la permission de gérer les utilisateurs ou étant manager/senior manager/teamlead
 @login_required
 def dashboard_data(request):
     if not request.user.a_la_permission(Permission.Code.GERER_UTILISATEURS) and not request.user.is_manager and not request.user.is_senior_manager and not request.user.is_teamlead:
@@ -1587,6 +1616,15 @@ def dashboard_data(request):
             "tendance_mensuelle": tendance_mensuelle,
         },
     })
+
+
+#fonction pour la page de dashboard ; paramètre : request
 @login_required
 def page_dashboard(request):
     return render(request, 'dashboard.html')
+
+
+#fonction pour la page d'aide ; paramètre : request
+@login_required
+def page_aide(request):
+    return render(request, 'aide.html')
