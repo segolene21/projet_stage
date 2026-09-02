@@ -9,6 +9,12 @@
     {% endif %}
 </div>
 
+<div class="config-rappels">
+    <label>Fréquence des rappels (jours) :</label>
+    <input type="number" id="frequence-rappels" min="1">
+    <button class="btn-secondary" onclick="sauvegarderFrequenceRappels()">Enregistrer</button>
+</div>
+
 
 <div class="filtres-recherche">
     <input type="text" id="recherche-import-incidents" class="search-input" placeholder="Rechercher un import par titre..." oninput="rechercherImportsIncidents()" />
@@ -18,11 +24,7 @@
         <option value="mois">Par mois</option>
         <option value="semaine">Par semaine</option>
     </select>
-<div class="config-rappels">
-    <label>Fréquence des rappels (jours) :</label>
-    <input type="number" id="frequence-rappels" min="1" style="width:60px;">
-    <button onclick="sauvegarderFrequenceRappels()">Enregistrer</button>
-</div>
+
     <select id="filtre-annee-incidents" style="display:none;" onchange="chargerListeImportsIncidents()"></select>
     <select id="filtre-mois-incidents" style="display:none;" onchange="chargerListeImportsIncidents()">
         <option value="1">Janvier</option>

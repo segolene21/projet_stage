@@ -46,6 +46,39 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from .models import Ticket, ImportLot, Permission
 
 
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
+
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from .models import ImportLot
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+
+import json
+from datetime import datetime
+from openpyxl import load_workbook, Workbook
+from django.http import HttpResponse, JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Q
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
+from .models import Incident, ImportIncidents, Permission
+
 # ==========================================
 # GESTION DES OUTILS
 # ==========================================
@@ -686,20 +719,7 @@ def _generer_pdf(tickets, response):
     ]))
     doc.build([tableau])
 
-
-import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from .models import ImportLot
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-
-
+#fonction pour exporter les tickets d'un lot en Excel ou PDF ; paramètres : request, lot_id
 @login_required
 def exporter_lot_excel(request, lot_id):
     lot = get_object_or_404(ImportLot, id=lot_id)
@@ -776,7 +796,9 @@ def exporter_lot_excel(request, lot_id):
     response['Content-Disposition'] = f'attachment; filename="tickets_{lot.id}.xlsx"'
     wb.save(response)
     return response
-    
+
+
+#fonction pour modifier ou supprimer un ticket précis via sa clé primaire Django ; paramètres : request, ticket_pk
 @csrf_exempt
 def ticket_detail(request, ticket_pk):
     """Modifier/supprimer un ticket précis via sa clé primaire Django."""
@@ -802,6 +824,9 @@ def ticket_detail(request, ticket_pk):
           return JsonResponse({"message": "Ticket modifié"})
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
+
+
+#fonction pour supprimer un lot d'importation de tickets ; paramètres : request, lot_id
 @csrf_exempt
 def supprimer_lot(request, lot_id):
     if request.method != 'DELETE':
@@ -818,6 +843,9 @@ def supprimer_lot(request, lot_id):
     lot.delete()
     return JsonResponse({"message": "Import supprimé"})
 
+
+
+#fonction pour consulter les tickets d'un lot d'importation ; paramètres : request, lot_id
 @login_required
 def tickets_du_lot(request, lot_id):
     q = request.GET.get('q', '').strip()
@@ -848,6 +876,8 @@ def tickets_du_lot(request, lot_id):
             "modifie_le": timezone.localtime(t.modifie_le).strftime("%d/%m/%Y %H:%M"),
         })
 
+
+
     # Décompte par personne assignée (pour peupler le filtre + afficher les chiffres)
     from django.db.models import Count
     repartition = list(
@@ -859,24 +889,7 @@ def tickets_du_lot(request, lot_id):
 
 
 
-import json
-from datetime import datetime
-from openpyxl import load_workbook, Workbook
-from django.http import HttpResponse, JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
-from django.utils import timezone
-from django.db.models import Q
-
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import landscape, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
-
-from .models import Incident, ImportIncidents, Permission
-
-
+#fonction pour la page d'incidents ; paramètre : request
 @login_required
 def page_incidents(request):
     return render(request, 'liste_incidents.html')
@@ -909,7 +922,7 @@ def _parser_statut_rca(valeur):
         return Incident.StatutRCA.PROVIDED
     return ''
 
-
+#fonction pour l'importation d'incidents depuis un fichier Excel ; paramètre : request
 @csrf_exempt
 def import_incidents_excel(request):
     if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
@@ -957,7 +970,7 @@ def import_incidents_excel(request):
     return JsonResponse({"message": f"{count} incidents importés", "lot_id": lot.id, "titre": lot.titre})
  
 
-
+#fonction pour la liste des imports d'incidents ; paramètre : request
 @login_required
 def liste_imports_incidents(request):
     periode_type = request.GET.get('periode_type', '')
@@ -995,7 +1008,7 @@ def liste_imports_incidents(request):
 
     return JsonResponse(resultat, safe=False)
 
-
+#fonction pour consulter les incidents d'un lot d'importation ; paramètres : request, lot_id
 @login_required
 def incidents_du_lot(request, lot_id):
     q = request.GET.get('q', '').strip()
@@ -1047,7 +1060,7 @@ def incidents_du_lot(request, lot_id):
     return JsonResponse({"titre": lot.titre, "incidents": incidents, "total": total, "sans_rca": sans_rca})
 
 from reportlab.lib.units import cm
-
+#fonction pour générer un PDF d'incidents ; paramètres : incidents, response
 def _generer_pdf_incidents(incidents, response):
     styles = getSampleStyleSheet()
     style_cellule = styles["Normal"]
@@ -1093,11 +1106,7 @@ def _generer_pdf_incidents(incidents, response):
     doc.build([tableau])
 
 
-
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
-
-
+#fonction pour exporter un lot d'incidents en PDF ou Excel ; paramètres : request, lot_id
 @login_required
 def export_lot_incidents(request, lot_id):
     type_rapport = request.GET.get('type', 'court')
@@ -1127,7 +1136,7 @@ def export_lot_incidents(request, lot_id):
     return response
 
    
-
+#fonction pour supprimer un lot d'incidents ; paramètres : request, lot_id
 @csrf_exempt
 def supprimer_lot_incidents(request, lot_id):
     if request.method != 'DELETE':
@@ -1143,7 +1152,7 @@ def supprimer_lot_incidents(request, lot_id):
     lot.delete()
     return JsonResponse({"message": "Import supprimé"})
 
-
+#fonction pour obtenir, modifier ou supprimer un incident précis via sa clé primaire Django ; paramètres : request, incident_pk
 @csrf_exempt
 def incident_detail(request, incident_pk):
     if request.method in ('DELETE', 'PUT'):
@@ -1186,7 +1195,7 @@ def incident_detail(request, incident_pk):
 
     return JsonResponse({'erreur': 'Méthode non autorisée'}, status=405)
 
-
+#fonction pour l'upload d'un fichier RCA pour un incident ; paramètres : request, incident_pk
 @csrf_exempt
 def uploader_rca(request, incident_pk):
     if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
@@ -1212,14 +1221,15 @@ def uploader_rca(request, incident_pk):
 
     return JsonResponse({"message": "RCA attaché avec succès", "rca_url": incident.rca_fichier.url})
 
+
+#fonction pour obtenir la configuration des rappels ; paramètre : request
 @login_required
 def obtenir_config_rappels(request):
     frequence = ConfigurationRappels.get_frequence()
     return JsonResponse({"frequence_jours": frequence})
 
 
-
-
+#fonction pour modifier la configuration des rappels ; paramètre : request
 @csrf_exempt
 def modifier_config_rappels(request):
     if not request.user.is_authenticated or not request.user.a_la_permission(Permission.Code.GERER_INCIDENTS):
@@ -1296,7 +1306,7 @@ def export_lot_incidents(request, lot_id):
 
     return response
 
-
+#fonction pour exporter les incidents en format long (Excel) ; paramètres : incidents, response
 def _export_incidents_long(incidents, response):
     wb = Workbook()
     ws = wb.active
@@ -1369,6 +1379,8 @@ def _export_incidents_long(incidents, response):
 
     wb.save(response)
 
+
+#fonction pour exporter les incidents en format court (Excel) ; paramètres : incidents, response
 def _export_incidents_court(incidents, response):
     wb = Workbook()
     ws = wb.active
@@ -1430,7 +1442,7 @@ def _export_incidents_court(incidents, response):
 
     wb.save(response)
 
-#fonction pour l'aperçu du rapport long, accessible a tous les utilisateurs 
+#fonction pour l'aperçu du rapport long, accessible a tous les utilisateurs par le biais d'une requête AJAX ; paramètres : request, lot_id
 def apercu_rapport_long(request, lot_id):
     try:
         lot = ImportIncidents.objects.get(id=lot_id)

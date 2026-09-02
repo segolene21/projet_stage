@@ -523,8 +523,12 @@ function activerModeEditionGlobal() {
             const valeur = td.textContent;
 
             if (champ === 'details') {
-                td.style.maxWidth = '500px';
-                td.style.width = '500px';
+                td.style.maxWidth = '300px';
+                td.style.width = '300px';
+            }
+            if (champ === 'feedback') {
+                td.style.maxWidth = '300px';
+                td.style.width = '300px';
             }
 
             const input = champ === 'details'

@@ -5,7 +5,7 @@ let indexTourActuel = 0;
 
 function demarrerVisite(cleConfig) {
     const etapes = CONFIGURATION_TOURS[cleConfig];
-    if (!etapes) return;
+    if (!etapes || !Array.isArray(etapes) || etapes.length === 0) return;
 
     etapesTourActuel = etapes;
     indexTourActuel = 0;
@@ -37,10 +37,11 @@ function creerOverlayTour() {
     `;
     document.body.appendChild(bulle);
 }
-
 function afficherEtapeTour() {
     const etape = etapesTourActuel[indexTourActuel];
     if (!etape) { fermerTour(); return; }
+
+    if (etape.avant) etape.avant();
 
     document.querySelectorAll('.tour-cible').forEach(el => el.classList.remove('tour-cible'));
 
@@ -68,6 +69,7 @@ function afficherEtapeTour() {
     document.getElementById('tour-progression').textContent = `${indexTourActuel + 1} / ${etapesTourActuel.length}`;
     document.getElementById('tour-precedent').style.visibility = indexTourActuel === 0 ? 'hidden' : 'visible';
     document.getElementById('tour-suivant').style.display = indexTourActuel === etapesTourActuel.length - 1 ? 'none' : 'inline-block';
+    document.getElementById('tour-fermer').style.display = 'inline-block';
 }
 
 function etapeSuivanteTour() {
@@ -94,33 +96,97 @@ function fermerTour() {
 // --- Configuration : une entrée par page, avec ses étapes ---
 
 const CONFIGURATION_TOURS = {
-    tickets: [
-        { selecteur: '.outils-header button.btn-primary', texte: "Cliquez ici pour importer un nouveau fichier de tickets depuis ServiceNow." },
-        { selecteur: '#recherche-import', texte: "Recherchez un import existant par son titre." },
-        { selecteur: '#filtre-periode-type', texte: "Filtrez les imports par période : semaine, mois ou année." },
-        { selecteur: '#liste-imports', texte: "Chaque bloc est un import. Survolez le titre pour un aperçu, ou cliquez 'Voir' pour ouvrir le détail complet." },
-    ],
-    incidents: [
-        { selecteur: '.outils-header button.btn-primary', texte: "Importez un fichier d'incidents exporté depuis ServiceNow." },
-        { selecteur: '#filtre-periode-type-incidents', texte: "Filtrez les imports par période." },
-        { selecteur: '#liste-imports-incidents', texte: "Chaque bloc est un import d'incidents. Cliquez 'Voir' pour ouvrir le détail." },
-    ],
+
     outils: [
         { selecteur: '.outils-header button.btn-primary', texte: "Ajoutez un nouvel outil de monitoring au catalogue." },
-        { selecteur: '.filtres-outils, form.filtres-outils', texte: "Filtrez par équipe, service, authentification ou statut." },
+        { selecteur: '#champ_recherche_outils', texte: "Recherchez un outil par son nom." },
+        { selecteur: 'select[name="team"]', texte: "Filtrez les outils par équipe responsable." },
+        { selecteur: 'select[name="authentification"]', texte: "Filtrez selon que l'outil nécessite ou non une authentification." },
+        { selecteur: 'select[name="statut"]', texte: "Filtrez les outils actifs ou inactifs." },
+        { selecteur: '#champ-nom', texte: "Formulaire d'ajout : le nom de l'outil.", avant: () => { const m = document.getElementById('modale-ajout'); if (m) m.style.display = 'flex'; } },
+        { selecteur: '#champ-lien-acces', texte: "L'URL ou lien d'accès à l'outil." },
+        { selecteur: '#champ-auth', texte: "Cochez si une authentification est requise pour cet outil." },
+        { selecteur: '#champ-statut', texte: "Décochez pour créer l'outil directement en statut inactif." },
+        { selecteur: '#select-outil-team', texte: "Choisissez l'équipe responsable, avec ses contacts." },
+        { selecteur: '#liste-outils', texte: "La liste des outils existants. Cliquez sur un nom pour voir sa fiche détaillée.", avant: () => { const m = document.getElementById('modale-ajout'); if (m) m.style.display = 'none'; } },
     ],
+
+    services: [
+        { selecteur: '.outils-header button.btn-primary', texte: "Ajoutez un nouveau service." },
+        { selecteur: '#champ_recherche_services', texte: "Recherchez un service par son nom." },
+        { selecteur: 'select[name="outil"]', texte: "Filtrez les services couverts par un outil précis." },
+        { selecteur: '#modale-ajout-service input[name="nom"]', texte: "Le nom du service.", avant: () => { const m = document.getElementById('modale-ajout-service'); if (m) m.style.display = 'flex'; } },
+        { selecteur: '#modale-ajout-service textarea[name="description"]', texte: "Une description du service." },
+        { selecteur: '#modale-ajout-service .checkbox-list', texte: "Cochez le ou les outils de monitoring qui couvrent ce service." },
+        { selecteur: '#liste-services', texte: "La liste des services existants, avec Modifier et Supprimer.", avant: () => { const m = document.getElementById('modale-ajout-service'); if (m) m.style.display = 'none'; } },
+    ],
+
+    mots_cles: [
+        { selecteur: '.outils-header button.btn-primary', texte: "Ajoutez un nouveau mot-clé d'assignation." },
+        { selecteur: '#champ_recherche_mots_cles', texte: "Recherchez un mot-clé." },
+        { selecteur: 'select[name="equipe"]', texte: "Filtrez les mots-clés par équipe." },
+        { selecteur: '#modale-ajout-mc input[name="intitule"]', texte: "L'intitulé du mot-clé.", avant: () => { const m = document.getElementById('modale-ajout-mc'); if (m) m.style.display = 'flex'; } },
+        { selecteur: '#select-equipe-ajout', texte: "L'équipe à laquelle rattacher ce mot-clé." },
+        { selecteur: '#modale-ajout-mc .btn-secondary[onclick*="ouvrirModaleEquipe"]', texte: "Pas d'équipe existante ? Créez-en une nouvelle ici." },
+        { selecteur: '#table-mots-cles', texte: "Le tableau des mots-clés, avec le nombre de membres de chaque équipe.", avant: () => { const m = document.getElementById('modale-ajout-mc'); if (m) m.style.display = 'none'; } },
+    ],
+
+    tickets: [
+        { selecteur: '.outils-header button.btn-primary', texte: "Importez un fichier de tickets exporté depuis ServiceNow." },
+        { selecteur: '#recherche-import', texte: "Recherchez un import existant par son titre." },
+        { selecteur: '#filtre-periode-type', texte: "Filtrez les imports par semaine, mois ou année." },
+        { selecteur: '#titre-import', texte: "Donnez un titre à votre import, par exemple 'Tickets semaine 33'.", avant: () => { const m = document.getElementById('modale-import'); if (m) m.style.display = 'flex'; } },
+        { selecteur: '#fichier-ticket', texte: "Sélectionnez votre fichier Excel ServiceNow ici." },
+        { selecteur: '#btn-confirmer', texte: "Une fois l'aperçu vérifié, cliquez ici pour valider l'import.", avant: () => { const m = document.getElementById('modale-import'); if (m) m.style.display = 'none'; } },
+        { selecteur: '#liste-imports', texte: "Chaque bloc représente un import. Survolez le titre pour un aperçu, ou cliquez 'Voir' pour ouvrir le détail complet." },
+    ],
+
+    incidents: [
+        { selecteur: '.outils-header button.btn-primary', texte: "Importez un fichier d'incidents exporté depuis ServiceNow." },
+        { selecteur: '#frequence-rappels', texte: "Réglez ici la fréquence (en jours) des relances automatiques pour les RCA manquants." },
+        { selecteur: '#filtre-periode-type-incidents', texte: "Filtrez les imports par période." },
+        { selecteur: '#titre-import-incidents', texte: "Donnez un titre à votre import d'incidents.", avant: () => { const m = document.getElementById('modale-import-incidents'); if (m) m.style.display = 'flex'; } },
+        { selecteur: '#fichier-incidents', texte: "Sélectionnez le fichier Excel ServiceNow des incidents." },
+        { selecteur: '#liste-imports-incidents', texte: "Chaque bloc est un import d'incidents. Cliquez 'Voir' pour ouvrir le détail.", avant: () => { const m = document.getElementById('modale-import-incidents'); if (m) m.style.display = 'none'; } },
+    ],
+
+    feedback: [
+        { selecteur: '.outils-header button.btn-primary', texte: "Soumettez un feedback sur un shift." },
+        { selecteur: '#filtre_feedbacks', texte: "Filtrez les feedbacks par shift ou par date." },
+        { selecteur: '#modale-feedback select[name="plage_shift"]', texte: "Choisissez la plage horaire concernée : matin, après-midi ou nuit.", avant: () => { const m = document.getElementById('modale-feedback'); if (m) m.style.display = 'flex'; } },
+        { selecteur: '#modale-feedback textarea[name="description"]', texte: "Décrivez votre retour sur ce shift." },
+        { selecteur: '#liste-feedbacks', texte: "Chaque carte est un feedback. Vous pouvez supprimer les vôtres.", avant: () => { const m = document.getElementById('modale-feedback'); if (m) m.style.display = 'none'; } },
+    ],
+
     parametres: [
         { selecteur: '#toggle-theme', texte: "Basculez entre le mode clair et le mode sombre." },
         { selecteur: '.modal-box form', texte: "Modifiez votre prénom, nom, email ou adresse ici." },
         { selecteur: '.settings-link', texte: "Cliquez ici pour changer votre mot de passe." },
     ],
+
     utilisateurs: [
         { selecteur: '.outils-header button.btn-primary', texte: "Créez un nouveau compte utilisateur et assignez-lui un rôle." },
         { selecteur: '.filtres-recherche', texte: "Recherchez un utilisateur ou filtrez par statut actif/inactif." },
         { selecteur: '.btn-action-edit', texte: "Ce bouton active ou désactive un compte." },
     ],
-};
 
+    plaintes: [
+    { selecteur: '.outils-header button.btn-primary', texte: "Soumettez une plainte, anonyme si vous le souhaitez." },
+    { selecteur: '#filtre_plaintes', texte: "Filtrez les plaintes par texte." },
+    { selecteur: '#filtre_date_plaintes', texte: "Filtrez les plaintes par date." },
+    { selecteur: '#modale-plainte textarea[name="contenu"]', texte: "Décrivez votre plainte ici.", avant: () => { const m = document.getElementById('modale-plainte'); if (m) m.style.display = 'flex'; } },
+    { selecteur: '#modale-plainte input[name="anonyme"]', texte: "Cochez cette case pour soumettre votre plainte de façon anonyme." },
+    { selecteur: '#liste-plaintes', texte: "Chaque carte est une plainte. Vous pouvez supprimer les vôtres.", avant: () => { const m = document.getElementById('modale-plainte'); if (m) m.style.display = 'none'; } },
+],
+recommandations: [
+    { selecteur: '.outils-header button.btn-primary', texte: "Soumettez une recommandation pour améliorer les process." },
+    { selecteur: '#filtre_recommandations', texte: "Filtrez les recommandations par texte." },
+    { selecteur: '#filtre_date_recommandations', texte: "Filtrez les recommandations par date." },
+    { selecteur: '#modale-recommandation textarea[name="contenu"]', texte: "Décrivez votre recommandation ici.", avant: () => { const m = document.getElementById('modale-recommandation'); if (m) m.style.display = 'flex'; } },
+    { selecteur: '#liste-recommandations', texte: "Chaque carte est une recommandation. Vous pouvez supprimer les vôtres.", avant: () => { const m = document.getElementById('modale-recommandation'); if (m) m.style.display = 'none'; } },
+],
+
+};
 // --- Auto-démarrage si l'URL contient ?tour=xxx ---
 
 document.addEventListener('DOMContentLoaded', () => {

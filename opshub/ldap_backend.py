@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
-
+#gestion de l'authentification LDAP pour les utilisateurs Active Directory
 class ADBackend(BaseBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         if not username or not password:

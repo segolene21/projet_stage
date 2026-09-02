@@ -8,130 +8,142 @@
 <div class="aide-accordeon">
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">📋 Vue d'ensemble</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Comment fonctionne l'application</button>
         <div class="aide-contenu">
-            <p>OpsHub centralise le suivi des outils de monitoring, des services, des tickets ServiceNow, des incidents, des retours d'expérience de l'équipe et un dashboard synthétique. Chaque module est accessible selon votre rôle — voir le tableau des permissions en bas de cette page.</p>
-        </div>
-    </div>
-
-    <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">🛠️ Outils de monitoring</button>
-        <div class="aide-contenu">
-            <p><strong>Ce que c'est :</strong> le catalogue de tous les outils de monitoring utilisés par l'équipe, chacun rattaché à une équipe responsable.</p>
-            <p><strong>Recherche et filtres, en haut de la page :</strong></p>
+            <p>OpsHub aide l'équipe Techcommand à suivre son travail au quotidien. L'application regroupe plusieurs espaces :</p>
             <ul>
-                <li><em>Barre de recherche</em> — filtre par nom d'outil</li>
-                <li><em>Équipe</em> — n'affiche que les outils d'une équipe précise</li>
-                <li><em>Service</em> — n'affiche que les outils couvrant un service précis</li>
-                <li><em>Authentification</em> — filtre "Requiert authentification" / "Sans authentification"</li>
-                <li><em>Statut</em> — filtre "Actif" / "Inactif"</li>
+                <li>Un catalogue des outils de monitoring et des services qu'ils surveillent</li>
+                <li>Un espace pour importer et suivre les tickets clients issus de ServiceNow</li>
+                <li>Un espace pour importer et suivre les incidents, avec le rapport d'analyse (RCA) à fournir pour chacun</li>
+                <li>Un espace où l'équipe peut donner un feedback, signaler une plainte ou proposer une recommandation après un shift</li>
+                <li>Un tableau de bord avec des statistiques et des graphiques</li>
             </ul>
-            <p><strong>+ Ajouter un outil</strong> (Team Lead uniquement) — ouvre un formulaire avec : Nom, Statut, Lien d'accès, Nécessite authentification, Équipe (OutilTeam).</p>
-            <p><strong>Détail d'un outil</strong> — cliquez sur un outil dans la liste pour voir sa fiche complète, dont les emails du point de contact et du manager, cliquables pour ouvrir directement votre client mail.</p>
-            <a href="{% url 'liste_outils' %}?tour=outils" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+            <p>Ce que vous voyez dans l'application dépend de votre rôle. Un tableau récapitulatif se trouve à la fin de cette page.</p>
         </div>
     </div>
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">🗂️ Services</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Outils de monitoring</button>
         <div class="aide-contenu">
-            <p><strong>Ce que c'est :</strong> la liste des services de l'entreprise, chacun pouvant être couvert par un ou plusieurs outils de monitoring.</p>
-            <p><strong>Filtre "Outil"</strong> — affiche uniquement les services couverts par un outil précis, utile pour vérifier la couverture de monitoring.</p>
+            <p>Cette page liste tous les outils de monitoring utilisés par l'équipe, comme Grafana ou Watcher. Chaque outil est rattaché à une équipe responsable.</p>
+            <p>En haut de la page, vous pouvez rechercher un outil par son nom, ou le filtrer par équipe, par service couvert, par besoin d'authentification, ou par statut actif/inactif.</p>
+            <p>Le bouton "Ajouter un outil" est réservé au Team Lead. Il ouvre un formulaire où l'on renseigne le nom de l'outil, son lien d'accès, si une authentification est nécessaire, son statut, et l'équipe responsable avec ses contacts.</p>
+            <p>En cliquant sur le nom d'un outil dans la liste, vous accédez à sa fiche complète, avec les emails de contact directement cliquables pour ouvrir votre messagerie.</p>
+            <a href="{% url 'liste_outils' %}?tour=outils" class="btn-secondary">Démarrer la visite guidée</a>
         </div>
     </div>
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">🏷️ Mots-clés d'assignation</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Services</button>
         <div class="aide-contenu">
-            <p><strong>Ce que c'est :</strong> des mots-clés (intitulés) associés à une équipe, pour orienter les demandes vers la bonne équipe.</p>
-            <p><strong>Filtre "Équipe"</strong> — n'affiche que les mots-clés d'une équipe précise. Un mot-clé peut aussi n'avoir aucune équipe assignée.</p>
+            <p>Cette page liste les services de l'entreprise. Chaque service peut être couvert par un ou plusieurs outils de monitoring.</p>
+            <p>Le filtre "Outil" permet de voir uniquement les services couverts par un outil précis, ce qui aide à repérer les services qui ne sont surveillés par aucun outil.</p>
+            <a href="{% url 'liste_services' %}?tour=services" class="btn-secondary">Démarrer la visite guidée</a>
         </div>
     </div>
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">🎫 Tickets</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Mots-clés d'assignation</button>
         <div class="aide-contenu">
-            <p><strong>1. Importer un ticket</strong> (bouton en haut, Team Lead/Manager/Senior Manager) :</p>
-            <ul>
-                <li>Donnez un <em>titre</em> à cet import</li>
-                <li>Choisissez le fichier Excel exporté depuis ServiceNow</li>
-                <li>Un aperçu du fichier s'affiche — vérifiez que les données sont correctes</li>
-                <li>Vous pouvez ajouter un feedback par ligne directement à cette étape (optionnel)</li>
-                <li>Cliquez "Confirmer l'import"</li>
-            </ul>
-            <p><strong>2. La liste des imports</strong> — chaque import apparaît avec son titre, sa date, et le nombre de tickets. Survolez le titre pour voir un aperçu des premières lignes.</p>
-            <p><strong>3. Boutons par import :</strong> Voir, Télécharger, Supprimer.</p>
-            <p><strong>4. Dans le tableau complet :</strong> Modifier rend toutes les lignes éditables d'un coup ; Enregistrer valide, Annuler abandonne. Recherche filtre sur tous les champs.</p>
-            <a href="{% url 'page_tickets' %}?tour=tickets" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+            <p>Un mot-clé permet d'orienter une demande vers la bonne équipe. Chaque mot-clé peut être rattaché à une équipe, ou laissé sans équipe pour le moment.</p>
+            <p>Le filtre "Équipe" permet d'afficher uniquement les mots-clés d'une équipe précise.</p>
+            <a href="{% url 'liste_mots_cles' %}?tour=mots_cles" class="btn-secondary">Démarrer la visite guidée</a>
         </div>
     </div>
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">🚨 Incidents</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Tickets</button>
         <div class="aide-contenu">
-            <p><strong>1. Importer des incidents</strong> — même principe que les tickets, avec le fichier ServiceNow des incidents.</p>
-            <p><strong>2. Champs à remplir vous-même :</strong> Impact, Affected Service, Root Cause, Owner Email, CC, RCA Status.</p>
-            <p><strong>3. Relances automatiques :</strong> tant qu'un incident est "Not Provided" avec un owner renseigné, un mail de rappel part automatiquement. Passez le statut à "En attente" pour suspendre temporairement.</p>
-            <p><strong>4. Attacher le RCA :</strong> uploadez le fichier PDF directement — le statut passe automatiquement à "Provided".</p>
-            <p><strong>5. Rapports :</strong> Rapport court, Aperçu rapport long (avec possibilité de modifier avant export), Télécharger PDF.</p>
-            <a href="{% url 'liste_incidents' %}?tour=incidents" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+            <p>Cette page permet d'importer les tickets exportés depuis ServiceNow, sous forme de fichier Excel.</p>
+            <p>Pour importer, donnez d'abord un titre à l'import, puis choisissez le fichier. Un aperçu s'affiche avant la confirmation, où vous pouvez déjà ajouter un feedback ligne par ligne si besoin.</p>
+            <p>Chaque import apparaît ensuite dans la liste avec son titre et sa date. Vous pouvez survoler le titre pour voir un aperçu, ou cliquer sur "Voir" pour ouvrir le tableau complet.</p>
+            <p>Dans le tableau complet, le bouton "Modifier" rend toutes les lignes éditables en même temps. Cliquez sur "Enregistrer" pour valider vos changements, ou "Annuler" pour les abandonner. Une barre de recherche permet de filtrer sur tous les champs, et un filtre spécifique permet de voir les tickets assignés à une personne précise.</p>
+            <p>Le téléchargement est disponible en Excel ou en PDF.</p>
+            <a href="{% url 'page_tickets' %}?tour=tickets" class="btn-secondary">Démarrer la visite guidée</a>
         </div>
     </div>
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">💬 Expériences membres</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Incidents</button>
         <div class="aide-contenu">
-            <p><strong>Ce que c'est :</strong> feedback, plaintes (anonymes possibles) et recommandations liés à un shift.</p>
-            <p><strong>Soumettre</strong> — bouton visible pour les Membres Techcommand.</p>
-            <p><strong>Supprimer</strong> — chaque membre peut supprimer ses propres contributions ; le Team Lead peut supprimer n'importe laquelle.</p>
+            <p>Cette page fonctionne comme celle des tickets, mais pour les incidents. L'import se fait aussi à partir d'un fichier Excel exporté depuis ServiceNow.</p>
+            <p>Après l'import, certains champs restent à remplir vous-même : l'impact, le service concerné, la cause racine, l'email de la personne responsable du rapport d'analyse (owner), et les personnes à mettre en copie des relances.</p>
+            <p>Tant que le rapport d'analyse (RCA) n'est pas fourni pour un incident, un email de rappel est envoyé automatiquement à la personne responsable, à intervalle régulier. Cet intervalle se règle en haut de la page. Si vous voulez suspendre temporairement les rappels sans marquer le RCA comme fourni, passez le statut sur "En attente".</p>
+            <p>Pour attacher un RCA, déposez directement le fichier PDF dans le tableau : le statut passe automatiquement sur "Fourni".</p>
+            <p>Deux formats de rapport sont disponibles au téléchargement : un rapport court avec les champs essentiels, et un rapport long avec des colonnes supplémentaires. Le rapport long peut être prévisualisé et modifié avant d'être téléchargé.</p>
+            <a href="{% url 'liste_incidents' %}?tour=incidents" class="btn-secondary">Démarrer la visite guidée</a>
         </div>
     </div>
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">📊 Dashboard</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Feedback</button>
         <div class="aide-contenu">
-            <p><strong>KPIs en haut</strong> — totaux animés (tickets, incidents, outils, services, contributions).</p>
-            <p><strong>Filtres de période</strong> — "Du" / "Au", cliquez "Filtrer".</p>
-            <p><strong>Graphiques :</strong> tickets par statut, top assignés, incidents par sévérité et équipe, tendance des expériences membres, outils par équipe, plaintes anonymes/nominatives.</p>
-            <p><strong>Points d'attention</strong> — signale ce qui nécessite une action.</p>
+            <p>Un membre de l'équipe peut donner un retour sur un shift : la date, la plage horaire concernée, et une description. Tous les membres connectés peuvent consulter les feedbacks, mais seul l'auteur ou le Team Lead peut en supprimer un.</p>
+            <a href="{% url 'liste_feedbacks' %}?tour=feedback" class="btn-secondary">Démarrer la visite guidée</a>
         </div>
     </div>
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">⚙️ Paramètres</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Plaintes</button>
         <div class="aide-contenu">
-            <p><strong>Mode sombre / clair</strong> — interrupteur en haut à droite.</p>
-            <p><strong>Modifier mon profil</strong> — Prénom, Nom, Email, Adresse.</p>
-            <p><strong>Changer mon mot de passe</strong> — bouton dédié.</p>
-            <a href="{% url 'parametres' %}?tour=parametres" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+            <p>Une plainte peut être soumise de façon anonyme ou non. Elle peut être filtrée par texte ou par date. Seul l'auteur ou le Team Lead peut supprimer une plainte.</p>
+            <a href="{% url 'liste_plaintes' %}?tour=plaintes" class="btn-secondary">Démarrer la visite guidée</a>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Recommandations</button>
+        <div class="aide-contenu">
+            <p>Une recommandation permet de proposer une amélioration. Elle peut être filtrée par texte ou par date. Seul l'auteur ou le Team Lead peut la supprimer.</p>
+            <a href="{% url 'liste_recommandations' %}?tour=recommandations" class="btn-secondary">Démarrer la visite guidée</a>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Tableau de bord</button>
+        <div class="aide-contenu">
+            <p>Le tableau de bord affiche des indicateurs globaux et des graphiques sur les tickets, les incidents, le catalogue d'outils et les expériences membres.</p>
+            <p>Vous pouvez filtrer les données sur une période précise en indiquant une date de début et une date de fin.</p>
+            <p>Une section "Points d'attention" signale automatiquement ce qui pourrait nécessiter une action, comme des tickets sans feedback ou des incidents sans RCA fourni.</p>
+        </div>
+    </div>
+
+    <div class="aide-section">
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Paramètres du compte</button>
+        <div class="aide-contenu">
+            <p>Sur cette page, vous pouvez basculer entre le mode clair et le mode sombre à l'aide de l'interrupteur en haut à droite.</p>
+            <p>Le formulaire "Profil" permet de modifier votre prénom, votre nom, votre email et votre adresse. Cliquez sur "Enregistrer" pour valider.</p>
+            <p>Le bouton "Changer mon mot de passe" ouvre un formulaire séparé où vous devez indiquer votre mot de passe actuel puis le nouveau.</p>
+            <a href="{% url 'parametres' %}?tour=parametres" class="btn-secondary">Démarrer la visite guidée</a>
         </div>
     </div>
 
     {% if user.is_administrateur %}
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">👥 Gestion des utilisateurs</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Gestion des utilisateurs</button>
         <div class="aide-contenu">
-            <p><strong>+ Ajouter un utilisateur</strong> — Rôle, Nom d'utilisateur, Prénom, Nom, Email, Adresse, Mot de passe.</p>
-            <p><strong>Actions par utilisateur :</strong> ⇆ Activer/Désactiver, ✕ Supprimer.</p>
-            <a href="{% url 'liste_utilisateurs' %}?tour=utilisateurs" class="btn-secondary">🎬 Démarrer la visite guidée</a>
+            <p>Cette page, réservée à l'Administrateur, permet de créer un nouveau compte en précisant son rôle, son nom d'utilisateur, ses informations personnelles et un mot de passe.</p>
+            <p>Une recherche et un filtre par statut permettent de retrouver un utilisateur. Les comptes sont regroupés par rôle.</p>
+            <p>Pour chaque utilisateur, un bouton permet d'activer ou de désactiver son compte, et un autre de le supprimer définitivement. Un compte désactivé ne peut plus se connecter.</p>
+            <a href="{% url 'liste_utilisateurs' %}?tour=utilisateurs" class="btn-secondary">Démarrer la visite guidée</a>
         </div>
     </div>
     {% endif %}
 
     <div class="aide-section">
-        <button class="aide-titre" onclick="toggleAccordeon(this)">🔑 Qui peut faire quoi ?</button>
+        <button class="aide-titre" onclick="toggleAccordeon(this)">Qui peut faire quoi</button>
         <div class="aide-contenu">
             <table class="table-permissions">
                 <thead>
-                    <tr><th>Module</th><th>Administrateur</th><th>Team Lead</th><th>Membre Techcommand</th><th>Senior Manager</th><th>Manager</th></tr>
+                    <tr><th>Espace</th><th>Administrateur</th><th>Team Lead</th><th>Membre Techcommand</th><th>Senior Manager</th><th>Manager</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Outils / Services / Mots-clés</td><td>Consulter</td><td>Gérer</td><td>Consulter</td><td>Consulter</td><td>Gérer</td></tr>
+                    <tr><td>Outils, services, mots-clés</td><td>Consulter</td><td>Gérer</td><td>Consulter</td><td>Consulter</td><td>Gérer</td></tr>
                     <tr><td>Tickets</td><td>Consulter</td><td>Gérer</td><td>Consulter</td><td>Consulter</td><td>Gérer</td></tr>
                     <tr><td>Incidents</td><td>Consulter</td><td>Consulter</td><td>Consulter</td><td>Gérer</td><td>Gérer</td></tr>
-                    <tr><td>Expériences membres</td><td>Consulter</td><td>Gérer</td><td>Soumettre + Consulter</td><td>Consulter</td><td>Gérer</td></tr>
+                    <tr><td>Feedback, plaintes, recommandations</td><td>Consulter</td><td>Gérer</td><td>Soumettre et consulter</td><td>Consulter</td><td>Gérer</td></tr>
                     <tr><td>Utilisateurs</td><td>Gérer</td><td>—</td><td>—</td><td>—</td><td>Gérer</td></tr>
-                    <tr><td>Dashboard</td><td>Voir</td><td>—</td><td>—</td><td>Voir</td><td>Voir</td></tr>
+                    <tr><td>Tableau de bord</td><td>Voir</td><td>—</td><td>—</td><td>Voir</td><td>Voir</td></tr>
                 </tbody>
             </table>
         </div>

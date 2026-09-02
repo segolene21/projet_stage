@@ -5,6 +5,7 @@ from .models import (
     Recommandation, Feedback, Plainte, OutilTeam, Equipe
 )
 
+#forms for the models defined in models.py
 
 class OutilMonitoringForm(forms.ModelForm):
     class Meta:
