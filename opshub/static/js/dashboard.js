@@ -60,20 +60,24 @@ function detruireGraphique(id) {
 }
 
 function construireGraphiques(data) {
-    // --- Tickets par statut ---
+    // --- Évolution des tickets sans feedback ---
     detruireGraphique('tickets-state');
     graphiques['tickets-state'] = new Chart(document.getElementById('chart-tickets-state'), {
-        type: 'doughnut',
+        type: 'line',
         data: {
-            labels: data.tickets.repartition_state.map(r => r.state),
+            labels: data.tickets.evolution_sans_feedback.map(t => t.mois),
             datasets: [{
-                data: data.tickets.repartition_state.map(r => r.total),
-                backgroundColor: ['#FFCC00', '#1a1a1a', '#666', '#ccc', '#999'],
+                label: 'Tickets sans feedback',
+                data: data.tickets.evolution_sans_feedback.map(t => t.total),
+                borderColor: '#e74c3c',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                fill: true,
+                tension: 0.3,
             }],
         },
         options: {
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } },
+            plugins: { legend: { display: false } },
         },
     });
 
@@ -181,15 +185,15 @@ function construireGraphiques(data) {
         },
     });
 
-    // --- Plaintes anonymes vs nominatives ---
-    detruireGraphique('plaintes-anonymat');
-    graphiques['plaintes-anonymat'] = new Chart(document.getElementById('chart-plaintes-anonymat'), {
+    // --- RCA fourni vs en attente ---
+    detruireGraphique('rca-statut');
+    graphiques['rca-statut'] = new Chart(document.getElementById('chart-rca-statut'), {
         type: 'doughnut',
         data: {
-            labels: ['Anonymes', 'Nominatives'],
+            labels: ['RCA fourni', 'RCA en attente'],
             datasets: [{
-                data: [data.experiences.plaintes_anonymes, data.experiences.plaintes_nominatives],
-                backgroundColor: ['#999', '#FFCC00'],
+                data: [data.incidents.rca_fourni, data.incidents.rca_manquant],
+                backgroundColor: ['#2ecc71', '#e74c3c'],
             }],
         },
         options: {

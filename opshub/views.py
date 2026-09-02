@@ -1438,9 +1438,9 @@ def apercu_rapport_long(request, lot_id):
 
 from django.db.models import Count, Avg, Q
 from datetime import datetime
-
-
+from collections import defaultdict
 @login_required
+
 def dashboard_data(request):
     if not request.user.a_la_permission(Permission.Code.GERER_UTILISATEURS) and not request.user.is_manager and not request.user.is_senior_manager and not request.user.is_teamlead:
         return JsonResponse({"erreur": "Accès interdit"}, status=403)
@@ -1468,9 +1468,14 @@ def dashboard_data(request):
 
     total_tickets = tickets_qs.count()
     tickets_sans_feedback = tickets_qs.filter(Q(feedback__isnull=True) | Q(feedback__exact='')).count()
-    repartition_state = list(
-        tickets_qs.values('state').annotate(total=Count('id')).order_by('-total')
-    )
+    tendance_tickets_sans_feedback = defaultdict(int)
+    for t in tickets_qs.filter(Q(feedback__isnull=True) | Q(feedback__exact='')).values('cree_le'):
+        cle = t['cree_le'].strftime("%Y-%m")
+        tendance_tickets_sans_feedback[cle] += 1
+
+    evolution_sans_feedback = [
+        {"mois": mois, "total": total} for mois, total in sorted(tendance_tickets_sans_feedback.items())
+]
     top_assignes = list(
         tickets_qs.exclude(assigned_to='').values('assigned_to').annotate(total=Count('id')).order_by('-total')[:5]
     )
@@ -1485,6 +1490,8 @@ def dashboard_data(request):
     total_incidents = incidents_qs.count()
     incidents_sans_rca = incidents_qs.filter(Q(rca_fichier='') | Q(rca_fichier__isnull=True)).count()
     incidents_en_attente = incidents_qs.filter(statut_rca=Incident.StatutRCA.EN_ATTENTE).count()
+    rca_fourni = incidents_qs.exclude(Q(rca_fichier='') | Q(rca_fichier__isnull=True)).count()
+    rca_manquant = incidents_sans_rca
     repartition_severite = list(
         incidents_qs.exclude(severite='').values('severite').annotate(total=Count('id')).order_by('-total')
     )
@@ -1525,7 +1532,7 @@ def dashboard_data(request):
     plaintes_nominatives = total_plainte - plaintes_anonymes
 
     # Tendance mensuelle (12 derniers mois par défaut, ou selon la période filtrée)
-    from collections import defaultdict
+   
     tendance = defaultdict(lambda: {"feedback": 0, "plainte": 0, "recommandation": 0})
 
     for f in feedback_qs.values('date_soumission'):
@@ -1555,19 +1562,21 @@ def dashboard_data(request):
             "total_contributions": total_feedback + total_plainte + total_recommandation,
         },
         "tickets": {
-            "total": total_tickets,
-            "sans_feedback": tickets_sans_feedback,
-            "repartition_state": repartition_state,
-            "top_assignes": top_assignes,
-        },
+    "total": total_tickets,
+    "sans_feedback": tickets_sans_feedback,
+    "evolution_sans_feedback": evolution_sans_feedback,
+    "top_assignes": top_assignes,
+},
         "incidents": {
-            "total": total_incidents,
-            "sans_rca": incidents_sans_rca,
-            "en_attente": incidents_en_attente,
-            "repartition_severite": repartition_severite,
-            "repartition_team": repartition_team,
-            "duree_moyenne_secondes": round(duree_moyenne) if duree_moyenne else None,
-        },
+    "total": total_incidents,
+    "sans_rca": incidents_sans_rca,
+    "en_attente": incidents_en_attente,
+    "rca_fourni": rca_fourni,
+    "rca_manquant": rca_manquant,
+    "repartition_severite": repartition_severite,
+    "repartition_team": repartition_team,
+    "duree_moyenne_secondes": round(duree_moyenne) if duree_moyenne else None,
+},
         "catalogue": {
             "total_outils": total_outils,
             "outils_actifs": outils_actifs,
