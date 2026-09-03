@@ -196,7 +196,7 @@ textarea{
     width:100%;
     max-width:500px;
     border:none;
-    background:#fadf94;
+    background:#fffec0;
     padding:15px 20px;
     border-radius:14px;
     box-shadow:0 6px 18px rgba(5, 5, 5, 0.05);
@@ -414,6 +414,96 @@ footer{
     padding:40px 0;
     font-size:16px;
 }
+
+/* ================= TOUR GUIDÉ ================= */
+
+.tour-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(10, 14, 20, 0.55);
+    z-index:999;
+    display:none;
+}
+
+.tour-cible{
+    position:relative;
+    z-index:1000;
+    border-radius:12px;
+    box-shadow:0 0 0 4px rgba(255,204,0,0.85), 0 0 0 9999px rgba(10, 14, 20, 0.45);
+}
+
+.tour-bulle{
+    position:absolute;
+    z-index:1001;
+    display:none;
+    max-width:360px;
+    background:#111827;
+    color:#fff;
+    border-radius:14px;
+    padding:16px 18px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.25);
+    font-size:14px;
+    line-height:1.5;
+}
+
+.tour-bulle::before{
+    content:"";
+    position:absolute;
+    top:-8px;
+    left:20px;
+    width:0;
+    height:0;
+    border-left:8px solid transparent;
+    border-right:8px solid transparent;
+    border-bottom:8px solid #111827;
+}
+
+.tour-bulle p{
+    margin:0 0 12px;
+    color:#fff;
+}
+
+.tour-actions{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:8px;
+}
+
+.tour-actions > div{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+#tour-progression{
+    font-size:12px;
+    color:#f4d35e;
+    font-weight:700;
+}
+
+#tour-precedent,
+#tour-suivant,
+#tour-fermer{
+    border:none;
+    border-radius:8px;
+    padding:8px 12px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+#tour-precedent,
+#tour-suivant{
+    background:#f5c542;
+    color:#111827;
+}
+
+#tour-fermer{
+    background:#ef4444;
+    color:#fff;
+}
+
 .form-group textarea,
 .form-group select{
     width:100%;
@@ -2169,4 +2259,214 @@ footer{
     background:#2a2f3a;
     color:#e5e7eb;
     border-color:#3a3f4a;
+}
+
+/* ================= CENTRE D'AIDE ================= */
+
+.aide-accordeon{
+    max-width:900px;
+    margin:24px auto 0;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.aide-section{
+    background:var(--white);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+}
+
+.aide-titre{
+    width:100%;
+    text-align:left;
+    background:none;
+    border:none;
+    padding:18px 22px;
+    font-size:16px;
+    font-weight:700;
+    color:var(--text);
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.aide-titre::after{
+    content:"+";
+    font-size:20px;
+    font-weight:400;
+    color:var(--primary-dark);
+    transition:transform 0.2s ease;
+}
+
+.aide-titre.actif::after{
+    transform:rotate(45deg);
+}
+.aide-titre:hover{
+    background:rgba(255,204,0,.06);
+}
+
+.aide-contenu{
+    display:none;
+    padding:0 22px 22px;
+}
+
+.aide-contenu p{
+    color:var(--text);
+    line-height:1.6;
+    margin-bottom:12px;
+}
+
+.aide-contenu ul{
+    margin:0 0 12px 20px;
+    color:var(--text);
+    line-height:1.7;
+}
+
+.aide-contenu .btn-secondary{
+    margin-top:8px;
+}
+
+.table-permissions{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+}
+
+.table-permissions th{
+    background:#1a1a1a;
+    color:#FFCC00;
+    padding:10px 14px;
+    font-size:12px;
+    text-transform:uppercase;
+    text-align:left;
+}
+
+.table-permissions td{
+    padding:10px 14px;
+    font-size:13px;
+    border-bottom:1px solid var(--border);
+}
+
+.table-permissions tbody tr:nth-child(even){
+    background:rgba(255,204,0,.06);
+}
+
+/* Dark mode */
+.dark-mode .aide-section{
+    background:#1f232b;
+}
+
+.dark-mode .aide-titre{
+    color:#e5e7eb;
+}
+
+.dark-mode .aide-titre:hover{
+    background:rgba(255,204,0,.08);
+}
+
+.dark-mode .aide-contenu p,
+.dark-mode .aide-contenu ul{
+    color:#d1d5db;
+}
+
+.dark-mode .table-permissions td{
+    color:#e5e7eb;
+    border-color:#2a2f3a;
+}
+
+/* ================= VISITE GUIDÉE ================= */
+
+.tour-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    z-index:2000;
+}
+
+.tour-cible{
+    position:relative;
+    z-index:2001;
+    outline:3px solid var(--primary);
+    outline-offset:4px;
+    border-radius:8px;
+    box-shadow:0 0 0 6px rgba(255,204,0,.25);
+    transition:outline 0.2s ease;
+}
+
+.tour-bulle{
+    display:none;
+    position:absolute;
+    z-index:2002;
+    background:#1a1a1a;
+    color:#fff;
+    border-radius:14px;
+    padding:16px 20px;
+    max-width:320px;
+    box-shadow:0 12px 32px rgba(0,0,0,.35);
+}
+
+.tour-bulle #tour-texte{
+    font-size:14px;
+    line-height:1.5;
+    margin-bottom:14px;
+}
+
+.tour-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+#tour-progression{
+    font-size:12px;
+    color:#9ca3af;
+    font-weight:600;
+    flex-shrink:0;
+}
+
+.tour-actions div{
+    display:flex;
+    gap:8px;
+}
+
+.tour-bulle button{
+    background:var(--primary);
+    color:#111;
+    border:none;
+    border-radius:8px;
+    padding:6px 14px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.tour-bulle button:hover{
+    background:var(--primary-dark);
+}
+
+#tour-precedent{
+    background:transparent;
+    color:#e5e7eb;
+    border:1px solid #3a3f4a;
+}
+
+#tour-precedent:hover{
+    background:#2a2f3a;
+}
+
+#tour-fermer{
+    background:transparent;
+    color:#9ca3af;
+    text-decoration:underline;
+    padding:6px 4px;
+}
+
+#tour-fermer:hover{
+    background:none;
+    color:#e5e7eb;
 }

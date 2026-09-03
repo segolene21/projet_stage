@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-
+# Member of the team, with a role and permissions
 class Permission(models.Model):
     class Code(models.TextChoices):
         GERER_OUTILS = 'gerer_outils', 'Créer, modifier, supprimer un outil de monitoring'
@@ -97,7 +97,7 @@ class Utilisateurs(AbstractUser):
     def is_manager(self):
         return self.is_superuser or self.a_le_role(Role.Nom.MANAGER)
 
-
+#models for teams, tools, services, keywords, complaints, feedback, recommendations, shifts, ticket imports, and incident imports
 class Equipe(models.Model):
     nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
