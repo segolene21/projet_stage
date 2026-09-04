@@ -608,7 +608,7 @@ footer{
 
 
 #table-mots-cles{
-    background:rgb(246, 240, 204);
+    background:rgba(253, 253, 179, 0.366);
     border-radius:16px;
     overflow:hidden;
     box-shadow:var(--shadow);
@@ -765,7 +765,7 @@ footer{
 #liste-services{
     list-style:none;
     counter-reset:row-num;
-    background:rgb(246, 240, 204);
+    background:rgb(241, 238, 219);
     border-radius:12px;
 }
 
@@ -1367,7 +1367,7 @@ footer{
 
 #liste-tickets-importes li:hover {
     box-shadow: 0 6px 16px rgba(0,0,0,.08);
-    border-color: rgba(255,204,0,.5);
+    border-color: rgba(255, 248, 219, 0.5);
 }
 
 .dark-mode #liste-tickets-importes li {

@@ -593,6 +593,12 @@ function afficherIncidentsEnLecture() {
     const corps = document.getElementById('corps-tableau-incidents');
     corps.innerHTML = '';
 
+    const labelsStatutRca = {
+        provided: 'Provided',
+        not_provided: 'Not Provided',
+        en_attente: 'En attente',
+    };
+
     incidentsActuels.forEach(i => {
         const tr = document.createElement('tr');
         tr.dataset.pk = i.id;
@@ -607,6 +613,7 @@ function afficherIncidentsEnLecture() {
             <td data-champ="root_cause" style="max-width:200px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.root_cause)}</td>
             <td data-champ="action_resolution" style="max-width:200px; white-space:pre-wrap; word-wrap:break-word;">${echapperHtml(i.action_resolution)}</td>
             <td data-champ="duree">${echapperHtml(i.duree)}</td>
+            <td data-champ="statut_rca">${echapperHtml(labelsStatutRca[i.statut_rca] || i.statut_rca || '')}</td>
             <td data-champ="owner_email">${creerLienMailto(i.owner_email)}</td>
             <td data-champ="cc_emails">${creerLienMailto(i.cc_emails)}</td>
             <td data-role="rca-cell">
@@ -625,6 +632,7 @@ function afficherIncidentsEnLecture() {
         corps.appendChild(tr);
     });
 }
+
 function changerTypeFiltreIncidents() {
     const type = document.getElementById('filtre-periode-type-incidents').value;
     const selectAnnee = document.getElementById('filtre-annee-incidents');
@@ -691,7 +699,7 @@ function afficherApercuLongEnLecture() {
             <td data-champ="description" style="max-width:250px; white-space:pre-wrap;">${echapperHtml(l.description)}</td>
             <td data-champ="date_signalement">${echapperHtml(l.date_signalement)}</td>
             <td data-champ="severite">${echapperHtml(l.severite)}</td>
-            <td data-champ="statut_rca">${l.statut_rca === 'provided' ? 'Provided' : 'Not Provided'}</td>
+            <td data-champ="statut_rca" data-valeur="${echapperHtml(l.statut_rca)}">${l.statut_rca === 'provided' ? 'Provided' : l.statut_rca === 'en_attente' ? 'En attente' : 'Not Provided'}</td>
             <td data-champ="impact" style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.impact)}</td>
             <td data-champ="affected_service" style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.affected_service)}</td>
             <td data-champ="root_cause" style="max-width:150px; white-space:pre-wrap;">${echapperHtml(l.root_cause)}</td>
@@ -732,16 +740,17 @@ function activerModeEditionApercuLong() {
     td.style.width = '180px';
 }
             let input;
-            if (champ === 'statut_rca') {
-                input = document.createElement('select');
-                [['provided', 'Provided'], ['not_provided', 'Not Provided'], ['en_attente', 'En attente'] ].forEach(([val, label]) => {
-                    const option = document.createElement('option');
-                    option.value = val;
-                    option.textContent = label;
-                    if (label === valeur) option.selected = true;
-                    input.appendChild(option);
-                });
-            } else if (champsLongs.includes(champ)) {
+           if (champ === 'statut_rca') {
+    const valeurReelle = td.dataset.valeur || valeur;
+    input = document.createElement('select');
+    [['provided', 'Provided'], ['not_provided', 'Not Provided'], ['en_attente', 'En attente']].forEach(([val, label]) => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = label;
+        if (val === valeurReelle) option.selected = true;
+        input.appendChild(option);
+    });
+} else if (champsLongs.includes(champ)) {
                 input = document.createElement('textarea');
                 input.value = valeur;
             } else {
