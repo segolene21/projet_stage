@@ -1,7 +1,9 @@
+// Synchronise le theme choisi avec l'interface et le serveur.
 const toggleTheme = document.getElementById('toggle-theme');
 const themeButtons = document.querySelectorAll('.theme-btn');
 
 function applyTheme(theme, sauvegarder = true) {
+    // Applique le theme choisi a l'interface.
     const isDark = theme === 'dark';
     document.body.classList.toggle('dark-mode', isDark);
 

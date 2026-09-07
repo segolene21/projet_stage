@@ -1,6 +1,8 @@
+// Contient l'etat de l'import et de la modale des tickets.
 let donneesTicket = null;
 let lotActuelId = null;
 
+// Protege les valeurs affichees dans le HTML genere dynamiquement.
 function echapperHtml(texte) {
     const div = document.createElement('div');
     div.textContent = texte || '';
@@ -10,6 +12,7 @@ function echapperHtml(texte) {
 // --- Import ---
 
 function fermerModaleImport() {
+    // Ferme la modale d'import des tickets.
     document.getElementById('modale-import').style.display = 'none';
     document.getElementById('apercu-ticket').style.display = 'none';
     document.getElementById('fichier-ticket').value = '';
@@ -20,6 +23,7 @@ document.querySelector('#modale-import .modal-box').style.background = '';
 }
 
 function previsualiserTicket(input) {
+    // Affiche un apercu du fichier de tickets selectionne.
     const fichier = input.files[0];
     if (!fichier) return;
 
@@ -68,6 +72,7 @@ document.getElementById('apercu-ticket').style.display = 'block';
  
 
 async function confirmerImport() {
+    // Envoie et confirme l'import des tickets.
     const inputFichier = document.getElementById('fichier-ticket');
     const fichier = inputFichier.files[0];
     if (!fichier) {
@@ -113,6 +118,7 @@ async function confirmerImport() {
 let tooltipApercu = null;
 
 function creerTooltipApercu() {
+    // Cree l'element d'aide pour les apercus de texte.
     if (tooltipApercu) return tooltipApercu;
     tooltipApercu = document.createElement('div');
     tooltipApercu.id = 'tooltip-apercu-import';
@@ -140,6 +146,7 @@ function creerTooltipApercu() {
 }
 
 function positionnerTooltipSurElement(element) {
+    // Positionne le tooltip pres de l'element cible.
     if (!tooltipApercu) return;
     const rect = element.getBoundingClientRect();
     const marge = 10;
@@ -161,6 +168,7 @@ function positionnerTooltipSurElement(element) {
 }
 
 function cacherTooltip() {
+    // Masque le tooltip d'aperçu actif.
     if (!tooltipApercu) return;
     tooltipApercu.style.opacity = '0';
     tooltipApercu.style.transform = 'translateY(-8px)';
@@ -172,6 +180,7 @@ function cacherTooltip() {
 }
 
 function afficherTooltipTickets(element, apercu) {
+    // Affiche le contenu d'aperçu d'un ticket.
     const tooltip = creerTooltipApercu();
 
     let lignesHtml = apercu.map(t => `
@@ -211,6 +220,7 @@ function afficherTooltipTickets(element, apercu) {
 // --- Liste des imports (extraits en tableau) ---
 
 async function chargerListeImports(recherche = '') {
+    // Charge et affiche la liste des imports de tickets.
     const zone = document.getElementById('liste-imports');
     if (!zone) return;
 
@@ -298,6 +308,7 @@ async function chargerListeImports(recherche = '') {
 
 let timerRechercheImports = null;
 function rechercherImports() {
+    // Filtre les imports de tickets selon la recherche.
     clearTimeout(timerRechercheImports);
     const valeur = document.getElementById('recherche-import').value;
     timerRechercheImports = setTimeout(() => chargerListeImports(valeur), 300);
@@ -306,6 +317,7 @@ function rechercherImports() {
 // --- Modale : tableau complet d'un import, édition inline ---
 
 async function ouvrirModaleTickets(lotId, titre) {
+    // Ouvre la modale contenant les tickets d'un lot.
     lotActuelId = lotId;
     document.getElementById('titre-modale-tickets').textContent = titre || 'Tickets';
     document.getElementById('modale-tickets').style.display = 'flex';
@@ -314,20 +326,24 @@ async function ouvrirModaleTickets(lotId, titre) {
 }
 
 function fermerModaleTickets() {
+    // Ferme la modale de consultation des tickets.
     document.getElementById('modale-tickets').style.display = 'none';
     lotActuelId = null;
 }
 
 let timerRechercheModale = null;
 function rechercherDansModale() {
+    // Filtre les tickets affiches dans la modale.
     clearTimeout(timerRechercheModale);
     const valeur = document.getElementById('recherche-ticket-modale').value;
     timerRechercheModale = setTimeout(() => chargerTicketsDuLot(valeur), 300);
 }
 
 function activerEditionInline() {
+    // Active la modification directe des cellules d'un ticket.
     document.querySelectorAll('.cellule-editable').forEach(cellule => {
         cellule.addEventListener('click', function gererClic() {
+            // Gere le passage d'une cellule en mode edition.
             if (cellule.querySelector('input')) return;
 
             const valeurActuelle = cellule.textContent;
@@ -380,6 +396,7 @@ function activerEditionInline() {
 }
 
 async function supprimerTicket(pk) {
+    // Supprime un ticket apres confirmation.
     if (!(await confirmerAction('Supprimer ce ticket ?'))) return;
 
     try {
@@ -401,10 +418,12 @@ async function supprimerTicket(pk) {
 // --- Téléchargement ---
 
 function telechargerLot(lotId, format) {
+    // Telecharge le rapport d'un lot de tickets.
     window.location.href = `/api/imports/${lotId}/export/?format=${format}`;
 }
 
 function telechargerLotActuel(format) {
+    // Telecharge le rapport du lot actuellement ouvert.
     if (!lotActuelId) return;
     telechargerLot(lotActuelId, format);
 }
@@ -416,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function supprimerLot(lotId) {
+    // Supprime un lot complet de tickets.
     if (!(await confirmerAction('Supprimer tout cet import (tous ses tickets) ?'))) return;
 
     try {
@@ -438,6 +458,7 @@ async function supprimerLot(lotId) {
     }
 }
 async function chargerTicketsDuLot(recherche = '') {
+    // Charge les tickets du lot selectionne.
     const corps = document.getElementById('corps-tableau-tickets');
     if (!corps || !lotActuelId) return;
 
@@ -471,6 +492,7 @@ async function chargerTicketsDuLot(recherche = '') {
 }
 
 function remplirFiltreAssignation(repartition, valeurSelectionnee) {
+    // Remplit le filtre avec les personnes assignees.
     const select = document.getElementById('filtre-assigned-to');
     if (!select) return;
 
@@ -490,6 +512,7 @@ function remplirFiltreAssignation(repartition, valeurSelectionnee) {
     }
 }
 function afficherTicketsEnLecture() {
+    // Affiche les tickets en mode lecture seule.
     const corps = document.getElementById('corps-tableau-tickets');
     corps.innerHTML = '';
 
@@ -513,6 +536,7 @@ function afficherTicketsEnLecture() {
 }
 
 function activerModeEditionGlobal() {
+    // Active l'edition de tous les tickets affiches.
     const corps = document.getElementById('corps-tableau-tickets');
     const champsEditables = ['ticket_id', 'state', 'requester', 'assigned_to', 'details', 'feedback'];
 
@@ -567,6 +591,7 @@ function activerModeEditionGlobal() {
 }
 
 function annulerModificationsGlobales() {
+    // Annule les modifications globales non enregistrees.
     afficherTicketsEnLecture();
     document.getElementById('btn-modifier-global').style.display = '';
     document.getElementById('btn-enregistrer-global').style.display = 'none';
@@ -574,6 +599,7 @@ function annulerModificationsGlobales() {
 }
 
 async function enregistrerModificationsGlobales() {
+    // Enregistre les modifications globales des tickets.
     const btn = document.getElementById('btn-enregistrer-global');
     const corps = document.getElementById('corps-tableau-tickets');
     const lignes = corps.querySelectorAll('tr');
@@ -650,11 +676,13 @@ async function enregistrerModificationsGlobales() {
     }
 }
 function supprimerLotActuel() {
+    // Demande la suppression du lot actuellement ouvert.
     if (!lotActuelId) return;
     supprimerLot(lotActuelId);
 }
 
 function changerTypeFiltre() {
+    // Change les champs selon le type de filtre choisi.
     const type = document.getElementById('filtre-periode-type').value;
     const selectAnnee = document.getElementById('filtre-annee');
     const selectMois = document.getElementById('filtre-mois');
@@ -678,6 +706,7 @@ function changerTypeFiltre() {
 }
 
 function reinitialiserFiltresImports() {
+    // Reinitialise les filtres des imports de tickets.
     document.getElementById('filtre-periode-type').value = '';
     document.getElementById('filtre-annee').style.display = 'none';
     document.getElementById('filtre-mois').style.display = 'none';

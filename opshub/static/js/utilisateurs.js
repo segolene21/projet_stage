@@ -1,3 +1,4 @@
+// Gere les actions d'administration des utilisateurs.
 const formUtilisateur = document.getElementById('form-utilisateur');
 
 if (formUtilisateur) {
@@ -25,6 +26,7 @@ if (formUtilisateur) {
 
 
 function toggleStatut(userId, url) {
+    // Active ou desactive le compte utilisateur cible.
     fetch(url, {
         method: 'POST',
         headers: {'X-CSRFToken': csrftoken},
@@ -42,6 +44,7 @@ function toggleStatut(userId, url) {
 
 
 async function supprimerUtilisateur(userId, url) {
+    // Supprime un utilisateur apres confirmation.
     if (!(await confirmerAction('Supprimer cet utilisateur ?'))) return;
 
     fetch(url, {

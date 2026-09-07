@@ -1,3 +1,4 @@
+// Affiche une notification temporaire a l'utilisateur.
 function afficherToast(message, type = 'info') {
     const toast = document.getElementById('toast-notification');
     if (!toast) return;
@@ -12,6 +13,7 @@ function afficherToast(message, type = 'info') {
     }, 3000);
 }
 function confirmerAction(message, titre = 'Confirmation') {
+    // Demande une confirmation avant une action sensible.
     return new Promise((resolve) => {
         const modal = document.getElementById('confirm-modal');
         document.getElementById('confirm-modal-titre').textContent = titre;

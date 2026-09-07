@@ -6,12 +6,15 @@ from django.contrib.auth import views as auth_views
 from opshub import views
 
 urlpatterns = [
+    # Administration et authentification du projet.
     path('admin/', admin.site.urls),
     path('connexion/', auth_views.LoginView.as_view(template_name='connexion.html', redirect_authenticated_user=True), name='login'),
     path('deconnexion/', auth_views.LogoutView.as_view(), name='logout'),
+    # Delegation des routes fonctionnelles vers l'application opshub.
     path('', include('opshub.urls')),
     path('', views.index, name='index'),
 ] 
 
 if settings.DEBUG:
+    # Sert les fichiers media uniquement en environnement de developpement.
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -3,7 +3,7 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    
+    # Routes de consultation et de gestion du catalogue des outils.
     path('outils/', views.liste_outils, name='liste_outils'),
     path('outils/<int:outil_id>/', views.detail_outil, name='detail_outil'),
     path('outils/ajouter/', views.ajouter_outil, name='ajouter_outil'),
@@ -14,6 +14,7 @@ urlpatterns = [
     path('services/ajouter/', views.ajouter_service, name='ajouter_service'),
     path('services/<int:service_id>/modifier/', views.modifier_service, name='modifier_service'),
     path('services/<int:service_id>/supprimer/', views.supprimer_service, name='supprimer_service'),
+    # Routes de gestion des mots-cles et des equipes utilisatrices.
     path('mots-cles/', views.liste_mots_cles, name='liste_mots_cles'),
     path('mots-cles/ajouter/', views.ajouter_mot_cle, name='ajouter_mot_cle'),
     path('mots-cles/<int:mot_cle_id>/modifier/', views.modifier_mot_cle, name='modifier_mot_cle'),
@@ -22,6 +23,7 @@ urlpatterns = [
     path('utilisateurs/ajouter/', views.ajouter_utilisateur, name='ajouter_utilisateur'),
     path('utilisateurs/<int:user_id>/toggle-statut/', views.toggle_statut_utilisateur, name='toggle_statut_utilisateur'),
     path('utilisateurs/<int:user_id>/supprimer/', views.supprimer_utilisateur, name='supprimer_utilisateur'),
+    # Routes des experiences, feedbacks, plaintes et recommandations.
     path('experiences/', views.experiences_membres, name='experiences_membres'),
     path('experiences/feedback/ajouter/', views.ajouter_feedback, name='ajouter_feedback'),
     path('experiences/recommandation/ajouter/', views.ajouter_recommandation, name='ajouter_recommandation'),
@@ -35,6 +37,7 @@ urlpatterns = [
     path('experiences/feedback/', views.liste_feedbacks, name='liste_feedbacks'),
     path('experiences/plainte/', views.liste_plaintes, name='liste_plaintes'),
     path('experiences/recommandation/', views.liste_recommandations, name='liste_recommandations'),
+    # Routes des equipes, parametres et authentification secondaire.
     path('ajouter-equipe/', views.ajouter_outil_team, name='ajouter_outil_team'),
     path('equipes/ajouter/', views.ajouter_equipe, name='ajouter_equipe'),
     path('outils-team/<int:team_id>/', views.detail_outil_team, name='detail_outil_team'),
@@ -53,6 +56,7 @@ urlpatterns = [
 ]
 
 urlpatterns += [
+    # Pages et API de gestion des incidents et des rapports RCA.
    path("incidents/", views.page_incidents, name="liste_incidents"),
     path("api/incidents-imports/", views.liste_imports_incidents, name="liste_imports_incidents"),
     path("api/incidents-imports/import/", views.import_incidents_excel, name="import_incidents_excel"),
@@ -64,6 +68,7 @@ urlpatterns += [
     path("api/incidents-imports/<int:lot_id>/apercu-long/", views.apercu_rapport_long, name="apercu_rapport_long"),
     path("api/config-rappels/", views.obtenir_config_rappels, name="obtenir_config_rappels"),
     path("api/config-rappels/modifier/", views.modifier_config_rappels, name="modifier_config_rappels"),    
+    # Routes du dashboard et du centre d'aide.
    path("api/dashboard/", views.dashboard_data, name="dashboard_data"),
    path("dashboard/", views.page_dashboard, name="page_dashboard"),
    path("aide/", views.page_aide, name="page_aide"),

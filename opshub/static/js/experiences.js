@@ -1,5 +1,6 @@
 // --- FEEDBACK ---
 
+// Gere les formulaires et filtres des experiences membres.
 const formFeedback = document.getElementById('form-feedback');
 
 if (formFeedback) {
@@ -26,6 +27,7 @@ if (formFeedback) {
     });
 }
 
+// Supprime un feedback apres confirmation de l'utilisateur.
 async function supprimerFeedback(feedbackId, url) {
     if (!(await confirmerAction('Supprimer ce feedback ?'))) return;
 
@@ -73,6 +75,7 @@ if (formRecommandation) {
     });
 }
 
+// Supprime une recommandation apres confirmation.
 async function supprimerRecommandation(recommandationId, url) {
     if (!(await confirmerAction('Supprimer cette recommandation ?'))) return;
 
@@ -120,6 +123,7 @@ if (formPlainte) {
     });
 }
 
+// Supprime une plainte apres confirmation.
 async function supprimerPlainte(plainteId, url) {
     if (!(await confirmerAction('Supprimer cette plainte ?'))) return;
 
@@ -144,6 +148,7 @@ async function supprimerPlainte(plainteId, url) {
 const filtreTexteFeedbacks = document.getElementById('filtre_feedbacks');
 const filtreDateFeedbacks = document.getElementById('filtre_date_feedbacks');
 
+// Filtre les feedbacks par texte et par date.
 function appliquerFiltresFeedbacks() {
     const texte = filtreTexteFeedbacks ? filtreTexteFeedbacks.value.toLowerCase() : '';
     const date = filtreDateFeedbacks ? filtreDateFeedbacks.value : '';
@@ -168,6 +173,7 @@ if (filtreDateFeedbacks) {
 const filtreTextePlaintes = document.getElementById('filtre_plaintes');
 const filtreDatePlaintes = document.getElementById('filtre_date_plaintes');
 
+// Filtre les plaintes par texte et par date.
 function appliquerFiltresPlaintes() {
     const texte = filtreTextePlaintes ? filtreTextePlaintes.value.toLowerCase() : '';
     const date = filtreDatePlaintes ? filtreDatePlaintes.value : '';
@@ -186,6 +192,7 @@ if (filtreDatePlaintes) filtreDatePlaintes.addEventListener('input', appliquerFi
 const filtreTexteRecommandations = document.getElementById('filtre_recommandations');
 const filtreDateRecommandations = document.getElementById('filtre_date_recommandations');
 
+// Filtre les recommandations par texte et par date.
 function appliquerFiltresRecommandations() {
     const texte = filtreTexteRecommandations ? filtreTexteRecommandations.value.toLowerCase() : '';
     const date = filtreDateRecommandations ? filtreDateRecommandations.value : '';

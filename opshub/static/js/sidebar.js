@@ -1,4 +1,5 @@
 
+// Controle l'ouverture de la barre laterale sur petit ecran.
 const burgerBtn = document.getElementById("burgerBtn");
 const sidebar = document.querySelector(".sidebar");
 const overlay = document.getElementById("sidebarOverlay");

@@ -1,7 +1,9 @@
+// Contient l'etat de l'import et de la modale des incidents.
 let donneesIncidents = null;
 let lotIncidentsActuelId = null;
 let incidentsActuels = [];
 
+// Protege les valeurs affichees dans le HTML genere dynamiquement.
 function echapperHtml(texte) {
     const div = document.createElement('div');
     div.textContent = texte || '';
@@ -10,6 +12,7 @@ function echapperHtml(texte) {
 
 // --- Import ---
 function fermerModaleImportIncidents() {
+    // Ferme la modale d'import des incidents.
     document.getElementById('modale-import-incidents').style.display = 'none';
     document.getElementById('apercu-incidents').style.display = 'none';
     document.getElementById('fichier-incidents').value = '';
@@ -20,6 +23,7 @@ document.querySelector('#modale-import-incidents .modal-box').style.background =
 }
 
 function previsualiserIncidents(input) {
+    // Affiche un apercu du fichier d'incidents selectionne.
     const fichier = input.files[0];
     if (!fichier) return;
 
@@ -63,6 +67,7 @@ document.getElementById('apercu-incidents').style.display = 'block';
 }
 
 async function confirmerImportIncidents() {
+    // Envoie et confirme l'import des incidents.
     const inputFichier = document.getElementById('fichier-incidents');
     const fichier = inputFichier.files[0];
     if (!fichier) {
@@ -100,6 +105,7 @@ async function confirmerImportIncidents() {
 let tooltipApercuIncidents = null;
 
 function creerTooltipApercu() {
+    // Cree l'element d'aide pour les apercus de texte.
     if (tooltipApercuIncidents) return tooltipApercuIncidents;
     tooltipApercuIncidents = document.createElement('div');
     tooltipApercuIncidents.id = 'tooltip-apercu-import-incidents';
@@ -127,6 +133,7 @@ function creerTooltipApercu() {
 }
 
 function positionnerTooltip(element) {
+    // Positionne le tooltip pres de l'element cible.
     if (!tooltipApercuIncidents) return;
     const rect = element.getBoundingClientRect();
     const marge = 10;
@@ -148,6 +155,7 @@ function positionnerTooltip(element) {
 }
 
 function cacherTooltip() {
+    // Masque le tooltip d'aperçu actif.
     if (!tooltipApercuIncidents) return;
     tooltipApercuIncidents.style.opacity = '0';
     tooltipApercuIncidents.style.transform = 'translateY(-8px)';
@@ -159,6 +167,7 @@ function cacherTooltip() {
 }
 
 function afficherTooltip(element, apercu) {
+    // Affiche le contenu d'aperçu dans le tooltip.
     const tooltip = creerTooltipApercu();
 
     let lignesHtml = apercu.map(i => `
@@ -192,6 +201,7 @@ function afficherTooltip(element, apercu) {
 }
 
 async function chargerListeImportsIncidents(recherche = '') {
+    // Charge et affiche la liste des imports d'incidents.
     const zone = document.getElementById('liste-imports-incidents');
     if (!zone) return;
 
@@ -277,6 +287,7 @@ async function chargerListeImportsIncidents(recherche = '') {
 }
 
 async function supprimerLotIncidents(lotId) {
+    // Supprime un lot complet d'incidents.
     if (!(await confirmerAction('Supprimer tout cet import (tous ses incidents) ?'))) return;
 
     try {
@@ -298,6 +309,7 @@ async function supprimerLotIncidents(lotId) {
 }
 
 function supprimerLotIncidentsActuel() {
+    // Demande la suppression du lot actuellement ouvert.
     if (!lotIncidentsActuelId) return;
     supprimerLotIncidents(lotIncidentsActuelId);
 }
@@ -305,6 +317,7 @@ function supprimerLotIncidentsActuel() {
 // --- Modale : tableau complet, édition globale ---
 
 async function ouvrirModaleIncidents(lotId, titre) {
+    // Ouvre la modale contenant les incidents d'un lot.
     lotIncidentsActuelId = lotId;
     document.getElementById('titre-modale-incidents').textContent = titre || 'Incidents';
     document.getElementById('modale-incidents').style.display = 'flex';
@@ -314,11 +327,13 @@ async function ouvrirModaleIncidents(lotId, titre) {
 }
 
 function fermerModaleIncidents() {
+    // Ferme la modale de consultation des incidents.
     document.getElementById('modale-incidents').style.display = 'none';
     lotIncidentsActuelId = null;
 }
 
 async function chargerIncidentsDuLot(recherche = '') {
+    // Charge les incidents du lot selectionne.
     const corps = document.getElementById('corps-tableau-incidents');
     if (!corps || !lotIncidentsActuelId) return;
 
@@ -354,12 +369,14 @@ async function chargerIncidentsDuLot(recherche = '') {
 
 let timerRechercheModaleIncidents = null;
 function rechercherDansModaleIncidents() {
+    // Filtre les incidents affiches dans la modale.
     clearTimeout(timerRechercheModaleIncidents);
     const valeur = document.getElementById('recherche-incident-modale').value;
     timerRechercheModaleIncidents = setTimeout(() => chargerIncidentsDuLot(valeur), 300);
 }
 
 async function uploaderRca(incidentPk, fichier) {
+    // Envoie le fichier RCA associe a un incident.
     if (!fichier) return;
     if (!fichier.name.toLowerCase().endsWith('.pdf')) {
         afficherToast('Le RCA doit être un fichier PDF.', 'erreur');
@@ -386,6 +403,7 @@ async function uploaderRca(incidentPk, fichier) {
 }
 
 async function supprimerIncident(pk) {
+    // Supprime un incident apres confirmation.
     if (!(await confirmerAction('Supprimer cet incident ?'))) return;
 
     try {
@@ -407,6 +425,7 @@ async function supprimerIncident(pk) {
 // --- Édition globale ---
 
 function activerModeEditionGlobalIncidents() {
+    // Active l'edition de tous les incidents affiches.
     const corps = document.getElementById('corps-tableau-incidents');
     const champsEditables = ['incident_id', 'description', 'date_signalement', 'severite', 'impact', 'affected_service', 'root_cause', 'action_resolution', 'duree', 'statut_rca', 'owner_email', 'cc_emails'];
 
@@ -522,6 +541,7 @@ if (champ === 'severite') {
 }
 
 function annulerModificationsGlobalesIncidents() {
+    // Annule les modifications globales non enregistrees.
     afficherIncidentsEnLecture();
     document.getElementById('btn-modifier-global-incidents').style.display = '';
     document.getElementById('btn-enregistrer-global-incidents').style.display = 'none';
@@ -529,6 +549,7 @@ function annulerModificationsGlobalesIncidents() {
 }
 
 async function enregistrerModificationsGlobalesIncidents() {
+    // Enregistre les modifications globales des incidents.
     const corps = document.getElementById('corps-tableau-incidents');
     const lignes = corps.querySelectorAll('tr');
     const requetes = [];
@@ -575,10 +596,12 @@ async function enregistrerModificationsGlobalesIncidents() {
 // --- Téléchargement ---
 
 function telechargerLotIncidents(lotId, type) {
+    // Telecharge le rapport d'un lot d'incidents.
     window.location.href = `/api/incidents-imports/${lotId}/export/?type=${type}`;
 }
 
 function telechargerLotIncidentsActuel(type) {
+    // Telecharge le rapport du lot actuellement ouvert.
     if (!lotIncidentsActuelId) return;
     telechargerLotIncidents(lotIncidentsActuelId, type);
 }
@@ -590,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function afficherIncidentsEnLecture() {
+    // Affiche les incidents en mode lecture seule.
     const corps = document.getElementById('corps-tableau-incidents');
     corps.innerHTML = '';
 
@@ -634,6 +658,7 @@ function afficherIncidentsEnLecture() {
 }
 
 function changerTypeFiltreIncidents() {
+    // Change les champs selon le type de filtre choisi.
     const type = document.getElementById('filtre-periode-type-incidents').value;
     const selectAnnee = document.getElementById('filtre-annee-incidents');
     const selectMois = document.getElementById('filtre-mois-incidents');
@@ -657,6 +682,7 @@ function changerTypeFiltreIncidents() {
 }
 
 function reinitialiserFiltresImportsIncidents() {
+    // Reinitialise les filtres des imports d'incidents.
     document.getElementById('filtre-periode-type-incidents').value = '';
     document.getElementById('filtre-annee-incidents').style.display = 'none';
     document.getElementById('filtre-mois-incidents').style.display = 'none';
@@ -668,6 +694,7 @@ function reinitialiserFiltresImportsIncidents() {
 let lignesApercuLong = [];
 
 async function ouvrirApercuLong() {
+    // Ouvre l'aperçu long du rapport d'incidents.
     if (!lotIncidentsActuelId) return;
 
     try {
@@ -686,6 +713,7 @@ async function ouvrirApercuLong() {
 }
 
 function afficherApercuLongEnLecture() {
+    // Affiche l'aperçu long sans mode edition.
     const corps = document.getElementById('corps-apercu-long');
     corps.innerHTML = '';
 
@@ -716,6 +744,7 @@ function afficherApercuLongEnLecture() {
 }
 
 function activerModeEditionApercuLong() {
+    // Active l'edition des champs de l'aperçu long.
     const corps = document.getElementById('corps-apercu-long');
    const champsTexte = ['incident_id', 'description', 'severite', 'impact', 'affected_service',
              'root_cause', 'action_resolution', 'owner_email',
@@ -790,6 +819,7 @@ function activerModeEditionApercuLong() {
 }
 
 function annulerModificationsApercuLong() {
+    // Annule les changements de l'aperçu long.
     afficherApercuLongEnLecture();
     document.getElementById('btn-modifier-apercu-long').style.display = '';
     document.getElementById('btn-enregistrer-apercu-long').style.display = 'none';
@@ -797,6 +827,7 @@ function annulerModificationsApercuLong() {
 }
 
 async function enregistrerModificationsApercuLong() {
+    // Enregistre les changements de l'aperçu long.
     const corps = document.getElementById('corps-apercu-long');
     const lignes = corps.querySelectorAll('tr');
     const requetes = [];
@@ -841,17 +872,20 @@ async function enregistrerModificationsApercuLong() {
 }
 
 function fermerApercuLong() {
+    // Ferme la fenetre d'aperçu long.
     document.getElementById('modale-apercu-long').style.display = 'none';
     document.getElementById('modale-incidents').style.display = 'flex';
 }
 
 async function chargerFrequenceRappels() {
+    // Charge la frequence actuelle des rappels RCA.
     const res = await fetch('/api/config-rappels/');
     const data = await res.json();
     document.getElementById('frequence-rappels').value = data.frequence_jours;
 }
 
 async function sauvegarderFrequenceRappels() {
+    // Enregistre la nouvelle frequence des rappels RCA.
     const valeur = document.getElementById('frequence-rappels').value;
     const res = await fetch('/api/config-rappels/modifier/', {
         method: 'POST',
@@ -873,6 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function creerLienMailto(emails) {
+    // Construit un lien mailto a partir d'une liste d'adresses.
     if (!emails) return '';
     const liste = emails.split(',').map(e => e.trim()).filter(Boolean);
     if (liste.length === 0) return '';

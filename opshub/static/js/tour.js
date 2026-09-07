@@ -1,9 +1,11 @@
 // --- Moteur de visite guidée ---
 
+// Stocke l'etape courante de la visite guidee.
 let etapesTourActuel = [];
 let indexTourActuel = 0;
 
 function demarrerVisite(cleConfig) {
+    // Demarre la visite guidee correspondant a la page.
     const etapes = CONFIGURATION_TOURS[cleConfig];
     if (!etapes || !Array.isArray(etapes) || etapes.length === 0) return;
 
@@ -14,6 +16,7 @@ function demarrerVisite(cleConfig) {
 }
 
 function creerOverlayTour() {
+    // Cree l'arriere-plan de la visite guidee.
     if (document.getElementById('tour-overlay')) return;
 
     const overlay = document.createElement('div');
@@ -38,6 +41,7 @@ function creerOverlayTour() {
     document.body.appendChild(bulle);
 }
 function afficherEtapeTour() {
+    // Affiche l'etape active de la visite guidee.
     const etape = etapesTourActuel[indexTourActuel];
     if (!etape) { fermerTour(); return; }
 
@@ -73,12 +77,14 @@ function afficherEtapeTour() {
 }
 
 function etapeSuivanteTour() {
+    // Passe a l'etape suivante de la visite.
     indexTourActuel++;
     if (indexTourActuel >= etapesTourActuel.length) { fermerTour(); return; }
     afficherEtapeTour();
 }
 
 function etapePrecedenteTour() {
+    // Revient a l'etape precedente de la visite.
     if (indexTourActuel > 0) {
         indexTourActuel--;
         afficherEtapeTour();
@@ -86,6 +92,7 @@ function etapePrecedenteTour() {
 }
 
 function fermerTour() {
+    // Ferme la visite guidee et nettoie son interface.
     document.querySelectorAll('.tour-cible').forEach(el => el.classList.remove('tour-cible'));
     const overlay = document.getElementById('tour-overlay');
     const bulle = document.getElementById('tour-bulle');

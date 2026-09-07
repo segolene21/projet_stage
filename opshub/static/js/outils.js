@@ -2,6 +2,7 @@
 // OUVERTURE MODALE AJOUT OUTIL
 // ===============================
 
+// Ouvre la modale de creation d'un outil.
 function ouvrirModaleAjout() {
     document.getElementById('champ-outil-id').value = '';
     document.getElementById('champ-nom').value = '';
@@ -18,6 +19,7 @@ function ouvrirModaleAjout() {
 // ===============================
 
 function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url, equipeId) {
+    // Ouvre la modale de modification d'un outil.
     document.getElementById('champ-outil-id').value = outilId;
     document.getElementById('champ-nom').value = nom;
     document.getElementById('champ-lien-acces').value = lienAcces;
@@ -39,6 +41,7 @@ function ouvrirModaleModification(outilId, nom, lienAcces, auth, statut, url, eq
 // ===============================
 
 async function supprimerOutil(outilId, url) {
+    // Supprime un outil apres confirmation.
     if (!(await confirmerAction("Supprimer cet outil ?"))) {
         return;
     }
@@ -95,6 +98,7 @@ let selectEquipeCible = null;
 let modaleParenteEquipe = null;
 
 function ouvrirModaleEquipe(selectId) {
+    // Ouvre la modale de creation d'une equipe d'outils.
     selectEquipeCible = selectId;
 
     const select = document.getElementById(selectId);
@@ -108,6 +112,7 @@ function ouvrirModaleEquipe(selectId) {
 }
 
 function fermerModaleEquipe() {
+    // Ferme la modale de creation d'equipe.
     document.getElementById('modale-outil-team').style.display = 'none';
 
     if (modaleParenteEquipe) {

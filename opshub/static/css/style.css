@@ -1,3 +1,5 @@
+/* Styles des pages publiques et de connexion. */
+/* Mise en page et fond de la page publique. */
 body{
     margin: 0;
     min-height: 100vh;
@@ -7,6 +9,7 @@ body{
     background: #f8f8fa;
     font-family: 'Raleway', sans-serif;
 }
+/* Hero d'accueil et diaporama visuel. */
 .hero-card{
     position: relative;
     width: min(1100px, 96vw);
@@ -156,6 +159,7 @@ body{
   box-sizing: border-box;
 }
 
+/* Structure generale de la page de connexion. */
 .login-page {
   font-family: 'Segoe UI', sans-serif;
   min-height: 100vh;
@@ -181,6 +185,7 @@ body{
 }
 
 /* ===== LOGIN ===== */
+/* Carte, illustration et formulaire de connexion. */
 .login-card {
   position: relative;
   width: min(1100px, 96vw);
@@ -346,6 +351,7 @@ body{
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
 /* ===== DASHBOARD ===== */
+/* Composants du tableau de bord principal. */
 .dashboard-body {
   background: #f4f5f7;
   min-height: 100vh;
@@ -668,6 +674,7 @@ body{
 
 /* ================= RESPONSIVE WELCOME / LOGIN ================= */
 
+/* Adaptation des pages publiques aux petits ecrans. */
 @media (max-width:768px){
 
     .hero-card{

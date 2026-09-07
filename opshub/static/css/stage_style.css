@@ -1,5 +1,7 @@
+/* Styles de l'espace authentifie et de ses composants. */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
+/* Variables globales de couleurs, dimensions et ombres. */
 :root{
     --primary:#ffcc00;
     --primary-dark:#e6b800;
@@ -25,6 +27,7 @@
 }
 
 html,
+/* Base visuelle commune de l'espace connecte. */
 body{
     min-height:100%;
     background:var(--bg);
@@ -505,6 +508,7 @@ footer{
 }
 
 .form-group textarea,
+/* Champs select et zones de texte des formulaires. */
 .form-group select{
     width:100%;
     padding:12px 16px;
@@ -1211,7 +1215,7 @@ footer{
 
 /* ================= TABLETTE / MOBILE ================= */
 
-@media (max-width: 768px) {
+@media (max-width: 993px) {
 
     .burger-btn {
         display: flex !important;
@@ -1343,6 +1347,7 @@ footer{
     position: relative;
     z-index: 5;
 }
+/* Liste des lots de tickets importes et leurs actions. */
 #liste-tickets-importes {
     list-style: none;
     padding: 0;
@@ -1715,6 +1720,7 @@ footer{
 }
 /* ================= BARRE DE FILTRES (réutilisable) ================= */
 
+/* Barre commune de recherche et de filtrage. */
 .filtres-recherche{
     display:flex;
     align-items:center;
@@ -1795,6 +1801,7 @@ footer{
 
 
 
+/* Notifications temporaires affichees par JavaScript. */
 .toast {
     position: fixed;
     bottom: 30px;
@@ -1846,6 +1853,7 @@ footer{
 
 /* ================= TOGGLE APPARENCE (compact) ================= */
 
+/* Controle compact du theme clair ou sombre. */
 .theme-toggle-card{
     display:flex;
     align-items:center;
@@ -1935,6 +1943,7 @@ footer{
     color:var(--primary);
 }
 
+/* Presentation des tableaux et imports d'incidents. */
 #modale-incidents .modal-box {
     background: #ffffff !important;
 }
@@ -2063,6 +2072,7 @@ footer{
 
 /* ================= DASHBOARD ================= */
 
+/* Indicateurs, graphiques et alertes du dashboard. */
 .dashboard-kpis{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
@@ -2263,6 +2273,7 @@ footer{
 
 /* ================= CENTRE D'AIDE ================= */
 
+/* Accordeon et tableau des permissions du centre d'aide. */
 .aide-accordeon{
     max-width:900px;
     margin:24px auto 0;
@@ -2379,6 +2390,7 @@ footer{
 
 /* ================= VISITE GUIDÉE ================= */
 
+/* Elements visuels de la visite guidee. */
 .tour-overlay{
     display:none;
     position:fixed;
@@ -2469,4 +2481,124 @@ footer{
 #tour-fermer:hover{
     background:none;
     color:#e5e7eb;
+}
+
+/* ================= RESPONSIVE — AJOUTS DASHBOARD / AIDE ================= */
+
+@media (max-width: 992px) {
+    .dashboard-kpis {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+    }
+
+    .kpi-valeur {
+        font-size: 22px;
+    }
+
+    .dashboard-bloc {
+        height: 280px;
+    }
+
+    .config-rappels {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .aide-accordeon {
+        max-width: 100%;
+        padding: 0 4px;
+    }
+}
+
+@media (max-width: 768px) {
+    .filtres-recherche label {
+        width: 100%;
+    }
+
+    .filtres-recherche input[type="date"] {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .dashboard-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .table-permissions {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .tour-bulle {
+        max-width: calc(100vw - 32px);
+        left: 16px !important;
+    }
+
+    #modale-incidents .modal-box,
+    #modale-apercu-long .modal-box,
+    #modale-tickets .modal-box {
+        width: 95vw;
+        max-width: 95vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-kpis {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .kpi-card {
+        padding: 14px;
+    }
+
+    .kpi-valeur {
+        font-size: 20px;
+    }
+
+    .dashboard-bloc {
+        height: 250px;
+        padding: 14px;
+    }
+
+    .dashboard-bloc h3 {
+        font-size: 13px;
+    }
+
+    .config-rappels {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px 14px;
+    }
+
+    .config-rappels input[type="number"] {
+        width: 100%;
+    }
+
+    .aide-titre {
+        padding: 14px 16px;
+        font-size: 14px;
+    }
+
+    .aide-contenu {
+        padding: 0 16px 16px;
+    }
+
+    #tooltip-apercu-import,
+    #tooltip-apercu-import-incidents {
+        width: calc(100vw - 32px) !important;
+        max-width: calc(100vw - 32px) !important;
+    }
+
+    .tour-bulle {
+        padding: 12px 14px;
+    }
+
+    .tour-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
 }

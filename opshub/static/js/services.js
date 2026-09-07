@@ -1,3 +1,4 @@
+// Gere le menu d'actions de la page des services.
 function toggleMenu(btn) {
     const menu = btn.closest('.action-menu-wrapper')?.querySelector('.action-dropdown');
 
@@ -58,6 +59,7 @@ if (formService) {
 
 
 async function supprimerService(serviceId, url) {
+    // Supprime un service apres confirmation.
     if (!(await confirmerAction('Supprimer ce service ?'))) return;
 
     fetch(url, {
@@ -82,6 +84,7 @@ async function supprimerService(serviceId, url) {
 }
 
 function modifierService(serviceId, url) {
+    // Prepare la modification d'un service existant.
 
     const form = document.getElementById(
         'form-modifier-service-' + serviceId

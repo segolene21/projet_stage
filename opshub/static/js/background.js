@@ -1,3 +1,5 @@
+// Initialise l'arriere-plan anime au chargement de la page.
+// Prepare les animations et les images de l'arriere-plan.
 document.addEventListener('DOMContentLoaded', () => {
     const images = window.backgroundImages || [];
     const slides = document.querySelectorAll('.card-slide');

@@ -1,3 +1,4 @@
+// Gere l'ouverture et la fermeture des sections d'aide.
 function toggleAccordeon(bouton) {
     const contenu = bouton.nextElementSibling;
     const estOuvert = contenu.style.display === 'block';
@@ -11,6 +12,7 @@ function toggleAccordeon(bouton) {
     }
 }
 
+// Filtre les rubriques d'aide selon le texte saisi.
 function filtrerAide() {
     const recherche = document.getElementById('recherche-aide').value.toLowerCase();
     document.querySelectorAll('.aide-section').forEach(section => {

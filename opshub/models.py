@@ -135,7 +135,7 @@ class OutilMonitoring(models.Model):
 class Service(models.Model):
     nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    outils_monitoring = models.ManyToManyField(OutilMonitoring, related_name="services")
+    outils_monitoring = models.ManyToManyField(OutilMonitoring, related_name="services" ,blank=True)
 
     def __str__(self):
         return self.nom

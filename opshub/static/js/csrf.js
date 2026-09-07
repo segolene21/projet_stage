@@ -1,3 +1,4 @@
+// Recupere un cookie necessaire aux requetes protegees.
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

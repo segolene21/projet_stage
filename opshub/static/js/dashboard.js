@@ -1,5 +1,7 @@
+// Stocke les instances Chart.js pour les remplacer proprement.
 let graphiques = {};
 
+// Charge les indicateurs et graphiques selon la periode choisie.
 async function chargerDashboard() {
     const debut = document.getElementById('filtre-debut').value;
     const fin = document.getElementById('filtre-fin').value;
@@ -23,18 +25,21 @@ async function chargerDashboard() {
     }
 }
 
+// Efface les dates et recharge les donnees du dashboard.
 function reinitialiserFiltresDashboard() {
     document.getElementById('filtre-debut').value = '';
     document.getElementById('filtre-fin').value = '';
     chargerDashboard();
 }
 
+// Anime un indicateur numerique jusqu'a sa valeur finale.
 function animerCompteur(elementId, valeurFinale) {
     const element = document.getElementById(elementId);
     const duree = 800;
     const debut = performance.now();
     const valeurInitiale = 0;
 
+    // Met a jour progressivement la valeur du compteur anime.
     function etape(maintenant) {
         const progres = Math.min((maintenant - debut) / duree, 1);
         const valeurActuelle = Math.round(valeurInitiale + (valeurFinale - valeurInitiale) * progres);
@@ -44,6 +49,7 @@ function animerCompteur(elementId, valeurFinale) {
     requestAnimationFrame(etape);
 }
 
+// Affiche les valeurs des indicateurs principaux.
 function afficherKpis(kpis) {
     animerCompteur('kpi-tickets', kpis.total_tickets);
     animerCompteur('kpi-incidents', kpis.total_incidents);
@@ -52,6 +58,7 @@ function afficherKpis(kpis) {
     animerCompteur('kpi-contributions', kpis.total_contributions);
 }
 
+// Supprime un graphique existant avant son remplacement.
 function detruireGraphique(id) {
     if (graphiques[id]) {
         graphiques[id].destroy();
@@ -59,6 +66,7 @@ function detruireGraphique(id) {
     }
 }
 
+// Construit les graphiques a partir des donnees de l'API.
 function construireGraphiques(data) {
     // --- Évolution des tickets sans feedback ---
     detruireGraphique('tickets-state');
@@ -203,6 +211,7 @@ function construireGraphiques(data) {
     });
 }
 
+// Affiche les points d'attention calcules par le dashboard.
 function afficherAlertes(data) {
     const liste = document.getElementById('liste-alertes');
     liste.innerHTML = '';

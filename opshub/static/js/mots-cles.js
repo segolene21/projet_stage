@@ -1,3 +1,4 @@
+// Gere le menu d'actions de la page des mots-cles.
 function toggleMenu(btn) {
     const menu = btn.closest('.action-menu-wrapper')?.querySelector('.action-dropdown');
 
@@ -56,6 +57,7 @@ if (formMotCle) {
 
 
 function modifierMotCle(motCleId, url) {
+    // Prepare la modification d'un mot-cle existant.
     const formData = new FormData(document.getElementById('form-modifier-mc-' + motCleId));
 
     fetch(url, {
@@ -78,6 +80,7 @@ function modifierMotCle(motCleId, url) {
 
 
 async function supprimerMotCle(motCleId, url) {
+    // Supprime un mot-cle apres confirmation.
     if (!(await confirmerAction('Supprimer ce mot-clé ?'))) return;
 
     fetch(url, {
@@ -126,6 +129,7 @@ let selectEquipeCible = null;
 let modaleParenteEquipe = null;
 
 function ouvrirModaleEquipe(selectId) {
+    // Ouvre la modale de creation d'une equipe cible.
     selectEquipeCible = selectId;
 
     const select = document.getElementById(selectId);
@@ -139,6 +143,7 @@ function ouvrirModaleEquipe(selectId) {
 }
 
 function fermerModaleEquipe() {
+    // Ferme la modale de creation d'equipe.
     document.getElementById('modale-equipe').style.display = 'none';
 
     if (modaleParenteEquipe) {
